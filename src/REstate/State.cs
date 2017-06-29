@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace REstate.Engine
+namespace REstate
 {
     public struct State
         : IEquatable<State>
@@ -9,25 +9,22 @@ namespace REstate.Engine
         {
             if (string.IsNullOrWhiteSpace(stateName))
                 throw new ArgumentException("Argument is null or whitespace", nameof(stateName));
-            
-            if (commitTag == Guid.Empty)
-                throw new ArgumentException("Must not be an empty Guid.", nameof(commitTag));
 
             StateName = stateName;
             CommitTag = commitTag;
         }
 
         public State(string stateName)
-        {
-            if (string.IsNullOrWhiteSpace(stateName))
-                throw new ArgumentException("Argument is null or whitespace", nameof(stateName));
+            : this(stateName, Guid.Empty) { }
 
-            StateName = stateName;
-            CommitTag = Guid.Empty;
-        }
 
         public string StateName { get; }
 
+        /// <summary>
+        /// A value that indicates a unique interaction of state within a machine.
+        /// <para />
+        /// Empty Guid represents the absence of a commit tag and should not be used.
+        /// </summary>
         public Guid CommitTag { get; }
 
         public override string ToString()
@@ -56,11 +53,8 @@ namespace REstate.Engine
         /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
-            if (obj == null)
-                return false;
-
-            if (obj is State)
-                return Equals((State)obj);
+            if (obj is State state)
+                return Equals(state);
 
             return false;
         }
@@ -76,24 +70,42 @@ namespace REstate.Engine
             return StateName.GetHashCode();
         }
 
+        /// <summary>
+        /// Verifies that both states have the same value 
+        /// AND verifies the commit tags match and are not empty.
+        /// </summary>
+        /// <param name="a">The left state.</param>
+        /// <param name="b">The right state.</param>
+        /// <returns>
+        /// True if same commit of the same state value;
+        /// false if the values or commit tags do not match 
+        /// OR if either commit tag is empty.
+        /// </returns>
         public static bool IsSameCommit(State a, State b)
         {
-            return a == b && a.CommitTag == b.CommitTag;
+            return a == b 
+                && a.CommitTag != Guid.Empty 
+                && a.CommitTag == b.CommitTag;
         }
 
+        /// <summary>
+        /// Verifies that both states have the same value 
+        /// AND verifies the commit tags match and are not empty.
+        /// </summary>
+        /// <param name="other">The state to compare against.</param>
+        /// <returns>
+        /// True if same commit of the same state value;
+        /// false if the values or commit tags do not match 
+        /// OR if either commit tag is empty.
+        /// </returns>
         public bool IsSameCommit(State other)
         {
             return IsSameCommit(this, other);
         }
 
-        public bool HasChanged(State newState)
-        {
-            return !IsSameCommit(newState);
-        }
-
         public static bool operator ==(State a, State b)
         {
-            return ReferenceEquals(a, b) || (object)a != null && a.Equals(b);
+            return a.Equals(b);
         }
 
         public static bool operator !=(State a, State b)

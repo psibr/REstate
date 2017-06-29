@@ -14,7 +14,7 @@ namespace REstate.IoC.TinyIoC
         /// <summary>
         /// Initializes a new instance of the <see cref="TinyIoCContainerAdapter"/> class.
         /// </summary>
-        /// <param name="container">The container.</param>
+        /// <param name="container">The TinyIoC container.</param>
         internal TinyIoCContainerAdapter(TinyIoCContainer container)
         {
             _container = container;
@@ -23,10 +23,9 @@ namespace REstate.IoC.TinyIoC
         /// <summary>
         /// Resolves the specified type.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="name">The name.</param>
-        /// <returns>T.</returns>
-        /// <exception cref="SusanooDependencyResolutionException">An error occured resolving a type.</exception>
+        /// <typeparam name="T">The type requested for resolution.</typeparam>
+        /// <param name="name">The name under which an implmentation was registered.</param>
+        /// <returns>The type requested.</returns>
         public T Resolve<T>(string name = null)
             where T : class
         {
@@ -50,8 +49,8 @@ namespace REstate.IoC.TinyIoC
         /// Registers the specified instance.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="instance">The instance.</param>
-        /// <param name="name">The name.</param>
+        /// <param name="instance">The instance to register.</param>
+        /// <param name="name">The name under which an implmentation was registered.</param>
         public void Register<T>(T instance, string name = null)
             where T : class
         {
@@ -65,8 +64,8 @@ namespace REstate.IoC.TinyIoC
         /// Registers the specified factory method.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="resolver">The resolver.</param>
-        /// <param name="name">The name.</param>
+        /// <param name="resolver">The resolver method that will build an implementation when requested.</param>
+        /// <param name="name">The name under which an implmentation was registered.</param>
         public void Register<T>(Func<IComponentContainer, T> resolver, string name = null)
             where T : class
         {
@@ -76,6 +75,10 @@ namespace REstate.IoC.TinyIoC
                 _container.Register((tinyIoC, overloads) => resolver(this), name);
         }
 
+        /// <summary>
+        /// Registers a component and all of it's associated dependencies.
+        /// </summary>
+        /// <param name="component">The component to register.</param>
         public void RegisterComponent(IComponent component)
         {
             component.Register(this);

@@ -1,9 +1,12 @@
-﻿namespace REstate.IoC
+﻿using System;
+
+namespace REstate.IoC
 {
     /// <summary>
     /// A simple container interface for plugging in DI containers.
     /// </summary>
-    public interface IComponentContainer : IRegistrar
+    public interface IComponentContainer 
+        : IRegistrar
     {
         /// <summary>
         /// Resolves the specified type.

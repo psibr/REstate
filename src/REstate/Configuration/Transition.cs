@@ -5,7 +5,7 @@ namespace REstate.Configuration
     public class Transition
     {
         [Required]
-        public string TriggerName { get; set; }
+        public string InputName { get; set; }
 
         [Required]
         public string ResultantStateName { get; set; }

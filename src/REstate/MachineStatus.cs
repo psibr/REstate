@@ -1,10 +1,9 @@
-﻿using REstate.Engine;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace REstate.Configuration
+namespace REstate
 {
-    public class Machine
+    public class MachineStatus
     {
         [Required]
         public string SchematicName { get; set; }
@@ -18,7 +17,7 @@ namespace REstate.Configuration
         [Required]
         public DateTime StateChangedDateTime { get; set; }
 
-        public static implicit operator State(Machine record)
+        public static implicit operator State(MachineStatus record)
         {
             return new State(record.StateName, Guid.Parse(record.CommitTag));
         }

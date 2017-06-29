@@ -18,7 +18,7 @@ namespace REstate.Engine
 
         protected IDictionary<State, StateConfiguration> StateMappings { get; }
 
-        public REstateMachine(
+        internal REstateMachine(
             IConnectorFactoryResolver connectorFactoryResolver,
             IRepositoryContextFactory repositoryContextFactory,
             ICartographer cartographer,
@@ -35,15 +35,15 @@ namespace REstate.Engine
         }
         public string MachineId { get; }
 
-        public Task<Machine> FireAsync(
-            Trigger trigger, string payload, 
+        public Task<MachineStatus> SendAsync(
+            Input input, string payload, 
             CancellationToken cancellationToken)
         {
-            return FireAsync(trigger, payload, null, cancellationToken);
+            return SendAsync(input, payload, null, cancellationToken);
         }
 
-        public async Task<Machine> FireAsync(
-            Trigger trigger, string payload, Guid? lastCommitTag,
+        public async Task<MachineStatus> SendAsync(
+            Input input, string payload, Guid? lastCommitTag,
             CancellationToken cancellationToken)
         {
             using (var dataContext = _repositoryContextFactory.OpenContext())
@@ -53,11 +53,11 @@ namespace REstate.Engine
 
                 var stateConfig = StateMappings[currentState];
 
-                var transition = stateConfig.Transitions.SingleOrDefault(t => t.TriggerName == trigger.TriggerName);
+                var transition = stateConfig.Transitions.SingleOrDefault(t => t.InputName == input.InputName);
 
                 if(transition == null)
                 {
-                    throw new InvalidOperationException($"No transition defined for state: '{currentState.StateName}' using input: '{trigger}'");
+                    throw new InvalidOperationException($"No transition defined for state: '{currentState.StateName}' using input: '{input}'");
                 }
 
                 if (transition.Guard != null)
@@ -68,7 +68,7 @@ namespace REstate.Engine
 
                     if (!await guardConnector
                         .ConstructPredicate(this, transition.Guard.Configuration)
-                        .Invoke(currentState, trigger, payload, cancellationToken).ConfigureAwait(false))
+                        .Invoke(currentState, input, payload, cancellationToken).ConfigureAwait(false))
                     {
                         throw new InvalidOperationException("Guard clause prevented transition.");
                     }
@@ -77,37 +77,34 @@ namespace REstate.Engine
                 currentState = await dataContext.Machines.SetMachineStateAsync(
                     MachineId,
                     transition.ResultantStateName, 
-                    trigger, 
+                    input, 
                     lastCommitTag ?? Guid.Parse(currentState.CommitTag), 
                     cancellationToken).ConfigureAwait(false);
 
                 stateConfig = StateMappings[currentState];
 
-                if(stateConfig.OnEntry != null)
-                {
-                    try
-                    {
-                        var entryConnector = await _connectorFactoryResolver
-                            .ResolveConnectorFactory(stateConfig.OnEntry.ConnectorKey)
-                            .BuildConnectorAsync(cancellationToken).ConfigureAwait(false);
-                        
-                        await entryConnector
-                            .ConstructAction(this, currentState, payload, stateConfig.OnEntry.Configuration) 
-                            .Invoke(cancellationToken).ConfigureAwait(false);
-                    }
-                    catch
-                    {
-                        if(stateConfig.OnEntry.FailureTransition != null)
-                        {
-                            await FireAsync(
-                                new Trigger(stateConfig.OnEntry.FailureTransition.TriggerName), 
-                                payload, 
-                                Guid.Parse(currentState.CommitTag), 
-                                cancellationToken).ConfigureAwait(false);
-                        }
+                if (stateConfig.OnEntry == null) return currentState;
 
+                try
+                {
+                    var entryConnector = await _connectorFactoryResolver
+                        .ResolveConnectorFactory(stateConfig.OnEntry.ConnectorKey)
+                        .BuildConnectorAsync(cancellationToken).ConfigureAwait(false);
+                        
+                    await entryConnector
+                        .ConstructAction(this, currentState, payload, stateConfig.OnEntry.Configuration) 
+                        .Invoke(cancellationToken).ConfigureAwait(false);
+                }
+                catch
+                {
+                    if (stateConfig.OnEntry.FailureTransition == null)
                         throw;
-                    }
+
+                    currentState = await SendAsync(
+                        new Input(stateConfig.OnEntry.FailureTransition.Input),
+                        payload,
+                        Guid.Parse(currentState.CommitTag),
+                        cancellationToken).ConfigureAwait(false);
                 }
 
                 return currentState;
@@ -138,9 +135,9 @@ namespace REstate.Engine
             return false;
         }
 
-        public async Task<Machine> GetCurrentStateAsync(CancellationToken cancellationToken)
+        public async Task<MachineStatus> GetCurrentStateAsync(CancellationToken cancellationToken)
         {
-            Machine currentState;
+            MachineStatus currentState;
 
             using (var dataContext = _repositoryContextFactory.OpenContext())
             {
@@ -152,13 +149,13 @@ namespace REstate.Engine
             return currentState;
         }
 
-        public async Task<ICollection<Trigger>> GetPermittedTriggersAsync(CancellationToken cancellationToken)
+        public async Task<ICollection<Input>> GetPermittedInputAsync(CancellationToken cancellationToken)
         {
             var currentState = await GetCurrentStateAsync(cancellationToken).ConfigureAwait(false);
 
             var configuration = StateMappings[currentState];
 
-            return configuration.Transitions.Select(t => new Trigger(t.TriggerName)).ToList();
+            return configuration.Transitions.Select(t => new Input(t.InputName)).ToList();
         }
 
         public override string ToString()

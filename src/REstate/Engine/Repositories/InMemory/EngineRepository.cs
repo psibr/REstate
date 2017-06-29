@@ -10,7 +10,7 @@ namespace REstate.Engine.Repositories.InMemory
     {
         private readonly StringSerializer _stringSerializer;
         private static IDictionary<string, Schematic> Schematics { get; } = new Dictionary<string, Schematic>();
-        private static IDictionary<string, ValueTuple<Machine, IDictionary<string, string>>> Machines { get; } = new Dictionary<string, ValueTuple<Machine, IDictionary<string, string>>>();
+        private static IDictionary<string, ValueTuple<MachineStatus, IDictionary<string, string>>> Machines { get; } = new Dictionary<string, ValueTuple<MachineStatus, IDictionary<string, string>>>();
 
         public EngineRepository(StringSerializer stringSerializer)
         {
@@ -31,7 +31,7 @@ namespace REstate.Engine.Repositories.InMemory
 
         public Task<Schematic> RetrieveSchematicForMachineAsync(string machineId, CancellationToken cancellationToken)
         {
-            ValueTuple<Machine, IDictionary<string, string>> instanceData;
+            ValueTuple<MachineStatus, IDictionary<string, string>> instanceData;
             try
             {
                 instanceData = Machines[machineId];
@@ -71,7 +71,7 @@ namespace REstate.Engine.Repositories.InMemory
         {
             var schematic = Schematics[schematicName];
 
-            Machines.Add(machineId, (new Machine
+            Machines.Add(machineId, (new MachineStatus
             {
                 SchematicName = schematicName,
                 StateName = schematic.InitialState,
@@ -86,7 +86,7 @@ namespace REstate.Engine.Repositories.InMemory
         {
             Schematics.Add(schematic.SchematicName, schematic);
 
-            Machines.Add(machineId, (new Machine
+            Machines.Add(machineId, (new MachineStatus
             {
                 SchematicName = schematic.SchematicName,
                 StateName = schematic.InitialState,
@@ -109,21 +109,21 @@ namespace REstate.Engine.Repositories.InMemory
             return Task.CompletedTask;
         }
 
-        public Task<Machine> GetMachineStateAsync(string machineId, CancellationToken cancellationToken)
+        public Task<MachineStatus> GetMachineStateAsync(string machineId, CancellationToken cancellationToken)
         {
-            var (machine, metadata) = Machines[machineId];
+            var (machine, _) = Machines[machineId];
 
             return Task.FromResult(machine);
         }
 
-        public Task<Machine> SetMachineStateAsync(string machineId, string stateName, string triggerName, Guid? lastCommitTag, CancellationToken cancellationToken)
+        public Task<MachineStatus> SetMachineStateAsync(string machineId, string stateName, Input input, Guid? lastCommitTag, CancellationToken cancellationToken)
         {
-            return SetMachineStateAsync(machineId, stateName, triggerName, null, lastCommitTag, cancellationToken);
+            return SetMachineStateAsync(machineId, stateName, input, null, lastCommitTag, cancellationToken);
         }
 
-        public Task<Machine> SetMachineStateAsync(string machineId, string stateName, string triggerName, string parameterData, Guid? lastCommitTag, CancellationToken cancellationToken)
+        public Task<MachineStatus> SetMachineStateAsync(string machineId, string stateName, Input input, string parameterData, Guid? lastCommitTag, CancellationToken cancellationToken)
         {
-            var (machine, metadata) = Machines[machineId];
+            var (machine, _) = Machines[machineId];
 
             lock(machine)
             {

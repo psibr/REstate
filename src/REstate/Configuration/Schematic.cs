@@ -11,7 +11,5 @@ namespace REstate.Configuration
         public string InitialState { get; set; }
 
         public StateConfiguration[] StateConfigurations { get; set; }
-        
-        public ServiceState[] ServiceStates { get; set; }
     }
 }

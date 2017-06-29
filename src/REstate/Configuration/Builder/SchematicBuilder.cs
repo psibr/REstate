@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace REstate.Configuration.Builder
 {
-    public class SchematicBuilder
+    public class SchematicBuilder 
+        : ISchematicBuilder
     {
         public SchematicBuilder(string schematicName)
         {
@@ -30,46 +29,58 @@ namespace REstate.Configuration.Builder
             InitialState = stateName;
         }
 
-        public IDictionary<string, IStateConfigurationBuilder> StateConfigurations { get; } = new Dictionary<string, IStateConfigurationBuilder>();
+        private readonly Dictionary<string, IStateBuilder> _stateConfigurations = new Dictionary<string, IStateBuilder>();
 
-        public IDictionary<string, ServiceState> ServiceStates { get; } = new Dictionary<string, ServiceState>();
+        public IReadOnlyDictionary<string, IStateBuilder> States => _stateConfigurations;
 
-        public SchematicBuilder WithState(string stateName, Action<IStateConfigurationBuilder> stateBuilder = null)
+        public ISchematicBuilder WithState(string stateName, Action<IStateBuilder> stateBuilder = null)
         {
-            var stateConfiguration = new StateConfigurationBuilder(this, stateName);
+            var stateConfiguration = new StateBuilder(this, stateName);
+
+            _stateConfigurations.Add(stateConfiguration.StateName, stateConfiguration);
 
             stateBuilder?.Invoke(stateConfiguration);
-
-            StateConfigurations.Add(stateConfiguration.StateName, stateConfiguration);
 
             return this;
         }
 
-        public SchematicBuilder WithStates(IEnumerable<string> stateNames, Action<IStateConfigurationBuilder> stateBuilder = null)
+        public ISchematicBuilder WithStates(ICollection<string> stateNames, Action<IStateBuilder> stateBuilder = null)
         {
             foreach (var stateName in stateNames)
             {
-                var stateConfiguration = new StateConfigurationBuilder(this, stateName);
+                var stateConfiguration = new StateBuilder(this, stateName);
+
+                _stateConfigurations.Add(stateConfiguration.StateName, stateConfiguration);
+            }
+
+            foreach (var stateName in stateNames)
+            {
+                var stateConfiguration = _stateConfigurations[stateName];
 
                 stateBuilder?.Invoke(stateConfiguration);
-
-                StateConfigurations.Add(stateConfiguration.StateName, stateConfiguration);
             }
 
             return this;
         }
 
-        public SchematicBuilder WithTransition(string stateName, string triggerName, string resultantStateName, GuardConnector guard = null)
+        public ISchematicBuilder WithStates(params string[] stateNames)
+        {
+            foreach (var stateName in stateNames)
+            {
+                var stateConfiguration = new StateBuilder(this, stateName);
+
+                _stateConfigurations.Add(stateConfiguration.StateName, stateConfiguration);
+            }
+
+            return this;
+        }
+
+        public ISchematicBuilder WithTransition(string stateName, Input input, string resultantStateName, GuardConnector guard = null)
         {
             if (stateName == null)
                 throw new ArgumentNullException(nameof(stateName));
             if (string.IsNullOrWhiteSpace(stateName))
                 throw new ArgumentException("No value provided.", nameof(stateName));
-
-            if (triggerName == null)
-                throw new ArgumentNullException(nameof(triggerName));
-            if (string.IsNullOrWhiteSpace(triggerName))
-                throw new ArgumentException("No value provided.", nameof(triggerName));
 
             if (resultantStateName == null)
                 throw new ArgumentNullException(nameof(resultantStateName));
@@ -77,26 +88,28 @@ namespace REstate.Configuration.Builder
                 throw new ArgumentException("No value provided.", nameof(resultantStateName));
 
 
-            if (!StateConfigurations.ContainsKey(resultantStateName))
+            if (!_stateConfigurations.ContainsKey(resultantStateName))
                 throw new ArgumentException("Resultant state was not defined.", nameof(resultantStateName));
 
-            if (!StateConfigurations.TryGetValue(stateName, out IStateConfigurationBuilder stateBuilder))
+            if (_stateConfigurations.TryGetValue(stateName, out IStateBuilder stateBuilder))
             {
-                throw new ArgumentException($"No matching start state found.", nameof(stateName));
-            }
-
-            try
-            {
-                stateBuilder.Transitions.Add(triggerName, new Transition
+                try
                 {
-                    TriggerName = triggerName,
-                    Guard = guard,
-                    ResultantStateName = resultantStateName
-                });
+                    stateBuilder.Transitions.Add(input, new Transition
+                    {
+                        InputName = input,
+                        Guard = guard,
+                        ResultantStateName = resultantStateName
+                    });
+                }
+                catch (ArgumentException ex)
+                {
+                    throw new InvalidOperationException($"Input matching: [ {input} ] is already defined on state: [ {stateName} ]", ex);
+                }
             }
-            catch(ArgumentException ex)
+            else
             {
-                throw new InvalidOperationException($"An trigger matching: [ {triggerName} ] is already defined on state: [ {stateName} ]", ex);
+                throw new ArgumentException("No matching start state found.", nameof(stateName));
             }
 
             return this;
@@ -108,8 +121,7 @@ namespace REstate.Configuration.Builder
             {
                 SchematicName = SchematicName,
                 InitialState = InitialState,
-                StateConfigurations = StateConfigurations.Select(kvp => kvp.Value.ToStateConfiguration()).ToArray(),
-                ServiceStates = ServiceStates.Select(kvp => kvp.Value).ToArray()
+                StateConfigurations = _stateConfigurations.Values.Select(builder => builder.ToStateConfiguration()).ToArray()
             };
         }
     }

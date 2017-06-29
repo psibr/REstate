@@ -1,23 +1,20 @@
 ﻿using System;
 
-namespace REstate.Engine
+namespace REstate
 {
-    public struct Trigger
-        : IEquatable<Trigger>
+    public struct Input
+        : IEquatable<Input>
     {
-        public Trigger(string triggerName)
+        public Input(string inputName)
         {
-            if (string.IsNullOrWhiteSpace(triggerName))
-                throw new ArgumentException("Cannot be null or whitespace", nameof(triggerName));
-
-            TriggerName = triggerName;
+            InputName = inputName;
         }
 
-        public string TriggerName { get; }
+        public string InputName { get; }
 
         public override string ToString()
         {
-            return TriggerName;
+            return InputName;
         }
 
         /// <summary>
@@ -27,26 +24,22 @@ namespace REstate.Engine
         /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
-        public bool Equals(Trigger other)
+        public bool Equals(Input other)
         {
-            return other != null
-                   && TriggerName == other.TriggerName;
+            return InputName.Equals(other.InputName);
         }
 
         /// <summary>
         /// Determines whether the specified object is equal to the current object.
         /// </summary>
         /// <returns>
-        /// true if the specified object  is equal to the current object; otherwise, false.
+        /// true if the specified object is equal to the current object; otherwise, false.
         /// </returns>
         /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
-            if (obj == null)
-                return false;
-
-            if (obj is Trigger)
-                return Equals((Trigger)obj);
+            if (obj is Input input)
+                return Equals(input);
 
             return false;
         }
@@ -59,27 +52,27 @@ namespace REstate.Engine
         /// </returns>
         public override int GetHashCode()
         {
-            return TriggerName.GetHashCode();
+            return InputName.GetHashCode();
         }
 
-        public static bool operator ==(Trigger a, Trigger b)
+        public static bool operator ==(Input a, Input b)
         {
-            return ReferenceEquals(a, b) || (object)a != null && a.Equals(b);
+            return a.Equals(b);
         }
 
-        public static bool operator !=(Trigger a, Trigger b)
+        public static bool operator !=(Input a, Input b)
         {
             return !(a == b);
         }
 
-        public static implicit operator Trigger(string triggerName)
+        public static implicit operator Input(string inputName)
         {
-            return new Trigger(triggerName);
+            return new Input(inputName);
         }
 
-        public static implicit operator String(Trigger trigger)
+        public static implicit operator string(Input input)
         {
-            return trigger.TriggerName;
+            return input.InputName;
         }
     }
 }

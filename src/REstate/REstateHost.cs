@@ -1,14 +1,15 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using REstate.Configuration.Builder;
 using REstate.Engine;
 using REstate.Engine.Repositories;
 using REstate.Engine.Repositories.InMemory;
 using REstate.Engine.Services;
 using REstate.IoC;
 using REstate.IoC.TinyIoC;
-using REstate.Services;
+using static REstate.Serialization.SimpleJson.SimpleJson;
 
 namespace REstate
-{ 
+{
     public class REstateHost
     {
         static REstateHost()
@@ -16,9 +17,10 @@ namespace REstate
             Register(new TinyIoCContainerAdapter(TinyIoCContainer.Current));
         }
 
-        private static IComponentContainer Container;
+        private static IComponentContainer _container;
 
-        public static IStateEngine Engine => Container.Resolve<IStateEngine>();
+        public static IStateEngine Engine =>
+            _container.Resolve<IStateEngine>();
 
         /// <summary>
         /// Register's defaults and the REstate engine in a given container.
@@ -26,7 +28,7 @@ namespace REstate
         /// <param name="container">An adapter to an IoC/DI container.</param>
         public static void Register(IComponentContainer container)
         {
-            container.Register<IConnectorFactoryResolver>(c => 
+            container.Register<IConnectorFactoryResolver>(c =>
                 new DefaultConnectorFactoryResolver(
                     connectorFactories: c.ResolveAll<IConnectorFactory>()));
 
@@ -43,31 +45,30 @@ namespace REstate
                     c.Resolve<StringSerializer>()));
 
             container.Register(new StringSerializer(
-                serializer: (obj) => JsonConvert.SerializeObject(obj),
-                deserializer: (str) => JsonConvert.DeserializeObject(str)));
+                serializer: SerializeObject,
+                deserializer: DeserializeObject));
 
             container.Register<ICartographer>(new DotGraphCartographer());
 
             container.RegisterComponent(new InMemoryRepositoryComponent());
 
-            Container = container;
+            _container = container;
 
             RegisterConnector(new ConsoleWriterConnector());
         }
 
-        public static void RegisterComponent(IComponent component)
-        {
-            Container.RegisterComponent(component);
-        }
+        public static void RegisterComponent(IComponent component) =>
+            _container.RegisterComponent(component);
 
-        public static void RegisterConnector(IConnectorFactory connectorFactory)
-        {
-            Container.Register(connectorFactory, connectorFactory.ConnectorKey);
-        }
+        public static void RegisterConnector(IConnectorFactory connectorFactory) =>
+            _container.Register(connectorFactory, connectorFactory.ConnectorKey);
 
-        public static void RegisterConnector(IConnector connector)
-        {
-            Container.Register<IConnectorFactory>(new SingletonConnectorFactory(connector), connector.ConnectorKey);
-        }
+        public static void RegisterConnector(IConnector connector) =>
+            _container.Register<IConnectorFactory>(
+                instance: new SingletonConnectorFactory(connector),
+                name: connector.ConnectorKey);
+
+        public static ISchematicBuilder CreateSchematic(string schematicName) =>
+            new SchematicBuilder(schematicName);
     }
 }

@@ -1,11 +1,14 @@
 ﻿namespace REstate.IoC
 {
+    /// <summary>
+    /// A single dependency, or set of dependencies to register.
+    /// </summary>
     public interface IComponent
     {
         /// <summary>
-        /// Registers dependencies.
+        /// Registers dependencies in the component.
         /// </summary>
-        /// <param name="container"></param>
+        /// <param name="registrar">The registration system to register with, typically a DI container.</param>
         void Register(IRegistrar registrar);
     }
 

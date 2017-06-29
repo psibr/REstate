@@ -1,14 +1,13 @@
-﻿using REstate.Engine.Services;
-using System;
-using System.Threading.Tasks;
+﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 
-namespace REstate.Services
+namespace REstate.Engine.Services
 {
     public class SingletonConnectorFactory 
         : IConnectorFactory
     {
-        private IConnector _connector;
+        private readonly IConnector _connector;
 
         public SingletonConnectorFactory(IConnector connector, bool isActionConnector = true, bool isGuardConnector = false)
         {
@@ -17,13 +16,17 @@ namespace REstate.Services
 
             ConnectorKey = connector.ConnectorKey;
             _connector = connector;
+
+            IsActionConnector = isActionConnector;
+            IsGuardConnector = isGuardConnector;
+
         }
 
-        public string ConnectorKey { get; private set; }
+        public string ConnectorKey { get; }
 
-        public bool IsActionConnector { get; private set; }
+        public bool IsActionConnector { get; }
 
-        public bool IsGuardConnector { get; private set; }
+        public bool IsGuardConnector { get; }
 
         public Task<IConnector> BuildConnectorAsync(CancellationToken cancellationToken)
         {

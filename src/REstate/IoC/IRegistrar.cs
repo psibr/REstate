@@ -2,6 +2,9 @@
 
 namespace REstate.IoC
 {
+    /// <summary>
+    /// Registration functionality for IoC.
+    /// </summary>
     public interface IRegistrar
     {
         /// <summary>
@@ -9,7 +12,7 @@ namespace REstate.IoC
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="instance">The instance.</param>
-        /// <param name="name">The name.</param>
+        /// <param name="name">The name under which an implmentation was registered.</param>
         void Register<T>(T instance, string name = null)
             where T : class;
 
@@ -18,7 +21,7 @@ namespace REstate.IoC
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="resolver">The resolver.</param>
-        /// <param name="name">The name.</param>
+        /// <param name="name">The name under which an implmentation was registered.</param>
         void Register<T>(Func<IComponentContainer, T> resolver, string name = null)
             where T : class;
 
