@@ -1,7 +1,0 @@
-C:\Users\Ovan\source\Persistant\REstate\src\REstate\bin\Debug\netstandard1.3\netstandard1.3\REstate.deps.json
-C:\Users\Ovan\source\Persistant\REstate\src\REstate\obj\Debug\netstandard1.3\REstate.AssemblyInfo.cs
-C:\Users\Ovan\source\Persistant\REstate\src\REstate\obj\Debug\netstandard1.3\REstate.csprojResolveAssemblyReference.cache
-C:\Users\Ovan\source\Persistant\REstate\src\REstate\bin\Debug\netstandard1.3\netstandard1.3\REstate.dll
-C:\Users\Ovan\source\Persistant\REstate\src\REstate\bin\Debug\netstandard1.3\netstandard1.3\REstate.pdb
-C:\Users\Ovan\source\Persistant\REstate\src\REstate\obj\Debug\netstandard1.3\REstate.dll
-C:\Users\Ovan\source\Persistant\REstate\src\REstate\obj\Debug\netstandard1.3\REstate.pdb
