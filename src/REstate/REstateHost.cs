@@ -1,5 +1,6 @@
 ﻿using System;
 using REstate.Configuration.Builder;
+using REstate.Configuration.Builder.Implementation;
 using REstate.Engine;
 using REstate.Engine.Repositories;
 using REstate.Engine.Repositories.InMemory;
@@ -54,7 +55,7 @@ namespace REstate
 
             _container = container;
 
-            RegisterConnector(new ConsoleWriterConnector());
+            RegisterConnector(new ConsoleConnector());
         }
 
         public static void RegisterComponent(IComponent component) =>
@@ -65,7 +66,10 @@ namespace REstate
 
         public static void RegisterConnector(IConnector connector) =>
             _container.Register<IConnectorFactory>(
-                instance: new SingletonConnectorFactory(connector),
+                instance: new SingletonConnectorFactory(
+                    connector: connector, 
+                    isActionConnector: true,
+                    isGuardConnector: true),
                 name: connector.ConnectorKey);
 
         public static ISchematicBuilder CreateSchematic(string schematicName) =>

@@ -47,7 +47,7 @@ namespace REstate.Engine
         {
             var line = string.IsNullOrWhiteSpace(guardDescription) 
                 ? $" \"{sourceState}\" -> \"{destination}\" [label=\"{input}\"];" 
-                : $" \"{sourceState}\" -> \"{destination}\" [label=\"{input} [{guardDescription}]\"]];";
+                : $" \"{sourceState}\" -> \"{destination}\" [label=\"{input} ({guardDescription})\"];";
 
             lines.Add(line);
         }

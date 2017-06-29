@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace REstate.Configuration.Builder
+namespace REstate.Configuration.Builder.Implementation
 {
     internal class StateBuilder
         : IStateBuilder
@@ -23,10 +23,10 @@ namespace REstate.Configuration.Builder
 
         public string StateName { get; }
         public string ParentStateName { get; private set; }
-        public string StateDescription { get; private set; }
-        public IDictionary<string, Transition> Transitions { get; } = new Dictionary<string, Transition>();
+        public string Description { get; private set; }
+        public IDictionary<string, ITransition> Transitions { get; } = new Dictionary<string, ITransition>();
 
-        private EntryConnector OnEntry { get; set; }
+        public IEntryAction OnEntry { get; private set; }
 
         public IStateBuilder AsInitialState()
         {
@@ -59,35 +59,42 @@ namespace REstate.Configuration.Builder
             if (string.IsNullOrWhiteSpace(description))
                 throw new ArgumentException("Descriptions, if provided, should not be empty.", nameof(description));
 
-            StateDescription = description;
+            Description = description;
 
             return this;
         }
 
-        public IStateBuilder WithTransitionTo(string resultantStateName, Input input, GuardConnector guard = null)
+        public IStateBuilder WithTransitionTo(string resultantStateName, Input input, Action<ITransitionBuilder> transition = null)
         {
-            _builder.WithTransition(StateName, input, resultantStateName, guard);
+            _builder.WithTransition(StateName, input, resultantStateName, transition);
 
             return this;
         }
 
-        public IStateBuilder WithTransitionFrom(string previousStateName, Input input, GuardConnector guard = null)
+        public IStateBuilder WithTransitionFrom(string previousStateName, Input input, Action<ITransitionBuilder> transition = null)
         {
-            _builder.WithTransition(previousStateName, input, StateName, guard);
+            _builder.WithTransition(previousStateName, input, StateName, transition);
 
             return this;
         }
 
-        public IStateBuilder WithOnEntry(string connectorKey, Action<IEntryActionBuilder> onEntryBuilderAction)
+        public IStateBuilder WithReentrance(Input input, Action<ITransitionBuilder> transition = null)
+        {
+            _builder.WithTransition(StateName, input, StateName, transition);
+
+            return this;
+        }
+
+        public IStateBuilder WithOnEntry(string connectorKey, Action<IEntryActionBuilder> onEntry = null)
         {
             if (string.IsNullOrWhiteSpace(connectorKey))
                 throw new ArgumentException("ConnectorKey must have a valid value", nameof(connectorKey));
 
-            var onEntryBuilder = new EntryActionBuilder(this, connectorKey );
+            var onEntryBuilder = new EntryActionBuilder(connectorKey );
 
-            onEntryBuilderAction?.Invoke(onEntryBuilder);
+            onEntry?.Invoke(onEntryBuilder);
 
-            OnEntry = onEntryBuilder.ToEntryConnector();
+            OnEntry = onEntryBuilder;
 
             return this;
         }
@@ -98,9 +105,9 @@ namespace REstate.Configuration.Builder
             {
                 StateName = StateName,
                 ParentStateName = ParentStateName,
-                Description = StateDescription,
-                OnEntry = OnEntry,
-                Transitions = Transitions.Values.ToArray()
+                Description = Description,
+                OnEntry = OnEntry?.ToEntryConnector(),
+                Transitions = Transitions.Values.Select(t => t.ToTransition()).ToArray()
             };
         }
     }

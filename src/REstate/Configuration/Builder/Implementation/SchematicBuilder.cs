@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace REstate.Configuration.Builder
+namespace REstate.Configuration.Builder.Implementation
 {
-    public class SchematicBuilder 
+    internal class SchematicBuilder 
         : ISchematicBuilder
     {
         public SchematicBuilder(string schematicName)
@@ -31,20 +31,21 @@ namespace REstate.Configuration.Builder
 
         private readonly Dictionary<string, IStateBuilder> _stateConfigurations = new Dictionary<string, IStateBuilder>();
 
-        public IReadOnlyDictionary<string, IStateBuilder> States => _stateConfigurations;
+        public IReadOnlyDictionary<string, IState> States => 
+            _stateConfigurations.ToDictionary(kvp => kvp.Key, kvp => (IState)kvp.Value);
 
-        public ISchematicBuilder WithState(string stateName, Action<IStateBuilder> stateBuilder = null)
+        public ISchematicBuilder WithState(string stateName, Action<IStateBuilder> state = null)
         {
             var stateConfiguration = new StateBuilder(this, stateName);
 
             _stateConfigurations.Add(stateConfiguration.StateName, stateConfiguration);
 
-            stateBuilder?.Invoke(stateConfiguration);
+            state?.Invoke(stateConfiguration);
 
             return this;
         }
 
-        public ISchematicBuilder WithStates(ICollection<string> stateNames, Action<IStateBuilder> stateBuilder = null)
+        public ISchematicBuilder WithStates(ICollection<string> stateNames, Action<IStateBuilder> state = null)
         {
             foreach (var stateName in stateNames)
             {
@@ -57,7 +58,7 @@ namespace REstate.Configuration.Builder
             {
                 var stateConfiguration = _stateConfigurations[stateName];
 
-                stateBuilder?.Invoke(stateConfiguration);
+                state?.Invoke(stateConfiguration);
             }
 
             return this;
@@ -75,7 +76,7 @@ namespace REstate.Configuration.Builder
             return this;
         }
 
-        public ISchematicBuilder WithTransition(string stateName, Input input, string resultantStateName, GuardConnector guard = null)
+        public ISchematicBuilder WithTransition(string stateName, Input input, string resultantStateName, Action<ITransitionBuilder> transition = null)
         {
             if (stateName == null)
                 throw new ArgumentNullException(nameof(stateName));
@@ -95,12 +96,11 @@ namespace REstate.Configuration.Builder
             {
                 try
                 {
-                    stateBuilder.Transitions.Add(input, new Transition
-                    {
-                        InputName = input,
-                        Guard = guard,
-                        ResultantStateName = resultantStateName
-                    });
+                    var transitionBuilder = new TransitionBuilder(input, resultantStateName);
+
+                    transition?.Invoke(transitionBuilder);
+
+                    stateBuilder.Transitions.Add(input, transitionBuilder);
                 }
                 catch (ArgumentException ex)
                 {

@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 
-namespace REstate.Configuration.Builder
+namespace REstate.Configuration.Builder.Implementation
 {
-    public class EntryActionBuilder 
+    internal class EntryActionBuilder 
         : IEntryActionBuilder
     {
-        private readonly IStateBuilder _stateBuilder;
-
-        public EntryActionBuilder(IStateBuilder stateBuilder, string connectorKey)
+        public EntryActionBuilder(string connectorKey)
         {
             if (connectorKey == null)
                 throw new ArgumentNullException(nameof(connectorKey));
@@ -16,7 +14,6 @@ namespace REstate.Configuration.Builder
                 throw new ArgumentException("Value cannot be empty or whitespace.", nameof(connectorKey));
 
             ConnectorKey = connectorKey;
-            _stateBuilder = stateBuilder ?? throw new ArgumentNullException(nameof(stateBuilder));
         }
 
         public string ConnectorKey { get; }
