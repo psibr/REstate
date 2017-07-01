@@ -51,3 +51,33 @@ namespace Scratchpad
     }
 }
 ```
+
+It can also be created in YML or JSON, or any format:
+
+```yml
+SchematicName: EchoMachine
+InitialState: Ready
+StateConfigurations:
+- StateName: Ready
+  Transitions:
+  - InputName: Echo
+    ResultantStateName: Ready
+    Guard:
+      ConnectorKey: Console
+      Configuration:
+        Prompt: Are you sure you want to echo "{3}"? (y/n)
+      Description: Verfies action OK to take with y/n from console.
+  - InputName: EchoFailure
+    ResultantStateName: EchoFailure
+  OnEntry:
+    ConnectorKey: Console
+    Configuration:
+      Format: '{2}'
+    Description: Echoes the payload to the console.
+    FailureTransition:
+      Input: EchoFailure
+- StateName: EchoFailure
+  ParentStateName: Ready
+  Description: An echo command failed to execute.
+  Transitions: []
+```
