@@ -1,5 +1,4 @@
 # REstate.Engine
-The core and engine of REstate.
 
 Given the following REstate schematic, represented in DOT Graph:
 
