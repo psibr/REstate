@@ -1,6 +1,12 @@
 # REstate.Engine
 The core and engine of REstate.
 
+Given the following REstate schematic, represented in DOT Graph:
+
+![Alt EchoMachine Schematic in DOT Graph](https://cdn.rawgit.com/psibr/REstate.Engine/92d7bbe2/echo-sample.svg)
+
+Here is the code to build the flow and echo "Hello!":
+
 ```csharp
 using System;
 using System.Threading;
