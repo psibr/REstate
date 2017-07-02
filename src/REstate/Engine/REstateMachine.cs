@@ -9,23 +9,23 @@ using REstate.Engine.Services;
 
 namespace REstate.Engine
 {
-    public class REstateMachine
-        : IStateMachine
+    public class REstateMachine<TState>
+        : IStateMachine<TState>
     {
-        private readonly IConnectorFactoryResolver _connectorFactoryResolver;
-        private readonly IRepositoryContextFactory _repositoryContextFactory;
-        private readonly ICartographer _cartographer;
+        private readonly IConnectorResolver<TState> _connectorResolver;
+        private readonly IRepositoryContextFactory<TState> _repositoryContextFactory;
+        private readonly ICartographer<TState> _cartographer;
 
-        protected IDictionary<State, StateConfiguration> StateMappings { get; }
+        protected IDictionary<State<TState>, StateConfiguration<TState>> StateMappings { get; }
 
         internal REstateMachine(
-            IConnectorFactoryResolver connectorFactoryResolver,
-            IRepositoryContextFactory repositoryContextFactory,
-            ICartographer cartographer,
+            IConnectorResolver<TState> connectorResolver,
+            IRepositoryContextFactory<TState> repositoryContextFactory,
+            ICartographer<TState> cartographer,
             string machineId,
-            IDictionary<State, StateConfiguration> stateMappings)
+            IDictionary<State<TState>, StateConfiguration<TState>> stateMappings)
         {
-            _connectorFactoryResolver = connectorFactoryResolver;
+            _connectorResolver = connectorResolver;
             _repositoryContextFactory = repositoryContextFactory;
             _cartographer = cartographer;
             
@@ -35,14 +35,14 @@ namespace REstate.Engine
         }
         public string MachineId { get; }
 
-        public Task<MachineStatus> SendAsync(
+        public Task<State<TState>> SendAsync(
             Input input, string payload, 
             CancellationToken cancellationToken)
         {
             return SendAsync(input, payload, null, cancellationToken);
         }
 
-        public async Task<MachineStatus> SendAsync(
+        public async Task<State<TState>> SendAsync(
             Input input, string payload, Guid? lastCommitTag,
             CancellationToken cancellationToken)
         {
@@ -57,14 +57,12 @@ namespace REstate.Engine
 
                 if(transition == null)
                 {
-                    throw new InvalidOperationException($"No transition defined for state: '{currentState.StateName}' using input: '{input}'");
+                    throw new InvalidOperationException($"No transition defined for state: '{currentState.Value}' using input: '{input}'");
                 }
 
                 if (transition.Guard != null)
                 {
-                    var guardConnector = await _connectorFactoryResolver
-                        .ResolveConnectorFactory(transition.Guard.ConnectorKey)
-                        .BuildConnectorAsync(cancellationToken).ConfigureAwait(false);
+                    var guardConnector =  _connectorResolver.ResolveConnector(transition.Guard.ConnectorKey);
 
                     if (!await guardConnector
                         .ConstructPredicate(this, transition.Guard.Configuration)
@@ -76,9 +74,9 @@ namespace REstate.Engine
 
                 currentState = await dataContext.Machines.SetMachineStateAsync(
                     MachineId,
-                    transition.ResultantStateName, 
+                    transition.ResultantState, 
                     input, 
-                    lastCommitTag ?? Guid.Parse(currentState.CommitTag), 
+                    lastCommitTag ?? currentState.CommitTag, 
                     cancellationToken).ConfigureAwait(false);
 
                 stateConfig = StateMappings[currentState];
@@ -87,9 +85,7 @@ namespace REstate.Engine
 
                 try
                 {
-                    var entryConnector = await _connectorFactoryResolver
-                        .ResolveConnectorFactory(stateConfig.OnEntry.ConnectorKey)
-                        .BuildConnectorAsync(cancellationToken).ConfigureAwait(false);
+                    var entryConnector = _connectorResolver.ResolveConnector(stateConfig.OnEntry.ConnectorKey);
                         
                     await entryConnector
                         .ConstructAction(this, currentState, payload, stateConfig.OnEntry.Configuration) 
@@ -103,7 +99,7 @@ namespace REstate.Engine
                     currentState = await SendAsync(
                         new Input(stateConfig.OnEntry.FailureTransition.Input),
                         payload,
-                        Guid.Parse(currentState.CommitTag),
+                        currentState.CommitTag,
                         cancellationToken).ConfigureAwait(false);
                 }
 
@@ -111,7 +107,7 @@ namespace REstate.Engine
             }
         }
 
-        public async Task<bool> IsInStateAsync(State state, CancellationToken cancellationToken)
+        public async Task<bool> IsInStateAsync(State<TState> state, CancellationToken cancellationToken)
         {
             var currentState = await GetCurrentStateAsync(cancellationToken);
 
@@ -122,22 +118,22 @@ namespace REstate.Engine
             var configuration = StateMappings[currentState];
 
             //Recursively look for anscestors
-            while(configuration.ParentStateName != null)
+            while(configuration.ParentState != null)
             {
                 //If state matches an ancestor, true
-                if(configuration.ParentStateName == state.StateName) 
+                if (configuration.ParentState.Equals(state.Value))
                     return true;
                 
                 //No match, move one level up the tree
-                configuration = StateMappings[new State(configuration.ParentStateName)];
+                configuration = StateMappings[new State<TState>(configuration.ParentState)];
             }
 
             return false;
         }
 
-        public async Task<MachineStatus> GetCurrentStateAsync(CancellationToken cancellationToken)
+        public async Task<State<TState>> GetCurrentStateAsync(CancellationToken cancellationToken)
         {
-            MachineStatus currentState;
+            State<TState> currentState;
 
             using (var dataContext = _repositoryContextFactory.OpenContext())
             {

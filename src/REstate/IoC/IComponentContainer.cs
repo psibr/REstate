@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace REstate.IoC
+﻿namespace REstate.IoC
 {
     /// <summary>
     /// A simple container interface for plugging in DI containers.
@@ -25,5 +23,4 @@ namespace REstate.IoC
         T[] ResolveAll<T>()
             where T : class;
     }
-
 }

@@ -11,5 +11,4 @@
         /// <param name="registrar">The registration system to register with, typically a DI container.</param>
         void Register(IRegistrar registrar);
     }
-
 }

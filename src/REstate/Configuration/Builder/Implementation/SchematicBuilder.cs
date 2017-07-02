@@ -4,8 +4,8 @@ using System.Linq;
 
 namespace REstate.Configuration.Builder.Implementation
 {
-    internal class SchematicBuilder 
-        : ISchematicBuilder
+    internal class SchematicBuilder<TState>
+        : ISchematicBuilder<TState>
     {
         public SchematicBuilder(string schematicName)
         {
@@ -19,84 +19,73 @@ namespace REstate.Configuration.Builder.Implementation
 
         public string SchematicName { get; }
 
-        public string InitialState { get; private set; }
+        public TState InitialState { get; private set; }
 
-        internal void SetInitialState(string stateName)
+        internal void SetInitialState(TState state)
         {
             if (InitialState != null)
-                throw new InvalidOperationException("Initial state cannot be set twice.");
+                throw new InvalidOperationException("Initial stateBuilderAction cannot be set twice.");
 
-            InitialState = stateName;
+            InitialState = state;
         }
 
-        private readonly Dictionary<string, IStateBuilder> _stateConfigurations = new Dictionary<string, IStateBuilder>();
+        private readonly Dictionary<TState, IStateBuilder<TState>> _stateConfigurations = new Dictionary<TState, IStateBuilder<TState>>();
 
-        public IReadOnlyDictionary<string, IState> States => 
-            _stateConfigurations.ToDictionary(kvp => kvp.Key, kvp => (IState)kvp.Value);
+        public IReadOnlyDictionary<TState, IState<TState>> States => 
+            _stateConfigurations.ToDictionary(kvp => kvp.Key, kvp => (IState<TState>)kvp.Value);
 
-        public ISchematicBuilder WithState(string stateName, Action<IStateBuilder> state = null)
+        public ISchematicBuilder<TState> WithState(TState state, Action<IStateBuilder<TState>> stateBuilderAction = null)
         {
-            var stateConfiguration = new StateBuilder(this, stateName);
+            var stateConfiguration = new StateBuilder<TState>(this, state);
 
-            _stateConfigurations.Add(stateConfiguration.StateName, stateConfiguration);
+            _stateConfigurations.Add(stateConfiguration.Value, stateConfiguration);
 
-            state?.Invoke(stateConfiguration);
+            stateBuilderAction?.Invoke(stateConfiguration);
 
             return this;
         }
 
-        public ISchematicBuilder WithStates(ICollection<string> stateNames, Action<IStateBuilder> state = null)
+        public ISchematicBuilder<TState> WithStates(ICollection<TState> states, Action<IStateBuilder<TState>> stateBuilderAction = null)
         {
-            foreach (var stateName in stateNames)
+            foreach (var state in states)
             {
-                var stateConfiguration = new StateBuilder(this, stateName);
+                var stateConfiguration = new StateBuilder<TState>(this, state);
 
-                _stateConfigurations.Add(stateConfiguration.StateName, stateConfiguration);
+                _stateConfigurations.Add(state, stateConfiguration);
             }
 
-            foreach (var stateName in stateNames)
+            foreach (var state in states)
             {
-                var stateConfiguration = _stateConfigurations[stateName];
+                var stateConfiguration = _stateConfigurations[state];
 
-                state?.Invoke(stateConfiguration);
-            }
-
-            return this;
-        }
-
-        public ISchematicBuilder WithStates(params string[] stateNames)
-        {
-            foreach (var stateName in stateNames)
-            {
-                var stateConfiguration = new StateBuilder(this, stateName);
-
-                _stateConfigurations.Add(stateConfiguration.StateName, stateConfiguration);
+                stateBuilderAction?.Invoke(stateConfiguration);
             }
 
             return this;
         }
 
-        public ISchematicBuilder WithTransition(string stateName, Input input, string resultantStateName, Action<ITransitionBuilder> transition = null)
+        public ISchematicBuilder<TState> WithStates(params TState[] states)
         {
-            if (stateName == null)
-                throw new ArgumentNullException(nameof(stateName));
-            if (string.IsNullOrWhiteSpace(stateName))
-                throw new ArgumentException("No value provided.", nameof(stateName));
+            foreach (var state in states)
+            {
+                var stateConfiguration = new StateBuilder<TState>(this, state);
 
-            if (resultantStateName == null)
-                throw new ArgumentNullException(nameof(resultantStateName));
-            if (string.IsNullOrWhiteSpace(resultantStateName))
-                throw new ArgumentException("No value provided.", nameof(resultantStateName));
+                _stateConfigurations.Add(state, stateConfiguration);
+            }
 
+            return this;
+        }
 
-            if (!_stateConfigurations.ContainsKey(resultantStateName))
-                throw new ArgumentException("Resultant state was not defined.", nameof(resultantStateName));
+        public ISchematicBuilder<TState> WithTransition(TState sourceState, Input input, TState resultantState, Action<ITransitionBuilder<TState>> transition = null)
+        {
+            if (!_stateConfigurations.ContainsKey(resultantState))
+                throw new ArgumentException("Resultant stateBuilderAction was not defined.", nameof(resultantState));
 
-            if (_stateConfigurations.TryGetValue(stateName, out IStateBuilder stateBuilder))
+            if (_stateConfigurations.TryGetValue(sourceState, out IStateBuilder<TState> stateBuilder))
             {
                 try
                 {
-                    var transitionBuilder = new TransitionBuilder(input, resultantStateName);
+                    var transitionBuilder = new TransitionBuilder<TState>(input, resultantState);
 
                     transition?.Invoke(transitionBuilder);
 
@@ -104,20 +93,20 @@ namespace REstate.Configuration.Builder.Implementation
                 }
                 catch (ArgumentException ex)
                 {
-                    throw new InvalidOperationException($"Input matching: [ {input} ] is already defined on state: [ {stateName} ]", ex);
+                    throw new InvalidOperationException($"Input matching: [ {input} ] is already defined on stateBuilderAction: [ {sourceState} ]", ex);
                 }
             }
             else
             {
-                throw new ArgumentException("No matching start state found.", nameof(stateName));
+                throw new ArgumentException("No matching start stateBuilderAction found.", nameof(sourceState));
             }
 
             return this;
         }
 
-        public Schematic ToSchematic()
+        public Schematic<TState> ToSchematic()
         {
-            return new Schematic
+            return new Schematic<TState>
             {
                 SchematicName = SchematicName,
                 InitialState = InitialState,

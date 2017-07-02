@@ -2,11 +2,11 @@
 
 namespace REstate.Engine.Repositories
 {
-    public interface IEngineRepositoryContext
+    public interface IEngineRepositoryContext<TState>
         : IDisposable
     {
-        ISchematicRepository Schematics { get; }
+        ISchematicRepository<TState> Schematics { get; }
 
-        IMachineRepository Machines { get; }
+        IMachineRepository<TState> Machines { get; }
     }
 }

@@ -5,24 +5,24 @@ using System.Threading.Tasks;
 
 namespace REstate
 {
-    public interface IStateMachine
+    public interface IStateMachine<TState>
     {
         string MachineId { get; }
 
-        Task<MachineStatus> SendAsync(
+        Task<State<TState>> SendAsync(
             Input input,
             string payload, 
             CancellationToken cancellationToken);
 
-        Task<MachineStatus> SendAsync(
+        Task<State<TState>> SendAsync(
             Input input,
             string payload, 
             Guid? lastCommitTag,
             CancellationToken cancellationToken);
 
-        Task<bool> IsInStateAsync(State state, CancellationToken cancellationToken);
+        Task<bool> IsInStateAsync(State<TState> state, CancellationToken cancellationToken);
 
-        Task<MachineStatus> GetCurrentStateAsync(CancellationToken cancellationToken);
+        Task<State<TState>> GetCurrentStateAsync(CancellationToken cancellationToken);
 
         Task<ICollection<Input>> GetPermittedInputAsync(CancellationToken cancellationToken);
     }

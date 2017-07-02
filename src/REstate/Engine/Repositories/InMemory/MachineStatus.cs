@@ -3,23 +3,23 @@ using System.ComponentModel.DataAnnotations;
 
 namespace REstate
 {
-    public class MachineStatus
+    public class MachineStatus<TState>
     {
         [Required]
         public string SchematicName { get; set; }
 
         [Required]
-        public string StateName { get; set; }
+        public TState State { get; set; }
 
         [Required]
-        public string CommitTag { get; set; }
+        public Guid CommitTag { get; set; }
 
         [Required]
         public DateTime StateChangedDateTime { get; set; }
 
-        public static implicit operator State(MachineStatus record)
+        public static implicit operator State<TState>(MachineStatus<TState> record)
         {
-            return new State(record.StateName, Guid.Parse(record.CommitTag));
+            return new State<TState>(record.State, record.CommitTag);
         }
     }
 }

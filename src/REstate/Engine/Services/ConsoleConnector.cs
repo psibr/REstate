@@ -5,25 +5,25 @@ using System.Threading.Tasks;
 
 namespace REstate.Engine.Services
 {
-    public class ConsoleConnector
-        : IConnector
+    public class ConsoleConnector<TState>
+        : IConnector<TState>
     {
         string IConnector.ConnectorKey => ConnectorKey;
 
-        public Func<CancellationToken, Task> ConstructAction(IStateMachine machineInstance, State state, string payload, IDictionary<string, string> connectorSettings) =>
+        public Func<CancellationToken, Task> ConstructAction(IStateMachine<TState> machineInstance, State<TState> state, string payload, IDictionary<string, string> connectorSettings) =>
             cancellationToken =>
             {
                 string format = null;
                 connectorSettings?.TryGetValue("Format", out format);
                 format = format ?? "Machine {{{0}}} entered state {{{1}}}";
 
-                Console.WriteLine(format, machineInstance.MachineId, state.StateName, payload);
+                Console.WriteLine(format, machineInstance.MachineId, state.Value, payload);
 
                 return Task.CompletedTask;
             };
 
 
-        public Func<State, Input, string, CancellationToken, Task<bool>> ConstructPredicate(IStateMachine machineInstance, IDictionary<string, string> connectorSettings) => 
+        public Func<State<TState>, Input, string, CancellationToken, Task<bool>> ConstructPredicate(IStateMachine<TState> machineInstance, IDictionary<string, string> connectorSettings) => 
             (state, input, payload, cancellationToken) =>
             {
                 string prompt = null;
@@ -32,7 +32,7 @@ namespace REstate.Engine.Services
 
                 while (true)
                 {
-                    Console.WriteLine(prompt, machineInstance.MachineId, state.StateName, input, payload);
+                    Console.WriteLine(prompt, machineInstance.MachineId, state.Value, input, payload);
                     var response = Console.ReadLine()?.ToLowerInvariant();
 
                     switch (response)

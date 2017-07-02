@@ -3,22 +3,22 @@ using System.Collections.Generic;
 
 namespace REstate.Configuration.Builder
 {
-    public interface ISchematicBuilder
-        : ISchematic
+    public interface ISchematicBuilder<TState>
+        : ISchematic<TState>
     { 
-        ISchematicBuilder WithState(string stateName, Action<IStateBuilder> state = null);
-        ISchematicBuilder WithStates(ICollection<string> stateNames, Action<IStateBuilder> state = null);
-        ISchematicBuilder WithStates(params string[] stateNames);
+        ISchematicBuilder<TState> WithState(TState state, Action<IStateBuilder<TState>> stateBuilderAction = null);
+        ISchematicBuilder<TState> WithStates(ICollection<TState> states, Action<IStateBuilder<TState>> stateBuilderAction = null);
+        ISchematicBuilder<TState> WithStates(params TState[] states);
 
-        ISchematicBuilder WithTransition(string stateName, Input input, string resultantStateName, Action<ITransitionBuilder> transition = null);
+        ISchematicBuilder<TState> WithTransition(TState sourceState, Input input, TState resultantState, Action<ITransitionBuilder<TState>> transitionBuilderAction = null);
     }
 
-    public interface ISchematic
+    public interface ISchematic<TState>
     {
         string SchematicName { get; }
-        string InitialState { get; }
-        IReadOnlyDictionary<string, IState> States { get; }
+        TState InitialState { get; }
+        IReadOnlyDictionary<TState, IState<TState>> States { get; }
 
-        Schematic ToSchematic();
+        Schematic<TState> ToSchematic();
     }
 }

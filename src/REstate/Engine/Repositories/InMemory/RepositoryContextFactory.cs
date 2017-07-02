@@ -2,19 +2,17 @@
 
 namespace REstate.Engine.Repositories.InMemory
 {
-    public class InMemoryRepositoryContextFactory
-        : IRepositoryContextFactory
+    public class InMemoryRepositoryContextFactory<TState>
+        : IRepositoryContextFactory<TState>
     {
-        private readonly StringSerializer _stringSerializer;
 
-        public InMemoryRepositoryContextFactory(StringSerializer stringSerializer)
+        public InMemoryRepositoryContextFactory()
         {
-            _stringSerializer = stringSerializer;
         }
 
-        public IEngineRepositoryContext OpenContext()
+        public IEngineRepositoryContext<TState> OpenContext()
         {
-            return new EngineRepositoryContext(_stringSerializer);
+            return new EngineRepositoryContext<TState>();
         }
     }
 }

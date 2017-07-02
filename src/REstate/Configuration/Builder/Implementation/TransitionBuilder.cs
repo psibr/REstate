@@ -2,25 +2,20 @@ using System;
 
 namespace REstate.Configuration.Builder.Implementation
 {
-    internal class TransitionBuilder 
-        : ITransitionBuilder
+    internal class TransitionBuilder<TState>
+        : ITransitionBuilder<TState>
     {
-        public TransitionBuilder(Input input, string resultantStateName)
+        public TransitionBuilder(Input input, TState resultantState)
         {
-            if (resultantStateName == null)
-                throw new ArgumentNullException(nameof(resultantStateName));
-            if (string.IsNullOrWhiteSpace(resultantStateName))
-                throw new ArgumentException("Value cannot be empty or whitespace.", nameof(resultantStateName));
-
             Input = input;
-            ResultantStateName = resultantStateName;
+            ResultantState = resultantState;
         }
 
         public Input Input { get; }
-        public string ResultantStateName { get; }
+        public TState ResultantState { get; }
         public IGuard Guard { get; private set; }
 
-        public ITransitionBuilder WithGuard(string connectorKey, Action<IGuardBuilder> guard = null)
+        public ITransitionBuilder<TState> WithGuard(string connectorKey, Action<IGuardBuilder> guard = null)
         {
             var guardBuilder = new GuardBuilder(connectorKey);
 
@@ -30,12 +25,12 @@ namespace REstate.Configuration.Builder.Implementation
 
             return this;
         }
-        public Transition ToTransition()
+        public Transition<TState> ToTransition()
         {
-            return new Transition
+            return new Transition<TState>
             {
                 InputName = Input,
-                ResultantStateName = ResultantStateName,
+                ResultantState = ResultantState,
                 Guard = Guard?.ToGuardConnector()
             };
         }

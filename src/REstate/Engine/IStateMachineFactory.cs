@@ -2,8 +2,8 @@
 
 namespace REstate.Engine
 {
-    public interface IStateMachineFactory
+    public interface IStateMachineFactory<TState>
     {
-        IStateMachine ConstructFromConfiguration(string machineId, Schematic configuration);
+        IStateMachine<TState> ConstructFromConfiguration(string machineId, Schematic<TState> configuration);
     }
 }
