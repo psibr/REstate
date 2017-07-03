@@ -12,13 +12,13 @@ using System.Threading;
 using REstate;
 
 namespace Scratchpad
-{
+{ 
     class Program
     {
         static void Main(string[] args)
         {
             var schematic = REstateHost
-                .CreateSchematic("EchoMachine")
+                .CreateSchematic<string, string>("EchoMachine")
 
                 .WithState("Ready", state => state
                     .AsInitialState()
@@ -38,15 +38,14 @@ namespace Scratchpad
 
                 .ToSchematic();
 
-            var echoMachine = REstateHost.Engine.CreateMachineAsync(
-                schematic: schematic,
-                metadata: null,
-                cancellationToken: CancellationToken.None).Result;
+            var echoMachine = REstateHost.GetStateEngine<string, string>().CreateMachineAsync(schematic, null, CancellationToken.None).Result;
 
-            var status = echoMachine.SendAsync(
-                input: "Echo",
-                payload: "Hello!",
-                cancellationToken: CancellationToken.None).Result;
+            var graph = echoMachine.ToString();
+
+            var status = echoMachine.SendAsync("Echo", "Hello!", CancellationToken.None).Result;
+
+            Console.ReadLine();
+
         }
     }
 }
