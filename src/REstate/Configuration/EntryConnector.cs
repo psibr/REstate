@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace REstate.Configuration
 {
-    public class EntryConnector
+    public class EntryConnector<TInput>
     {
         [Required]
         public string ConnectorKey { get; set; }
@@ -13,6 +13,6 @@ namespace REstate.Configuration
         
         public string Description { get; set; }
 
-        public ExceptionTransition FailureTransition { get; set; }
+        public ExceptionTransition<TInput> FailureTransition { get; set; }
     }
 }

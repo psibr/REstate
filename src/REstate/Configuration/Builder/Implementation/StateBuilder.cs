@@ -4,12 +4,12 @@ using System.Linq;
 
 namespace REstate.Configuration.Builder.Implementation
 {
-    internal class StateBuilder<TState>
-        : IStateBuilder<TState>
+    internal class StateBuilder<TState, TInput>
+        : IStateBuilder<TState, TInput>
     {
-        private readonly SchematicBuilder<TState> _builder;
+        private readonly SchematicBuilder<TState, TInput> _builder;
 
-        public StateBuilder(SchematicBuilder<TState> builder, TState state)
+        public StateBuilder(SchematicBuilder<TState, TInput> builder, TState state)
         {
             _builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
@@ -19,18 +19,18 @@ namespace REstate.Configuration.Builder.Implementation
         public TState Value { get; }
         public TState ParentState { get; private set; }
         public string Description { get; private set; }
-        public IDictionary<Input, ITransition<TState>> Transitions { get; } = new Dictionary<Input, ITransition<TState>>();
+        public IDictionary<TInput, ITransition<TState, TInput>> Transitions { get; } = new Dictionary<TInput, ITransition<TState, TInput>>();
 
-        public IEntryAction OnEntry { get; private set; }
+        public IEntryAction<TInput> OnEntry { get; private set; }
 
-        public IStateBuilder<TState> AsInitialState()
+        public IStateBuilder<TState, TInput> AsInitialState()
         {
             _builder.SetInitialState(Value);
 
             return this;
         }
 
-        public IStateBuilder<TState> AsSubStateOf(TState state)
+        public IStateBuilder<TState, TInput> AsSubStateOf(TState state)
         {
             if (!_builder.States.Keys.Contains(state))
             {
@@ -42,7 +42,7 @@ namespace REstate.Configuration.Builder.Implementation
             return this;
         }
 
-        public IStateBuilder<TState> DescribedAs(string description)
+        public IStateBuilder<TState, TInput> DescribedAs(string description)
         {
             if (description == null)
                 throw new ArgumentNullException(nameof(description));
@@ -54,33 +54,33 @@ namespace REstate.Configuration.Builder.Implementation
             return this;
         }
 
-        public IStateBuilder<TState> WithTransitionTo(TState resultantState, Input input, Action<ITransitionBuilder<TState>> transitionBuilderAction = null)
+        public IStateBuilder<TState, TInput> WithTransitionTo(TState resultantState, TInput input, Action<ITransitionBuilder<TState, TInput>> transitionBuilderAction = null)
         {
             _builder.WithTransition(Value, input, resultantState, transitionBuilderAction);
 
             return this;
         }
 
-        public IStateBuilder<TState> WithTransitionFrom(TState previousState, Input input, Action<ITransitionBuilder<TState>> transitionBuilderAction = null)
+        public IStateBuilder<TState, TInput> WithTransitionFrom(TState previousState, TInput input, Action<ITransitionBuilder<TState, TInput>> transitionBuilderAction = null)
         {
             _builder.WithTransition(previousState, input, Value, transitionBuilderAction);
 
             return this;
         }
 
-        public IStateBuilder<TState> WithReentrance(Input input, Action<ITransitionBuilder<TState>> transition = null)
+        public IStateBuilder<TState, TInput> WithReentrance(TInput input, Action<ITransitionBuilder<TState, TInput>> transition = null)
         {
             _builder.WithTransition(Value, input, Value, transition);
 
             return this;
         }
 
-        public IStateBuilder<TState> WithOnEntry(string connectorKey, Action<IEntryActionBuilder> onEntry = null)
+        public IStateBuilder<TState, TInput> WithOnEntry(string connectorKey, Action<IEntryActionBuilder<TInput>> onEntry = null)
         {
             if (string.IsNullOrWhiteSpace(connectorKey))
                 throw new ArgumentException("ConnectorKey must have a valid value", nameof(connectorKey));
 
-            var onEntryBuilder = new EntryActionBuilder(connectorKey );
+            var onEntryBuilder = new EntryActionBuilder<TInput>(connectorKey );
 
             onEntry?.Invoke(onEntryBuilder);
 
@@ -89,9 +89,9 @@ namespace REstate.Configuration.Builder.Implementation
             return this;
         }
 
-        public StateConfiguration<TState> ToStateConfiguration()
+        public StateConfiguration<TState, TInput> ToStateConfiguration()
         {
-            return new StateConfiguration<TState>
+            return new StateConfiguration<TState, TInput>
             {
                 Value = Value,
                 ParentState = ParentState,

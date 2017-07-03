@@ -5,17 +5,17 @@ using System.Threading.Tasks;
 
 namespace REstate
 {
-    public interface IStateMachine<TState>
+    public interface IStateMachine<TState, TInput>
     {
         string MachineId { get; }
 
         Task<State<TState>> SendAsync(
-            Input input,
+            TInput input,
             string payload, 
             CancellationToken cancellationToken);
 
         Task<State<TState>> SendAsync(
-            Input input,
+            TInput input,
             string payload, 
             Guid? lastCommitTag,
             CancellationToken cancellationToken);
@@ -24,6 +24,6 @@ namespace REstate
 
         Task<State<TState>> GetCurrentStateAsync(CancellationToken cancellationToken);
 
-        Task<ICollection<Input>> GetPermittedInputAsync(CancellationToken cancellationToken);
+        Task<ICollection<TInput>> GetPermittedInputAsync(CancellationToken cancellationToken);
     }
 }

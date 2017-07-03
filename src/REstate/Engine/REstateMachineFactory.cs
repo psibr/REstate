@@ -7,24 +7,24 @@ using REstate.Engine.Services;
 
 namespace REstate.Engine
 {
-    public class REstateMachineFactory<TState>
-        : IStateMachineFactory<TState>
+    public class REstateMachineFactory<TState, TInput>
+        : IStateMachineFactory<TState, TInput>
     {
-        private readonly IConnectorResolver<TState> _connectorResolver;
-        private readonly IRepositoryContextFactory<TState> _repositoryContextFactory;
-        private readonly ICartographer<TState> _cartographer;
+        private readonly IConnectorResolver<TState, TInput> _connectorResolver;
+        private readonly IRepositoryContextFactory<TState, TInput> _repositoryContextFactory;
+        private readonly ICartographer<TState, TInput> _cartographer;
 
         public REstateMachineFactory(
-            IConnectorResolver<TState> connectorResolver,
-            IRepositoryContextFactory<TState> repositoryContextFactory,
-            ICartographer<TState> cartographer)
+            IConnectorResolver<TState, TInput> connectorResolver,
+            IRepositoryContextFactory<TState, TInput> repositoryContextFactory,
+            ICartographer<TState, TInput> cartographer)
         {
             _connectorResolver = connectorResolver;
             _repositoryContextFactory = repositoryContextFactory;
             _cartographer = cartographer;
         }
 
-        public IStateMachine<TState> ConstructFromConfiguration(string machineId, Schematic<TState> configuration)
+        public IStateMachine<TState, TInput> ConstructFromConfiguration(string machineId, Schematic<TState, TInput> configuration)
         {
             if (configuration == null)
                 throw new ArgumentNullException(nameof(configuration));
@@ -32,7 +32,7 @@ namespace REstate.Engine
             var stateMappings = configuration.StateConfigurations
                 .ToDictionary(stateConfig => new State<TState>(stateConfig.Value), stateConfig => stateConfig);
 
-            var reStateMachine = new REstateMachine<TState>(_connectorResolver, _repositoryContextFactory, _cartographer, machineId, stateMappings);
+            var reStateMachine = new REstateMachine<TState, TInput>(_connectorResolver, _repositoryContextFactory, _cartographer, machineId, stateMappings);
 
             return reStateMachine;
         }

@@ -2,9 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace REstate.Configuration
 {
-    public class ExceptionTransition
+    public class ExceptionTransition<TInput>
     {
         [Required]
-        public string Input { get; set; }
+        public TInput Input { get; set; }
     }
 }

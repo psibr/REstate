@@ -8,7 +8,7 @@ namespace Scratchpad
         static void Main(string[] args)
         {
             var schematic = REstateHost
-                .CreateSchematic<string>("EchoMachine")
+                .CreateSchematic<string, string>("EchoMachine")
 
                 .WithState("Ready", state => state
                     .AsInitialState()
@@ -28,7 +28,7 @@ namespace Scratchpad
 
                 .ToSchematic();
 
-            var echoMachine = REstateHost.GetStateEngine<string>().CreateMachineAsync(schematic, null, CancellationToken.None).Result;
+            var echoMachine = REstateHost.GetStateEngine<string, string>().CreateMachineAsync(schematic, null, CancellationToken.None).Result;
 
             var graph = echoMachine.ToString();
 

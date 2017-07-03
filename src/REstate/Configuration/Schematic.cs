@@ -2,7 +2,7 @@
 
 namespace REstate.Configuration
 {
-    public class Schematic<TState>
+    public class Schematic<TState, TInput>
     {
         [Required]
         public string SchematicName { get; set; }
@@ -10,6 +10,6 @@ namespace REstate.Configuration
         [Required]
         public TState InitialState { get; set; }
 
-        public StateConfiguration<TState>[] StateConfigurations { get; set; }
+        public StateConfiguration<TState, TInput>[] StateConfigurations { get; set; }
     }
 }

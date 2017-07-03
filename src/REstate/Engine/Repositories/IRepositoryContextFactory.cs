@@ -1,7 +1,7 @@
 ﻿namespace REstate.Engine.Repositories
 {
-    public interface IRepositoryContextFactory<TState>
+    public interface IRepositoryContextFactory<TState, TInput>
     {
-        IEngineRepositoryContext<TState> OpenContext();
+        IEngineRepositoryContext<TState, TInput> OpenContext();
     }
 }
