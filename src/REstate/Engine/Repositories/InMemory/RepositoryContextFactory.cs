@@ -2,17 +2,12 @@
 
 namespace REstate.Engine.Repositories.InMemory
 {
-    public class InMemoryRepositoryContextFactory<TState>
-        : IRepositoryContextFactory<TState>
+    public class InMemoryRepositoryContextFactory<TState, TInput>
+        : IRepositoryContextFactory<TState, TInput>
     {
-
-        public InMemoryRepositoryContextFactory()
+        public IEngineRepositoryContext<TState, TInput> OpenContext()
         {
-        }
-
-        public IEngineRepositoryContext<TState> OpenContext()
-        {
-            return new EngineRepositoryContext<TState>();
+            return new EngineRepositoryContext<TState, TInput>();
         }
     }
 }

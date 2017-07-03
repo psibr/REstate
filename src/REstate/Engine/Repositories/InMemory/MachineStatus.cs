@@ -1,9 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace REstate
+namespace REstate.Engine.Repositories.InMemory
 {
-    public class MachineStatus<TState>
+    internal class MachineStatus<TState>
     {
         [Required]
         public string SchematicName { get; set; }

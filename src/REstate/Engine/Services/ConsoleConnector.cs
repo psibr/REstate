@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 
 namespace REstate.Engine.Services
 {
-    public class ConsoleConnector<TState>
-        : IConnector<TState>
+    public class ConsoleConnector<TState, TInput>
+        : IConnector<TState, TInput>
     {
         string IConnector.ConnectorKey => ConnectorKey;
 
-        public Func<CancellationToken, Task> ConstructAction(IStateMachine<TState> machineInstance, State<TState> state, string payload, IDictionary<string, string> connectorSettings) =>
+        public Func<CancellationToken, Task> ConstructAction(IStateMachine<TState, TInput> machineInstance, State<TState> state, string payload, IDictionary<string, string> connectorSettings) =>
             cancellationToken =>
             {
                 string format = null;
@@ -23,7 +23,7 @@ namespace REstate.Engine.Services
             };
 
 
-        public Func<State<TState>, Input, string, CancellationToken, Task<bool>> ConstructPredicate(IStateMachine<TState> machineInstance, IDictionary<string, string> connectorSettings) => 
+        public Func<State<TState>, TInput, string, CancellationToken, Task<bool>> ConstructPredicate(IStateMachine<TState, TInput> machineInstance, IDictionary<string, string> connectorSettings) => 
             (state, input, payload, cancellationToken) =>
             {
                 string prompt = null;

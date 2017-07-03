@@ -2,12 +2,12 @@
 
 namespace REstate.Engine.Repositories.InMemory
 {
-    public class EngineRepositoryContext<TState>
-        : IEngineRepositoryContext<TState>
+    public class EngineRepositoryContext<TState, TInput>
+        : IEngineRepositoryContext<TState, TInput>
     {
         public EngineRepositoryContext()
         {
-            var repo = new EngineRepository<TState>();
+            var repo = new EngineRepository<TState, TInput>();
 
             Schematics = repo;
             Machines = repo;
@@ -20,8 +20,8 @@ namespace REstate.Engine.Repositories.InMemory
         {
         }
 
-        public ISchematicRepository<TState> Schematics { get; }
+        public ISchematicRepository<TState, TInput> Schematics { get; }
 
-        public IMachineRepository<TState> Machines { get; }
+        public IMachineRepository<TState, TInput> Machines { get; }
     }
 }

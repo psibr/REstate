@@ -2,20 +2,20 @@ using System;
 
 namespace REstate.Configuration.Builder
 {
-    public interface ITransitionBuilder<TState>
-        : ITransition<TState>
+    public interface ITransitionBuilder<TState, TInput>
+        : ITransition<TState, TInput>
     {
-        ITransitionBuilder<TState> WithGuard(string connectorKey, Action<IGuardBuilder> guard = null);
+        ITransitionBuilder<TState, TInput> WithGuard(string connectorKey, Action<IGuardBuilder> guard = null);
     }
 
-    public interface ITransition<TState>
+    public interface ITransition<TState, TInput>
     {
-        Input Input { get; }
+        TInput Input { get; }
 
         TState ResultantState { get; }
 
         IGuard Guard { get; }
 
-        Transition<TState> ToTransition();
+        Transition<TState, TInput> ToTransition();
     }
 }

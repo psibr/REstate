@@ -2,20 +2,20 @@ using System;
 
 namespace REstate.Configuration.Builder.Implementation
 {
-    internal class TransitionBuilder<TState>
-        : ITransitionBuilder<TState>
+    internal class TransitionBuilder<TState, TInput>
+        : ITransitionBuilder<TState, TInput>
     {
-        public TransitionBuilder(Input input, TState resultantState)
+        public TransitionBuilder(TInput input, TState resultantState)
         {
             Input = input;
             ResultantState = resultantState;
         }
 
-        public Input Input { get; }
+        public TInput Input { get; }
         public TState ResultantState { get; }
         public IGuard Guard { get; private set; }
 
-        public ITransitionBuilder<TState> WithGuard(string connectorKey, Action<IGuardBuilder> guard = null)
+        public ITransitionBuilder<TState, TInput> WithGuard(string connectorKey, Action<IGuardBuilder> guard = null)
         {
             var guardBuilder = new GuardBuilder(connectorKey);
 
@@ -25,11 +25,11 @@ namespace REstate.Configuration.Builder.Implementation
 
             return this;
         }
-        public Transition<TState> ToTransition()
+        public Transition<TState, TInput> ToTransition()
         {
-            return new Transition<TState>
+            return new Transition<TState, TInput>
             {
-                InputName = Input,
+                Input = Input,
                 ResultantState = ResultantState,
                 Guard = Guard?.ToGuardConnector()
             };

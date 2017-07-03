@@ -6,11 +6,11 @@ using System;
 
 namespace REstate.Engine.Repositories
 {
-    public interface IMachineRepository<TState>
+    public interface IMachineRepository<TState, TInput>
     {
         Task CreateMachineAsync(string schematicName, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken);
 
-        Task CreateMachineAsync(Schematic<TState> schematic, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken);
+        Task CreateMachineAsync(Schematic<TState, TInput> schematic, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken);
 
         Task CreateMachineAsync(string schematicName, string machineId, CancellationToken cancellationToken);
 
@@ -18,9 +18,9 @@ namespace REstate.Engine.Repositories
 
         Task<State<TState>> GetMachineStateAsync(string machineId, CancellationToken cancellationToken);
 
-        Task<State<TState>> SetMachineStateAsync(string machineId, TState stateName, Input input, Guid? lastCommitTag, CancellationToken cancellationToken);
+        Task<State<TState>> SetMachineStateAsync(string machineId, TState state, TInput input, Guid? lastCommitTag, CancellationToken cancellationToken);
 
-        Task<State<TState>> SetMachineStateAsync(string machineId, TState stateName, Input input, string parameterData, Guid? lastCommitTag, CancellationToken cancellationToken);
+        Task<State<TState>> SetMachineStateAsync(string machineId, TState state, TInput input, string parameterData, Guid? lastCommitTag, CancellationToken cancellationToken);
 
         Task<IDictionary<string, string>> GetMachineMetadataAsync(string machineId, CancellationToken cancellationToken);
     }

@@ -4,8 +4,8 @@ using System.Linq;
 
 namespace REstate.Configuration.Builder.Implementation
 {
-    internal class SchematicBuilder<TState>
-        : ISchematicBuilder<TState>
+    internal class SchematicBuilder<TState, TInput>
+        : ISchematicBuilder<TState, TInput>
     {
         public SchematicBuilder(string schematicName)
         {
@@ -29,14 +29,14 @@ namespace REstate.Configuration.Builder.Implementation
             InitialState = state;
         }
 
-        private readonly Dictionary<TState, IStateBuilder<TState>> _stateConfigurations = new Dictionary<TState, IStateBuilder<TState>>();
+        private readonly Dictionary<TState, IStateBuilder<TState, TInput>> _stateConfigurations = new Dictionary<TState, IStateBuilder<TState, TInput>>();
 
-        public IReadOnlyDictionary<TState, IState<TState>> States => 
-            _stateConfigurations.ToDictionary(kvp => kvp.Key, kvp => (IState<TState>)kvp.Value);
+        public IReadOnlyDictionary<TState, IState<TState, TInput>> States => 
+            _stateConfigurations.ToDictionary(kvp => kvp.Key, kvp => (IState<TState, TInput>)kvp.Value);
 
-        public ISchematicBuilder<TState> WithState(TState state, Action<IStateBuilder<TState>> stateBuilderAction = null)
+        public ISchematicBuilder<TState, TInput> WithState(TState state, Action<IStateBuilder<TState, TInput>> stateBuilderAction = null)
         {
-            var stateConfiguration = new StateBuilder<TState>(this, state);
+            var stateConfiguration = new StateBuilder<TState, TInput>(this, state);
 
             _stateConfigurations.Add(stateConfiguration.Value, stateConfiguration);
 
@@ -45,11 +45,11 @@ namespace REstate.Configuration.Builder.Implementation
             return this;
         }
 
-        public ISchematicBuilder<TState> WithStates(ICollection<TState> states, Action<IStateBuilder<TState>> stateBuilderAction = null)
+        public ISchematicBuilder<TState, TInput> WithStates(ICollection<TState> states, Action<IStateBuilder<TState, TInput>> stateBuilderAction = null)
         {
             foreach (var state in states)
             {
-                var stateConfiguration = new StateBuilder<TState>(this, state);
+                var stateConfiguration = new StateBuilder<TState, TInput>(this, state);
 
                 _stateConfigurations.Add(state, stateConfiguration);
             }
@@ -64,11 +64,11 @@ namespace REstate.Configuration.Builder.Implementation
             return this;
         }
 
-        public ISchematicBuilder<TState> WithStates(params TState[] states)
+        public ISchematicBuilder<TState, TInput> WithStates(params TState[] states)
         {
             foreach (var state in states)
             {
-                var stateConfiguration = new StateBuilder<TState>(this, state);
+                var stateConfiguration = new StateBuilder<TState, TInput>(this, state);
 
                 _stateConfigurations.Add(state, stateConfiguration);
             }
@@ -76,16 +76,16 @@ namespace REstate.Configuration.Builder.Implementation
             return this;
         }
 
-        public ISchematicBuilder<TState> WithTransition(TState sourceState, Input input, TState resultantState, Action<ITransitionBuilder<TState>> transition = null)
+        public ISchematicBuilder<TState, TInput> WithTransition(TState sourceState, TInput input, TState resultantState, Action<ITransitionBuilder<TState, TInput>> transition = null)
         {
             if (!_stateConfigurations.ContainsKey(resultantState))
                 throw new ArgumentException("Resultant stateBuilderAction was not defined.", nameof(resultantState));
 
-            if (_stateConfigurations.TryGetValue(sourceState, out IStateBuilder<TState> stateBuilder))
+            if (_stateConfigurations.TryGetValue(sourceState, out IStateBuilder<TState, TInput> stateBuilder))
             {
                 try
                 {
-                    var transitionBuilder = new TransitionBuilder<TState>(input, resultantState);
+                    var transitionBuilder = new TransitionBuilder<TState, TInput>(input, resultantState);
 
                     transition?.Invoke(transitionBuilder);
 
@@ -104,9 +104,9 @@ namespace REstate.Configuration.Builder.Implementation
             return this;
         }
 
-        public Schematic<TState> ToSchematic()
+        public Schematic<TState, TInput> ToSchematic()
         {
-            return new Schematic<TState>
+            return new Schematic<TState, TInput>
             {
                 SchematicName = SchematicName,
                 InitialState = InitialState,

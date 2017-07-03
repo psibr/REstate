@@ -1,7 +1,7 @@
 ﻿namespace REstate.Engine.Services
 {
-    public interface IConnectorResolver<TState>
+    public interface IConnectorResolver<TState, TInput>
     {
-        IConnector<TState> ResolveConnector(string connectorKey);
+        IConnector<TState, TInput> ResolveConnector(string connectorKey);
     }
 }
