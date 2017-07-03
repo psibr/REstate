@@ -1,31 +1,30 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace REstate.Configuration.Builder
 {
-    public interface IEntryActionBuilder 
-        : IEntryAction
+    public interface IEntryActionBuilder<TInput> 
+        : IEntryAction<TInput>
     {
-        IEntryActionBuilder DescribedAs(string description);
+        IEntryActionBuilder<TInput> DescribedAs(string description);
 
-        IEntryActionBuilder WithSetting(string key, string value);
-        IEntryActionBuilder WithSetting(KeyValuePair<string, string> setting);
-        IEntryActionBuilder WithSetting(ValueTuple<string, string> setting);
+        IEntryActionBuilder<TInput> WithSetting(string key, string value);
+        IEntryActionBuilder<TInput> WithSetting(KeyValuePair<string, string> setting);
+        IEntryActionBuilder<TInput> WithSetting(ValueTuple<string, string> setting);
 
-        IEntryActionBuilder OnFailureSend(Input input);
+        IEntryActionBuilder<TInput> OnFailureSend(TInput input);
     }
 
-    public interface IEntryAction
+    public interface IEntryAction<TInput>
     {
         string ConnectorKey { get; }
 
         string Description { get; }
 
-        string OnFailureInput { get; }
+        TInput OnFailureInput { get; }
 
         IReadOnlyDictionary<string, string> Settings { get; }
 
-        EntryConnector ToEntryConnector();
+        EntryConnector<TInput> ToEntryConnector();
     }
 }

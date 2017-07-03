@@ -17,6 +17,24 @@ namespace REstate.IoC
             where T : class;
 
         /// <summary>
+        /// Registers the specified type to an implementation type.
+        /// </summary>
+        /// <typeparam name="TBinding">The type to register.</typeparam>
+        /// <typeparam name="TImplementation">The implementation to which the binding resolves.</typeparam>
+        /// <param name="name">The name under which an implmentation was registered.</param>
+        void Register<TBinding, TImplementation>(string name = null)
+            where TBinding : class 
+            where TImplementation : class, TBinding;
+
+        /// <summary>
+        /// Registers the specified type to an implementation type.
+        /// </summary>
+        /// <param name="name">The name under which an implmentation was registered.</param>
+        /// <param name="registrationType">The type to register.</param>
+        /// <param name="implementationType">The implementation to which the binding resolves.</param>
+        void Register(Type registrationType, Type implementationType, string name = null);
+
+        /// <summary>
         /// Registers the specified factory method.
         /// </summary>
         /// <typeparam name="T"></typeparam>

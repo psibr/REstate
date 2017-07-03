@@ -4,55 +4,45 @@ using System.Linq;
 
 namespace REstate.Configuration.Builder.Implementation
 {
-    internal class StateBuilder
-        : IStateBuilder
+    internal class StateBuilder<TState, TInput>
+        : IStateBuilder<TState, TInput>
     {
-        private readonly SchematicBuilder _builder;
+        private readonly SchematicBuilder<TState, TInput> _builder;
 
-        public StateBuilder(SchematicBuilder builder, string stateName)
+        public StateBuilder(SchematicBuilder<TState, TInput> builder, TState state)
         {
             _builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
-            if (stateName == null)
-                throw new ArgumentNullException(nameof(stateName));
-            if (string.IsNullOrWhiteSpace(stateName))
-                throw new ArgumentException("No value provided.", nameof(stateName));
-
-            StateName = stateName;
+            Value = state;
         }
 
-        public string StateName { get; }
-        public string ParentStateName { get; private set; }
+        public TState Value { get; }
+        public TState ParentState { get; private set; }
         public string Description { get; private set; }
-        public IDictionary<string, ITransition> Transitions { get; } = new Dictionary<string, ITransition>();
+        public IDictionary<TInput, ITransition<TState, TInput>> Transitions { get; } = new Dictionary<TInput, ITransition<TState, TInput>>();
 
-        public IEntryAction OnEntry { get; private set; }
+        public IEntryAction<TInput> OnEntry { get; private set; }
 
-        public IStateBuilder AsInitialState()
+        public IStateBuilder<TState, TInput> AsInitialState()
         {
-            _builder.SetInitialState(StateName);
+            _builder.SetInitialState(Value);
 
             return this;
         }
 
-        public IStateBuilder AsSubStateOf(string stateName)
+        public IStateBuilder<TState, TInput> AsSubStateOf(TState state)
         {
-            if (stateName == null)
-                throw new ArgumentNullException(nameof(stateName));
-            if (string.IsNullOrWhiteSpace(stateName))
-                throw new ArgumentException("No value provided.", nameof(stateName));
-
-            if (!_builder.States.Keys.Contains(stateName))
+            if (!_builder.States.Keys.Contains(state))
             {
-                throw new ArgumentException("Parent state not defined.", nameof(stateName));
+                throw new ArgumentException("Parent state not defined.", nameof(state));
             }
 
-            ParentStateName = stateName;
+            ParentState = state;
 
             return this;
         }
 
-        public IStateBuilder DescribedAs(string description)
+        public IStateBuilder<TState, TInput> DescribedAs(string description)
         {
             if (description == null)
                 throw new ArgumentNullException(nameof(description));
@@ -64,33 +54,33 @@ namespace REstate.Configuration.Builder.Implementation
             return this;
         }
 
-        public IStateBuilder WithTransitionTo(string resultantStateName, Input input, Action<ITransitionBuilder> transition = null)
+        public IStateBuilder<TState, TInput> WithTransitionTo(TState resultantState, TInput input, Action<ITransitionBuilder<TState, TInput>> transitionBuilderAction = null)
         {
-            _builder.WithTransition(StateName, input, resultantStateName, transition);
+            _builder.WithTransition(Value, input, resultantState, transitionBuilderAction);
 
             return this;
         }
 
-        public IStateBuilder WithTransitionFrom(string previousStateName, Input input, Action<ITransitionBuilder> transition = null)
+        public IStateBuilder<TState, TInput> WithTransitionFrom(TState previousState, TInput input, Action<ITransitionBuilder<TState, TInput>> transitionBuilderAction = null)
         {
-            _builder.WithTransition(previousStateName, input, StateName, transition);
+            _builder.WithTransition(previousState, input, Value, transitionBuilderAction);
 
             return this;
         }
 
-        public IStateBuilder WithReentrance(Input input, Action<ITransitionBuilder> transition = null)
+        public IStateBuilder<TState, TInput> WithReentrance(TInput input, Action<ITransitionBuilder<TState, TInput>> transition = null)
         {
-            _builder.WithTransition(StateName, input, StateName, transition);
+            _builder.WithTransition(Value, input, Value, transition);
 
             return this;
         }
 
-        public IStateBuilder WithOnEntry(string connectorKey, Action<IEntryActionBuilder> onEntry = null)
+        public IStateBuilder<TState, TInput> WithOnEntry(string connectorKey, Action<IEntryActionBuilder<TInput>> onEntry = null)
         {
             if (string.IsNullOrWhiteSpace(connectorKey))
                 throw new ArgumentException("ConnectorKey must have a valid value", nameof(connectorKey));
 
-            var onEntryBuilder = new EntryActionBuilder(connectorKey );
+            var onEntryBuilder = new EntryActionBuilder<TInput>(connectorKey );
 
             onEntry?.Invoke(onEntryBuilder);
 
@@ -99,12 +89,12 @@ namespace REstate.Configuration.Builder.Implementation
             return this;
         }
 
-        public StateConfiguration ToStateConfiguration()
+        public StateConfiguration<TState, TInput> ToStateConfiguration()
         {
-            return new StateConfiguration
+            return new StateConfiguration<TState, TInput>
             {
-                StateName = StateName,
-                ParentStateName = ParentStateName,
+                Value = Value,
+                ParentState = ParentState,
                 Description = Description,
                 OnEntry = OnEntry?.ToEntryConnector(),
                 Transitions = Transitions.Values.Select(t => t.ToTransition()).ToArray()

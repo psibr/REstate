@@ -3,36 +3,36 @@ using System.Collections.Generic;
 
 namespace REstate.Configuration.Builder
 {
-    public interface IStateBuilder
-        : IState
+    public interface IStateBuilder<TState, TInput>
+        : IState<TState, TInput>
     {
-        IStateBuilder AsInitialState();
+        IStateBuilder<TState, TInput> AsInitialState();
 
-        IStateBuilder AsSubStateOf(string stateName);
+        IStateBuilder<TState, TInput> AsSubStateOf(TState state);
 
-        IStateBuilder DescribedAs(string description);
+        IStateBuilder<TState, TInput> DescribedAs(string description);
 
-        IStateBuilder WithTransitionTo(string resultantStateName, Input input, Action<ITransitionBuilder> transition = null);
+        IStateBuilder<TState, TInput> WithTransitionTo(TState resultantState, TInput input, Action<ITransitionBuilder<TState, TInput>> transitionBuilderAction = null);
 
-        IStateBuilder WithTransitionFrom(string previousStateName, Input input, Action<ITransitionBuilder> transition = null);
+        IStateBuilder<TState, TInput> WithTransitionFrom(TState previousState, TInput input, Action<ITransitionBuilder<TState, TInput>> transitionBuilderAction = null);
 
-        IStateBuilder WithReentrance(Input input, Action<ITransitionBuilder> transition = null);
+        IStateBuilder<TState, TInput> WithReentrance(TInput input, Action<ITransitionBuilder<TState, TInput>> transition = null);
 
-        IStateBuilder WithOnEntry(string connectorKey, Action<IEntryActionBuilder> onEntry = null);
+        IStateBuilder<TState, TInput> WithOnEntry(string connectorKey, Action<IEntryActionBuilder<TInput>> onEntry = null);
     }
 
-    public interface IState
+    public interface IState<TState, TInput>
     {
-        string StateName { get; }
+        TState Value { get; }
 
-        string ParentStateName { get; }
+        TState ParentState { get; }
 
         string Description { get; }
 
-        IDictionary<string, ITransition> Transitions { get; }
+        IDictionary<TInput, ITransition<TState, TInput>> Transitions { get; }
 
-        IEntryAction OnEntry { get; }
+        IEntryAction<TInput> OnEntry { get; }
 
-        StateConfiguration ToStateConfiguration();
+        StateConfiguration<TState, TInput> ToStateConfiguration();
     }
 }

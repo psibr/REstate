@@ -5,16 +5,16 @@ using System.Threading.Tasks;
 
 namespace REstate.Engine.Repositories
 {
-    public interface ISchematicRepository
+    public interface ISchematicRepository<TState, TInput>
     {
-        Task<IEnumerable<Schematic>> ListSchematicsAsync(CancellationToken cancellationToken);
+        Task<IEnumerable<Schematic<TState, TInput>>> ListSchematicsAsync(CancellationToken cancellationToken);
 
-        Task<Schematic> RetrieveSchematicAsync(string schematicName, CancellationToken cancellationToken);
+        Task<Schematic<TState, TInput>> RetrieveSchematicAsync(string schematicName, CancellationToken cancellationToken);
 
-        Task<Schematic> RetrieveSchematicForMachineAsync(string machineId, CancellationToken cancellationToken);
+        Task<Schematic<TState, TInput>> RetrieveSchematicForMachineAsync(string machineId, CancellationToken cancellationToken);
 
-        Task<Schematic> CreateSchematicAsync(Schematic schematic, string forkedFrom, CancellationToken cancellationToken);
+        Task<Schematic<TState, TInput>> CreateSchematicAsync(Schematic<TState, TInput> schematic, string forkedFrom, CancellationToken cancellationToken);
 
-        Task<Schematic> StoreSchematicAsync(Schematic schematic, CancellationToken cancellationToken);
+        Task<Schematic<TState, TInput>> StoreSchematicAsync(Schematic<TState, TInput> schematic, CancellationToken cancellationToken);
     }
 }

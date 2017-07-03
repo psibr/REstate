@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace REstate.Configuration.Builder.Implementation
 {
-    internal class EntryActionBuilder 
-        : IEntryActionBuilder
+    internal class EntryActionBuilder<TInput> 
+        : IEntryActionBuilder<TInput>
     {
         public EntryActionBuilder(string connectorKey)
         {
@@ -18,13 +18,13 @@ namespace REstate.Configuration.Builder.Implementation
 
         public string ConnectorKey { get; }
         public string Description { get; private set; }
-        public string OnFailureInput { get; private set; }
+        public TInput OnFailureInput { get; private set; }
 
         public IReadOnlyDictionary<string, string> Settings => _settings;
 
         private readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
 
-        public IEntryActionBuilder DescribedAs(string description)
+        public IEntryActionBuilder<TInput> DescribedAs(string description)
         {
             if (description == null)
                 throw new ArgumentNullException(nameof(description));
@@ -36,7 +36,7 @@ namespace REstate.Configuration.Builder.Implementation
             return this;
         }
 
-        public IEntryActionBuilder WithSetting(string key, string value)
+        public IEntryActionBuilder<TInput> WithSetting(string key, string value)
         {
             try
             {
@@ -50,29 +50,27 @@ namespace REstate.Configuration.Builder.Implementation
             return this;
         }
 
-        public IEntryActionBuilder WithSetting(KeyValuePair<string, string> setting) => 
+        public IEntryActionBuilder<TInput> WithSetting(KeyValuePair<string, string> setting) => 
             WithSetting(setting.Key, setting.Value);
 
-        public IEntryActionBuilder WithSetting((string, string) setting) => 
+        public IEntryActionBuilder<TInput> WithSetting((string, string) setting) => 
             WithSetting(setting.Item1, setting.Item2);
 
-        public IEntryActionBuilder OnFailureSend(Input input)
+        public IEntryActionBuilder<TInput> OnFailureSend(TInput input)
         {
             OnFailureInput = input;
 
             return this;
         }
 
-        public EntryConnector ToEntryConnector()
+        public EntryConnector<TInput> ToEntryConnector()
         {
-            return new EntryConnector
+            return new EntryConnector<TInput>
             {
                 ConnectorKey = ConnectorKey,
                 Description = Description,
                 Configuration = _settings,
-                FailureTransition = OnFailureInput != null 
-                    ? new ExceptionTransition { Input = OnFailureInput } 
-                    : null
+                FailureTransition = !OnFailureInput.Equals(default(TInput)) ? new ExceptionTransition<TInput> { Input = OnFailureInput } : null
             };
         }
     }

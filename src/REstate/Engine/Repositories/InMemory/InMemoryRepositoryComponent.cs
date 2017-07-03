@@ -7,9 +7,7 @@ namespace REstate.Engine.Repositories.InMemory
     {
         public void Register(IRegistrar registrar)
         {
-            registrar.Register<IRepositoryContextFactory>(c =>
-                new InMemoryRepositoryContextFactory(
-                    c.Resolve<StringSerializer>()));
+            registrar.Register(typeof(IRepositoryContextFactory<,>), typeof(InMemoryRepositoryContextFactory<,>));
         }
     }
 }

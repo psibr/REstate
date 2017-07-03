@@ -2,23 +2,20 @@
 
 namespace REstate
 {
-    public struct State
-        : IEquatable<State>
+    public struct State<T>
+        : IEquatable<State<T>>
     {
-        public State(string stateName, Guid commitTag)
+        public State(T value, Guid commitTag)
         {
-            if (string.IsNullOrWhiteSpace(stateName))
-                throw new ArgumentException("Argument is null or whitespace", nameof(stateName));
-
-            StateName = stateName;
+            Value = value;
             CommitTag = commitTag;
         }
 
-        public State(string stateName)
-            : this(stateName, Guid.Empty) { }
+        public State(T value)
+            : this(value, Guid.Empty) { }
 
 
-        public string StateName { get; }
+        public T Value { get; }
 
         /// <summary>
         /// A value that indicates a unique interaction of state within a machine.
@@ -29,7 +26,7 @@ namespace REstate
 
         public override string ToString()
         {
-            return StateName;
+            return Value.ToString();
         }
 
         /// <summary>
@@ -39,9 +36,9 @@ namespace REstate
         /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
-        public bool Equals(State other)
+        public bool Equals(State<T> other)
         {
-            return StateName == other.StateName;
+            return Value.Equals(other.Value);
         }
 
         /// <summary>
@@ -53,7 +50,7 @@ namespace REstate
         /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
-            if (obj is State state)
+            if (obj is State<T> state)
                 return Equals(state);
 
             return false;
@@ -67,7 +64,7 @@ namespace REstate
         /// </returns>
         public override int GetHashCode()
         {
-            return StateName.GetHashCode();
+            return Value.GetHashCode();
         }
 
         /// <summary>
@@ -81,7 +78,7 @@ namespace REstate
         /// false if the values or commit tags do not match 
         /// OR if either commit tag is empty.
         /// </returns>
-        public static bool IsSameCommit(State a, State b)
+        public static bool IsSameCommit(State<T> a, State<T> b)
         {
             return a == b 
                 && a.CommitTag != Guid.Empty 
@@ -98,17 +95,17 @@ namespace REstate
         /// false if the values or commit tags do not match 
         /// OR if either commit tag is empty.
         /// </returns>
-        public bool IsSameCommit(State other)
+        public bool IsSameCommit(State<T> other)
         {
             return IsSameCommit(this, other);
         }
 
-        public static bool operator ==(State a, State b)
+        public static bool operator ==(State<T> a, State<T> b)
         {
             return a.Equals(b);
         }
 
-        public static bool operator !=(State a, State b)
+        public static bool operator !=(State<T> a, State<T> b)
         {
             return !(a == b);
         }

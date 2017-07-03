@@ -1,14 +1,15 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace REstate.Configuration
 {
-    public class Transition
+    public class Transition<TState, TInput>
     {
         [Required]
-        public string InputName { get; set; }
+        public TInput Input { get; set; }
 
         [Required]
-        public string ResultantStateName { get; set; }
+        public TState ResultantState { get; set; }
 
         public GuardConnector Guard { get; set; }
     }
