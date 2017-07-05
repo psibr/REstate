@@ -23,9 +23,6 @@ namespace REstate.Configuration.Builder.Implementation
 
         internal void SetInitialState(TState state)
         {
-            if (InitialState != null)
-                throw new InvalidOperationException("Initial stateBuilderAction cannot be set twice.");
-
             InitialState = state;
         }
 
@@ -93,7 +90,7 @@ namespace REstate.Configuration.Builder.Implementation
                 }
                 catch (ArgumentException ex)
                 {
-                    throw new InvalidOperationException($"Input matching: [ {input} ] is already defined on stateBuilderAction: [ {sourceState} ]", ex);
+                    throw new InvalidOperationException($"Input matching: [ {input} ] is already defined on state: [ {sourceState} ]", ex);
                 }
             }
             else

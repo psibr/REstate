@@ -8,10 +8,21 @@ namespace REstate.Engine.Services
     public interface IConnector<TState, TInput>
         : IConnector
     {
+        Task OnEntryAsync<TPayload>(
+            IStateMachine<TState, TInput> machine,
+            State<TState> state,
+            TInput input,
+            TPayload payload,
+            IDictionary<string, string> connectorSettings,
+            CancellationToken cancellationToken);
 
-        Func<CancellationToken, Task> ConstructAction(IStateMachine<TState, TInput> machineInstance, State<TState> state, string payload, IDictionary<string, string> connectorSettings);
-
-        Func<State<TState>, TInput, string, CancellationToken, Task<bool>> ConstructPredicate(IStateMachine<TState, TInput> machineInstance, IDictionary<string, string> connectorSettings);
+        Task<bool> GuardAsync<TPayload>(
+            IStateMachine<TState, TInput> machine,
+            State<TState> state,
+            TInput input,
+            TPayload payload,
+            IDictionary<string, string> connectorSettings,
+            CancellationToken cancellationToken);
     }
 
     public interface IConnector

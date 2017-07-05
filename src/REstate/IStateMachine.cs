@@ -9,14 +9,23 @@ namespace REstate
     {
         string MachineId { get; }
 
-        Task<State<TState>> SendAsync(
+        Task<State<TState>> SendAsync<TPayload>(
             TInput input,
-            string payload, 
+            TPayload payload, 
+            CancellationToken cancellationToken);
+
+        Task<State<TState>> SendAsync<TPayload>(
+            TInput input,
+            TPayload payload, 
+            Guid? lastCommitTag,
             CancellationToken cancellationToken);
 
         Task<State<TState>> SendAsync(
             TInput input,
-            string payload, 
+            CancellationToken cancellationToken);
+
+        Task<State<TState>> SendAsync(
+            TInput input,
             Guid? lastCommitTag,
             CancellationToken cancellationToken);
 

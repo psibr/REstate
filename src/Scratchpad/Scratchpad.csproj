@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PocketContainer" Version="1.3.0" />
-    <PackageReference Include="PocketContainer.OpenGenericStrategy" Version="1.0.4" />
+    <PackageReference Include="Best.Avro" Version="1.8.1.4" />
+    <PackageReference Include="MagicOnion" Version="0.5.1" />
   </ItemGroup>
 
   <ItemGroup>

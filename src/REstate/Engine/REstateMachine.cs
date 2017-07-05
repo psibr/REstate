@@ -35,15 +35,33 @@ namespace REstate.Engine
         }
         public string MachineId { get; }
 
-        public Task<State<TState>> SendAsync(
-            TInput input, string payload, 
+        public Task<State<TState>> SendAsync<TPayload>(
+            TInput input,
+            TPayload payload, 
             CancellationToken cancellationToken)
         {
             return SendAsync(input, payload, null, cancellationToken);
         }
 
-        public async Task<State<TState>> SendAsync(
-            TInput input, string payload, Guid? lastCommitTag,
+        public Task<State<TState>> SendAsync(
+            TInput input,
+            CancellationToken cancellationToken)
+        {
+            return SendAsync<object>(input, null, null, cancellationToken);
+        }
+
+        public Task<State<TState>> SendAsync(
+            TInput input,
+            Guid? lastCommitTag,
+            CancellationToken cancellationToken)
+        {
+            return SendAsync<object>(input, null, lastCommitTag, cancellationToken);
+        }
+
+        public async Task<State<TState>> SendAsync<TPayload>(
+            TInput input,
+            TPayload payload, 
+            Guid? lastCommitTag,
             CancellationToken cancellationToken)
         {
             using (var dataContext = _repositoryContextFactory.OpenContext())
@@ -64,9 +82,7 @@ namespace REstate.Engine
                 {
                     var guardConnector =  _connectorResolver.ResolveConnector(transition.Guard.ConnectorKey);
 
-                    if (!await guardConnector
-                        .ConstructPredicate(this, transition.Guard.Configuration)
-                        .Invoke(currentState, input, payload, cancellationToken).ConfigureAwait(false))
+                    if (!await guardConnector.GuardAsync(this, currentState, input, payload, transition.Guard.Configuration, cancellationToken).ConfigureAwait(false))
                     {
                         throw new InvalidOperationException("Guard clause prevented transition.");
                     }
@@ -87,9 +103,7 @@ namespace REstate.Engine
                 {
                     var entryConnector = _connectorResolver.ResolveConnector(stateConfig.OnEntry.ConnectorKey);
                         
-                    await entryConnector
-                        .ConstructAction(this, currentState, payload, stateConfig.OnEntry.Configuration) 
-                        .Invoke(cancellationToken).ConfigureAwait(false);
+                    await entryConnector.OnEntryAsync(this, currentState, input, payload, stateConfig.OnEntry.Configuration, cancellationToken).ConfigureAwait(false);
                 }
                 catch
                 {
