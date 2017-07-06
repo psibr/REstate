@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\REstate.Interop.Services\REstate.Interop.csproj" />
     <ProjectReference Include="..\REstate\REstate.csproj" />
   </ItemGroup>
 

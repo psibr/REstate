@@ -7,37 +7,22 @@ using REstate.Configuration;
 using Grpc.Core;
 using MagicOnion;
 using MagicOnion.Server;
-using System;
+using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using MagicOnion.Client;
 using MessagePack;
+using REstate.Interop.Models;
+using REstate.Interop.Services;
 
 namespace Scratchpad
 {
-    // define interface as Server/Client IDL.
-    // implements T : IService<T>.
-    public interface IMyFirstService : IService<IMyFirstService>
-    {
-        UnaryResult<T> TestAsync<T>(Test<T> t);
-    }
-
-    // implement RPC service.
-    // inehrit ServiceBase<interface>, interface
-    public class MyFirstService : ServiceBase<IMyFirstService>, IMyFirstService
-    {
-        public async UnaryResult<T> TestAsync<T>(Test<T> t)
-        {
-            Logger.Debug($"Received:{t.Property}");
-
-            return t.Property;
-        }
-    }
-
-    [MessagePackObject]
-    public class Test<T>
+    [MessagePackObject()]
+    public class InputTest
     {
         [Key(0)]
-        public T Property { get; set; }
+        public string InputName { get; set; }
     }
 
     class Program
@@ -49,18 +34,30 @@ namespace Scratchpad
             var channel = new Channel("localhost", 12345, ChannelCredentials.Insecure);
 
             // create MagicOnion dynamic client proxy
-            var client = MagicOnionClient.Create<IMyFirstService>(channel);
+            var client = MagicOnionClient.Create<IStateMachineService>(channel);
 
             // call method.
-            var result = await client.TestAsync(new Test<string>{ Property = "Dick"});
-            Console.WriteLine("Client Received:" + result);
+            var result = await client.SendAsync(new SendRequest
+            {
+                MachineId = Guid.NewGuid().ToString(),
+                InputBytes = MessagePackSerializer.Serialize("This is a string"),
+                PayloadBytes = Encoding.UTF8.GetBytes("Payload"),
+                CommitTag = Guid.NewGuid()
+            });
+
+            Console.WriteLine("Client Received:" + result.StateBytes.Length);
         }
 
         static void Main(string[] args)
         {
             GrpcEnvironment.SetLogger(new Grpc.Core.Logging.ConsoleLogger());
 
-            var service = MagicOnionEngine.BuildServerServiceDefinition(isReturnExceptionStackTraceInErrorDetail: true);
+            var service = MagicOnionEngine.BuildServerServiceDefinition(
+                targetTypes: new []
+                {
+                    typeof(StateMachineService)
+                },
+                option: new MagicOnionOptions( isReturnExceptionStackTraceInErrorDetail: true));
 
             var server = new Server
             {
