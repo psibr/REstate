@@ -5,6 +5,6 @@ namespace REstate.Engine
 {
     public interface ICartographer<TState, TInput>
     {
-        string WriteMap(IDictionary<State<TState>, StateConfiguration<TState, TInput>> configuration);
+        string WriteMap(ICollection<StateConfiguration<TState, TInput>> configuration);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using REstate.Configuration;
 using REstate.Configuration.Builder;
 using REstate.Configuration.Builder.Implementation;
 using REstate.Engine;
@@ -9,7 +10,7 @@ using REstate.IoC.BoDi;
 
 namespace REstate
 {
-    public class REstateHost
+    public static class REstateHost
     {
         static REstateHost()
         {
@@ -20,6 +21,11 @@ namespace REstate
 
         public static IStateEngine<TState, TInput> GetStateEngine<TState, TInput>() =>
             _container.Resolve<IStateEngine<TState, TInput>>();
+
+        public static string GetDiagram<TState, TInput>(this Schematic<TState, TInput> schematic)
+        {
+            return _container.Resolve<ICartographer<TState, TInput>>().WriteMap(schematic.StateConfigurations);
+        }
 
         /// <summary>
         /// Register's defaults and the REstate engine in a given container.

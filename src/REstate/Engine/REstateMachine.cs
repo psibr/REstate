@@ -170,7 +170,7 @@ namespace REstate.Engine
 
         public override string ToString()
         {
-            return _cartographer.WriteMap(StateMappings);
+            return _cartographer.WriteMap(StateMappings.Values);
         }
     }
 }

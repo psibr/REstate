@@ -14,25 +14,25 @@ namespace REstate.Engine
         /// Produces a DOT GraphViz graph.
         /// </summary>
         /// <returns>DOT GraphViz text.</returns>
-        public string WriteMap(IDictionary<State<TState>, StateConfiguration<TState, TInput>> configuration)
+        public string WriteMap(ICollection<StateConfiguration<TState, TInput>> configuration)
         {
             var lines = new List<string>();
 
             foreach (var statePair in configuration)
             {
 
-                var source = statePair.Key.Value;
-                foreach (var transition in statePair.Value.Transitions ?? new Transition<TState, TInput>[0])
+                var source = statePair.Value;
+                foreach (var transition in statePair.Transitions ?? new Transition<TState, TInput>[0])
                 {
                     HandleTransitions(ref lines, source.ToString(), transition.Input.ToString(), transition.ResultantState.ToString(), transition.Guard?.Description);
                 }
             }
 
-            if (configuration.Values.Any(s => s.OnEntry != null))
+            if (configuration.Any(s => s.OnEntry != null))
             {
                 lines.Add(" node [shape=box];");
 
-                lines.AddRange(configuration.Values
+                lines.AddRange(configuration
                     .Where(s => s.OnEntry != null)
                     .Select(state =>
                         $" {state.Value} -> \"{state.OnEntry.Description ?? state.OnEntry.ConnectorKey}\" [label=\"On Entry\" style=dotted];"));
