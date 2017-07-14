@@ -4,25 +4,30 @@ using REstate;
 using Grpc.Core;
 using MagicOnion.Server;
 using System.Threading.Tasks;
-using MagicOnion.Client;
-using REstate.Interop;
-using REstate.Interop.Services;
+using Grpc.Core.Logging;
+using REstate.Remote;
+using REstate.Remote.Services;
 
 namespace Scratchpad
 {
     class Program
     {
-        private static async void ClientImpl()
+        private static async Task ClientImpl()
         {
-            // standard gRPC channel
-            var channel = new Channel("localhost", 12345, ChannelCredentials.Insecure);
+            REstateHost.Agent.Configuration
+                .RegisterComponent(
+                    new GrpcRemoteHostComponent(
+                        new GrpcHostOptions
+                        {
+                            Channel = new Channel("localhost", 12345, ChannelCredentials.Insecure),
+                            UseAsDefaultEngine = true
+                        }));
 
-            // create MagicOnion dynamic client proxy
-            var client = MagicOnionClient.Create<IStateMachineService>(channel);
+            var stateEngine = REstateHost.Agent
+                .AsRemote()
+                .GetStateEngine<string, string>();
 
-            var grpcStateEngine = new GrpcStateEngine<string, string>(client);
-
-            var schematic = REstateHost
+            var schematic = REstateHost.Agent
                 .CreateSchematic<string, string>("EchoMachine")
 
                 .WithState("Ready", state => state
@@ -31,11 +36,10 @@ namespace Scratchpad
                         .DescribedAs("Echoes the payload to the console.")
                         .WithSetting("Format", "{2}")
                         .OnFailureSend("EchoFailure"))
-                    .WithReentrance("Echo")//, transition => transition
-                        //.WithGuard("Console", guard => guard
-                            //.DescribedAs("Verfies action OK to take with y/n from console.")
-                            //.WithSetting("Prompt", "Are you sure you want to echo \"{3}\"? (y/n)")))
-                    )
+                    .WithReentrance("Echo", transition => transition
+                        .WithGuard("Console", guard => guard
+                            .DescribedAs("Verfies action OK to take with y/n from console.")
+                            .WithSetting("Prompt", "Are you sure you want to echo \"{3}\"? (y/n)"))))
 
                 .WithState("EchoFailure", state => state
                     .AsSubStateOf("Ready")
@@ -44,21 +48,21 @@ namespace Scratchpad
 
                 .ToSchematic();
 
-            var diagram = schematic.GetDiagram();
+            var diagram = schematic.WriteStateMap();
 
-            var newSchematic = await grpcStateEngine.StoreSchematicAsync(schematic, CancellationToken.None);
+            var newSchematic = await stateEngine.StoreSchematicAsync(schematic, CancellationToken.None);
 
-            var echoMachineId = await REstateHost.GetStateEngine<string, string>()
+            var echoMachine = await REstateHost.Agent
+                .AsLocal()
+                .GetStateEngine<string, string>()
                 .CreateMachineAsync("EchoMachine", null, CancellationToken.None);
-
-            var echoMachine = await grpcStateEngine.GetMachineAsync(echoMachineId, CancellationToken.None);
 
             var status = await echoMachine.SendAsync("Echo", "Hello!", CancellationToken.None);
         }
 
         private static void Main(string[] args)
         {
-            GrpcEnvironment.SetLogger(new Grpc.Core.Logging.ConsoleLogger());
+            GrpcEnvironment.SetLogger(new ConsoleLogger());
 
             var service = MagicOnionEngine.BuildServerServiceDefinition(
                 targetTypes: new[]
@@ -77,12 +81,16 @@ namespace Scratchpad
             server.Start();
 
             // sample, launch server/client in same app.
-            Task.Run(() =>
+            Task.Run(async () =>
             {
-                ClientImpl();
-            });
+                await ClientImpl();
+            }).Wait();
 
             Console.ReadLine();
         }
+    }
+
+    public class REstateRemoteHost
+    {
     }
 }

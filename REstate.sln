@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.14
+VisualStudioVersion = 15.0.26430.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate", "src\REstate\REstate.csproj", "{8B02FF53-A9F3-4004-8CDC-32831070957D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scratchpad", "src\Scratchpad\Scratchpad.csproj", "{1AD1F4C0-DC47-416C-90BF-F1EE648988FA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Interop", "src\REstate.Interop.Services\REstate.Interop.csproj", "{CE1667CA-B386-4B36-9D81-577EC98D129F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Remote", "src\REstate.Interop.Services\REstate.Remote.csproj", "{CE1667CA-B386-4B36-9D81-577EC98D129F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MessagePack;
-using REstate.Interop.Models;
-using REstate.Interop.Services;
+using REstate.Remote.Models;
+using REstate.Remote.Services;
 
-namespace REstate.Interop
+namespace REstate.Remote
 {
     public class GrpcStateMachine<TState, TInput>
         : IStateMachine<TState, TInput>

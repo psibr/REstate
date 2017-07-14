@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MessagePack;
 
-namespace REstate.Interop.Models
+namespace REstate.Remote.Models
 {
     [MessagePackObject]
     public class StoreSchematicRequest

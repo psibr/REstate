@@ -4,13 +4,13 @@ using System.Threading.Tasks;
 using Grpc.Core;
 using MessagePack;
 using REstate.Configuration;
-using REstate.Interop.Models;
-using REstate.Interop.Services;
+using REstate.Remote.Models;
+using REstate.Remote.Services;
 
-namespace REstate.Interop
+namespace REstate.Remote
 {
     public class GrpcStateEngine<TState, TInput>
-        : IStateEngine<TState, TInput>
+        : IRemoteStateEngine<TState, TInput>
     {
         private readonly IStateMachineService _stateMachineService;
 
@@ -29,7 +29,7 @@ namespace REstate.Interop
             return null;
         }
 
-        public Task<string> CreateMachineAsync(string schematicName, IDictionary<string, string> metadata, CancellationToken cancellationToken)
+        public Task<IStateMachine<TState, TInput>> CreateMachineAsync(string schematicName, IDictionary<string, string> metadata, CancellationToken cancellationToken)
         {
             return null;
         }

@@ -1,7 +1,7 @@
 ﻿using System;
 using MessagePack;
 
-namespace REstate.Interop.Models
+namespace REstate.Remote.Models
 {
     [MessagePackObject]
     public class SendRequest

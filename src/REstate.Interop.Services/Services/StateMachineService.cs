@@ -7,10 +7,11 @@ using MagicOnion;
 using MagicOnion.Server;
 using MessagePack;
 using REstate.Configuration;
-using REstate.Interop.Models;
+using REstate.Remote.Models;
+
 #pragma warning disable 1998
 
-namespace REstate.Interop.Services
+namespace REstate.Remote.Services
 {
     public interface IStateMachineService
         : IService<IStateMachineService>
@@ -27,6 +28,7 @@ namespace REstate.Interop.Services
         private const string StateTypeHeaderKey = "state-type";
         private const string InputTypeHeaderKey = "input-type";
 
+        #region SendAsync
         public async UnaryResult<SendResponse> SendAsync(SendRequest sendRequest)
         {
             (var stateType, var inputType) = GetGenericTupleFromHeaders();
@@ -49,6 +51,25 @@ namespace REstate.Interop.Services
                 });
         }
 
+        private static async Task<SendResponse> SendAsync<TState, TInput, TPayload>(string machineId, TInput input, TPayload payload, Guid? commitTag, CancellationToken cancellationToken)
+        {
+            var engine = REstateHost.Agent.AsLocal()
+                .GetStateEngine<TState, TInput>();
+
+            var machine = await engine.GetMachineAsync(machineId, cancellationToken);
+
+            var newState = await machine.SendAsync(input, payload, commitTag, cancellationToken);
+
+            return new SendResponse
+            {
+                MachineId = machineId,
+                CommitTag = newState.CommitTag,
+                StateBytes = MessagePackSerializer.Serialize(newState.Value, MessagePack.Resolvers.ContractlessStandardResolver.Instance)
+            };
+        }
+        #endregion SendAsync
+
+        #region StoreSchematicAsync
         public async UnaryResult<StoreSchematicResponse> StoreSchematicAsync(StoreSchematicRequest storeSchematicRequest)
         {
             var genericTypes = GetGenericsFromHeaders();
@@ -70,6 +91,20 @@ namespace REstate.Interop.Services
                 });
         }
 
+        private static async Task<StoreSchematicResponse> StoreSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, CancellationToken cancellationToken)
+        {
+            var engine = REstateHost.Agent.AsLocal()
+                .GetStateEngine<TState, TInput>();
+
+            var newSchematic = await engine.StoreSchematicAsync(schematic, cancellationToken);
+
+            return new StoreSchematicResponse
+            {
+                SchematicBytes = MessagePackSerializer.Serialize(newSchematic, MessagePack.Resolvers.ContractlessStandardResolver.Instance)
+            };
+        }
+        #endregion StoreSchematicAsync
+
         private Type[] GetGenericsFromHeaders()
         {
             return Context.CallContext.RequestHeaders
@@ -84,34 +119,6 @@ namespace REstate.Interop.Services
             var array = GetGenericsFromHeaders();
 
             return (array[0], array[1]);
-        }
-
-        private static async Task<StoreSchematicResponse> StoreSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, CancellationToken cancellationToken)
-        {
-            var engine = REstateHost.GetStateEngine<TState, TInput>();
-
-            var newSchematic = await engine.StoreSchematicAsync(schematic, cancellationToken);
-
-            return new StoreSchematicResponse
-            {
-                SchematicBytes = MessagePackSerializer.Serialize(newSchematic, MessagePack.Resolvers.ContractlessStandardResolver.Instance)
-            };
-        }
-
-        private static async Task<SendResponse> SendAsync<TState, TInput, TPayload>(string machineId, TInput input, TPayload payload, Guid? commitTag, CancellationToken cancellationToken)
-        {
-            var engine = REstateHost.GetStateEngine<TState, TInput>();
-
-            var machine = await engine.GetMachineAsync(machineId, cancellationToken);
-
-            var newState = await machine.SendAsync(input, payload, commitTag, cancellationToken);
-
-            return new SendResponse
-            {
-                MachineId = machineId,
-                CommitTag = newState.CommitTag,
-                StateBytes = MessagePackSerializer.Serialize(newState.Value, MessagePack.Resolvers.ContractlessStandardResolver.Instance)
-            };
         }
     }
 }

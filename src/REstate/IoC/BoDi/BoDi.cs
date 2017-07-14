@@ -28,7 +28,7 @@
  *   - should not allow resolving value types (structs)
  *   - should list registrations in container ToString()
  *   - should not dispose registered instances by default, disposal can be requested by the 'dispose: true' parameter
- *   - should be able to disable configuration file support (and the dependency on System.Configuration) with BODI_DISABLECONFIGFILESUPPORT compilation symbol
+ *   - should be able to disable configuration file support (and the dependency on System.IrEstateConfiguration) with BODI_DISABLECONFIGFILESUPPORT compilation symbol
  *   - smaller code refactoring
  *   - improve resolution path handling
  * 
@@ -45,7 +45,7 @@ using System.Reflection;
 
 #if !BODI_LIMITEDRUNTIME
 using System.Runtime.Serialization;
-using System.Configuration;
+using System.IrEstateConfiguration;
 #endif
 
 namespace REstate.IoC.BoDi
@@ -900,7 +900,7 @@ namespace REstate.IoC.BoDi
         }
     }
 
-#region Configuration handling
+#region IrEstateConfiguration handling
 #if !BODI_LIMITEDRUNTIME && !BODI_DISABLECONFIGFILESUPPORT
 
     public class BoDiConfigurationSection : ConfigurationSection

@@ -24,7 +24,7 @@ namespace REstate.Engine
             _cartographer = cartographer;
         }
 
-        public IStateMachine<TState, TInput> ConstructFromConfiguration(string machineId, Schematic<TState, TInput> configuration)
+        public IStateMachine<TState, TInput> ConstructFromSchematic(string machineId, Schematic<TState, TInput> configuration)
         {
             if (configuration == null)
                 throw new ArgumentNullException(nameof(configuration));
