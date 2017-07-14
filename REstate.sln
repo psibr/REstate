@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate", "src\REstate\REst
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scratchpad", "src\Scratchpad\Scratchpad.csproj", "{1AD1F4C0-DC47-416C-90BF-F1EE648988FA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Remote", "src\REstate.Interop.Services\REstate.Remote.csproj", "{CE1667CA-B386-4B36-9D81-577EC98D129F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Remote", "src\REstate.Remote\REstate.Remote.csproj", "{9D9597DB-CC42-4CA3-9E65-A83B0C0EC664}"
 EndProject
 Global
 	GlobalSection(Performance) = preSolution
@@ -26,12 +26,18 @@ Global
 		{1AD1F4C0-DC47-416C-90BF-F1EE648988FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1AD1F4C0-DC47-416C-90BF-F1EE648988FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1AD1F4C0-DC47-416C-90BF-F1EE648988FA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CE1667CA-B386-4B36-9D81-577EC98D129F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CE1667CA-B386-4B36-9D81-577EC98D129F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CE1667CA-B386-4B36-9D81-577EC98D129F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CE1667CA-B386-4B36-9D81-577EC98D129F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D9597DB-CC42-4CA3-9E65-A83B0C0EC664}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D9597DB-CC42-4CA3-9E65-A83B0C0EC664}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D9597DB-CC42-4CA3-9E65-A83B0C0EC664}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D9597DB-CC42-4CA3-9E65-A83B0C0EC664}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal

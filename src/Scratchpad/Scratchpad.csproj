@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\REstate.Interop.Services\REstate.Remote.csproj" />
+    <ProjectReference Include="..\REstate.Remote\REstate.Remote.csproj" />
     <ProjectReference Include="..\REstate\REstate.csproj" />
   </ItemGroup>
 
