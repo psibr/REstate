@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace REstate.Configuration.Builder.Implementation
 {
-    internal class SchematicBuilder<TState, TInput>
+    public class SchematicBuilder<TState, TInput>
         : ISchematicBuilder<TState, TInput>
     {
         public SchematicBuilder(string schematicName)

@@ -28,7 +28,7 @@
  *   - should not allow resolving value types (structs)
  *   - should list registrations in container ToString()
  *   - should not dispose registered instances by default, disposal can be requested by the 'dispose: true' parameter
- *   - should be able to disable configuration file support (and the dependency on System.Configuration) with BODI_DISABLECONFIGFILESUPPORT compilation symbol
+ *   - should be able to disable configuration file support (and the dependency on System.IrEstateConfiguration) with BODI_DISABLECONFIGFILESUPPORT compilation symbol
  *   - smaller code refactoring
  *   - improve resolution path handling
  * 
@@ -45,7 +45,7 @@ using System.Reflection;
 
 #if !BODI_LIMITEDRUNTIME
 using System.Runtime.Serialization;
-using System.Configuration;
+using System.IrEstateConfiguration;
 #endif
 
 namespace REstate.IoC.BoDi
@@ -317,9 +317,6 @@ namespace REstate.IoC.BoDi
         private interface IRegistration
         {
             object Resolve(ObjectContainer container, RegistrationKey keyToResolve, ResolutionList resolutionPath);
-
-            object Resolve(ObjectContainer container, RegistrationKey keyToResolve, ResolutionList resolutionPath,
-                Type[] genericTypeArguments);
         }
 
         private class TypeRegistration : IRegistration
@@ -331,7 +328,7 @@ namespace REstate.IoC.BoDi
                 this.implementationType = implementationType;
             }
 
-            public object Resolve(ObjectContainer container, RegistrationKey keyToResolve, ResolutionList resolutionPath, Type[] genericTypeArguments)
+            public object Resolve(ObjectContainer container, RegistrationKey keyToResolve, ResolutionList resolutionPath)
             {
                 var typeToConstruct = GetTypeToConstruct(keyToResolve);
 
@@ -350,30 +347,10 @@ namespace REstate.IoC.BoDi
                     else
                     {
 
-                        obj = container.CreateObject(typeToConstruct, resolutionPath, keyToResolve,
-                            genericTypeArguments);
+                        obj = container.CreateObject(typeToConstruct, resolutionPath, keyToResolve);
 
                         container.objectPool.Add(pooledObjectKey, obj);
                     }
-                }
-
-                return obj;
-            }
-
-            public object Resolve(ObjectContainer container, RegistrationKey keyToResolve, ResolutionList resolutionPath)
-            {
-                var typeToConstruct = GetTypeToConstruct(keyToResolve);
-
-                var pooledObjectKey = new RegistrationKey(typeToConstruct, keyToResolve.Name);
-                object obj = container.GetPooledObject(pooledObjectKey);
-
-                if (obj == null)
-                {
-                    if (typeToConstruct.GetTypeInfo().IsInterface)
-                        throw new ObjectContainerException("Interface cannot be resolved: " + keyToResolve, resolutionPath.ToTypeList());
-
-                    obj = container.CreateObject(typeToConstruct, resolutionPath, keyToResolve, null);
-                    container.objectPool.Add(pooledObjectKey, obj);
                 }
 
                 return obj;
@@ -481,7 +458,7 @@ namespace REstate.IoC.BoDi
                 {
                     var convertedKey = ChangeType(namedRegistration.Name, keyType);
                     Debug.Assert(convertedKey != null);
-                    result.Add(convertedKey, container.Resolve(namedRegistration.Type, null, namedRegistration.Name));
+                    result.Add(convertedKey, container.Resolve(namedRegistration.Type, namedRegistration.Name));
                 }
 
                 return result;
@@ -722,24 +699,25 @@ namespace REstate.IoC.BoDi
             return (T)resolvedObject;
         }
 
-        public object Resolve(Type typeToResolve, Type[] genericTypeArguments = null, string name = null)
-        {
-            return Resolve(typeToResolve, new ResolutionList(), genericTypeArguments, name);
-        }
 
         public object Resolve(Type typeToResolve, string name = null)
         {
-            return Resolve(typeToResolve, new ResolutionList(), null, name);
+            return Resolve(typeToResolve, new ResolutionList(), name);
         }
 
         public IEnumerable<T> ResolveAll<T>() where T : class
         {
             return registrations
-                .Where(x => x.Key.Type == typeof(T) || typeof(T).IsConstructedGenericType && typeof(T).GetGenericTypeDefinition() == x.Key.Type)
-                .Select(x => Resolve(x.Key.Type, typeof(T).GenericTypeArguments, x.Key.Name) as T);
+                .Where(x => 
+                    x.Key.Type == typeof(T) 
+                    || typeof(T).IsConstructedGenericType 
+                        && typeof(T).GetGenericTypeDefinition() == x.Key.Type)
+                .Select(x => Resolve(x.Key.Type.GetTypeInfo().IsGenericTypeDefinition 
+                    ? x.Key.Type.MakeGenericType(typeof(T).GenericTypeArguments) 
+                    : x.Key.Type, x.Key.Name) as T);
         }
 
-        private object Resolve(Type typeToResolve, ResolutionList resolutionPath, Type[] genericTypeArguments, string name)
+        private object Resolve(Type typeToResolve, ResolutionList resolutionPath, string name)
         {
             AssertNotDisposed();
 
@@ -747,7 +725,7 @@ namespace REstate.IoC.BoDi
             object resolvedObject;
             if (!resolvedObjects.TryGetValue(keyToResolve, out resolvedObject))
             {
-                resolvedObject = ResolveObject(keyToResolve, resolutionPath, genericTypeArguments);
+                resolvedObject = ResolveObject(keyToResolve, resolutionPath);
                 resolvedObjects.Add(keyToResolve, resolvedObject);
             }
             return resolvedObject;
@@ -817,7 +795,7 @@ namespace REstate.IoC.BoDi
             return true;
         }
 
-        private object ResolveObject(RegistrationKey keyToResolve, ResolutionList resolutionPath, Type[] genericTypeArguments)
+        private object ResolveObject(RegistrationKey keyToResolve, ResolutionList resolutionPath)
         {
             if (keyToResolve.Type.GetTypeInfo().IsPrimitive || keyToResolve.Type == typeof(string) || keyToResolve.Type.GetTypeInfo().IsValueType)
                 throw new ObjectContainerException("Primitive types or structs cannot be resolved: " + keyToResolve.Type.FullName, resolutionPath.ToTypeList());
@@ -827,14 +805,11 @@ namespace REstate.IoC.BoDi
 
             var resolutionPathForResolve = registrationResult.Key == this ?
                 resolutionPath : new ResolutionList();
-            return registrationResult.Value.Resolve(registrationResult.Key, keyToResolve, resolutionPathForResolve, genericTypeArguments);
+            return registrationResult.Value.Resolve(registrationResult.Key, keyToResolve, resolutionPathForResolve);
         }
 
-        private object CreateObject(Type type, ResolutionList resolutionPath, RegistrationKey keyToResolve, Type[] genericTypeArguments)
-        {
-            if (genericTypeArguments != null)
-                type = type.GetGenericTypeDefinition().MakeGenericType(genericTypeArguments);
-
+        private object CreateObject(Type type, ResolutionList resolutionPath, RegistrationKey keyToResolve)
+        { 
             var ctors = type.GetConstructors();
             if (ctors.Length == 0)
                 ctors = type.GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance);
@@ -882,7 +857,7 @@ namespace REstate.IoC.BoDi
 
         private object[] ResolveArguments(IEnumerable<ParameterInfo> parameters, RegistrationKey keyToResolve, ResolutionList resolutionPath)
         {
-            return parameters.Select(p => IsRegisteredNameParameter(p) ? ResolveRegisteredName(keyToResolve) : Resolve(p.ParameterType, resolutionPath, null, null)).ToArray();
+            return parameters.Select(p => IsRegisteredNameParameter(p) ? ResolveRegisteredName(keyToResolve) : Resolve(p.ParameterType, resolutionPath, null)).ToArray();
         }
 
         private object ResolveRegisteredName(RegistrationKey keyToResolve)
@@ -925,7 +900,7 @@ namespace REstate.IoC.BoDi
         }
     }
 
-#region Configuration handling
+#region IrEstateConfiguration handling
 #if !BODI_LIMITEDRUNTIME && !BODI_DISABLECONFIGFILESUPPORT
 
     public class BoDiConfigurationSection : ConfigurationSection

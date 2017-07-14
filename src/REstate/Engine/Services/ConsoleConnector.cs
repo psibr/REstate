@@ -21,7 +21,7 @@ namespace REstate.Engine.Services
             return Task.CompletedTask;
         }
 
-        public Task<bool> GuardAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, State<TState> state, TInput input, TPayload payload, IDictionary<string, string> connectorSettings, CancellationToken cancellationToken)
+        public async Task<bool> GuardAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, State<TState> state, TInput input, TPayload payload, IDictionary<string, string> connectorSettings, CancellationToken cancellationToken)
         {
             string prompt = null;
             connectorSettings?.TryGetValue("Prompt", out prompt);
@@ -30,14 +30,14 @@ namespace REstate.Engine.Services
             while (true)
             {
                 Console.WriteLine(prompt, machineInstance.MachineId, state.Value, input, payload);
-                var response = Console.ReadLine()?.ToLowerInvariant();
+                var response = await Task.Run(() => Console.ReadLine()?.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
 
                 switch (response)
                 {
                     case "y":
-                        return Task.FromResult(true);
+                        return true;
                     case "n":
-                        return Task.FromResult(false);
+                        return false;
                     default:
                         continue;
                 }

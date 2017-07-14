@@ -1,83 +1,33 @@
 ﻿using System;
-using System.IO;
 using System.Threading;
-using Avro;
 using REstate;
-using REstate.Configuration;
 using Grpc.Core;
-using MagicOnion;
 using MagicOnion.Server;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
-using MagicOnion.Client;
-using MessagePack;
-using REstate.Interop.Models;
-using REstate.Interop.Services;
+using Grpc.Core.Logging;
+using REstate.Remote;
+using REstate.Remote.Services;
 
 namespace Scratchpad
 {
-    [MessagePackObject()]
-    public class InputTest
-    {
-        [Key(0)]
-        public string InputName { get; set; }
-    }
-
     class Program
     {
-
-        static async void ClientImpl()
+        private static async Task ClientImpl()
         {
-            // standard gRPC channel
-            var channel = new Channel("localhost", 12345, ChannelCredentials.Insecure);
+            REstateHost.Agent.Configuration
+                .RegisterComponent(
+                    new GrpcRemoteHostComponent(
+                        new GrpcHostOptions
+                        {
+                            Channel = new Channel("localhost", 12345, ChannelCredentials.Insecure),
+                            UseAsDefaultEngine = true
+                        }));
 
-            // create MagicOnion dynamic client proxy
-            var client = MagicOnionClient.Create<IStateMachineService>(channel);
+            var stateEngine = REstateHost.Agent
+                .AsRemote()
+                .GetStateEngine<string, string>();
 
-            // call method.
-            var result = await client.SendAsync(new SendRequest
-            {
-                MachineId = Guid.NewGuid().ToString(),
-                InputBytes = MessagePackSerializer.Serialize("This is a string"),
-                PayloadBytes = Encoding.UTF8.GetBytes("Payload"),
-                CommitTag = Guid.NewGuid()
-            });
-
-            Console.WriteLine("Client Received:" + result.StateBytes.Length);
-        }
-
-        static void Main(string[] args)
-        {
-            GrpcEnvironment.SetLogger(new Grpc.Core.Logging.ConsoleLogger());
-
-            var service = MagicOnionEngine.BuildServerServiceDefinition(
-                targetTypes: new []
-                {
-                    typeof(StateMachineService)
-                },
-                option: new MagicOnionOptions( isReturnExceptionStackTraceInErrorDetail: true));
-
-            var server = new Server
-            {
-                Services = { service },
-                Ports = { new ServerPort("localhost", 12345, ServerCredentials.Insecure) }
-            };
-
-            // launch gRPC Server.
-            server.Start();
-
-            // sample, launch server/client in same app.
-            Task.Run(() =>
-            {
-                ClientImpl();
-            });
-
-            Console.ReadLine();
-
-
-            var schematic = REstateHost
+            var schematic = REstateHost.Agent
                 .CreateSchematic<string, string>("EchoMachine")
 
                 .WithState("Ready", state => state
@@ -98,15 +48,49 @@ namespace Scratchpad
 
                 .ToSchematic();
 
+            var diagram = schematic.WriteStateMap();
 
+            var newSchematic = await stateEngine.StoreSchematicAsync(schematic, CancellationToken.None);
 
-            var echoMachine = REstateHost.GetStateEngine<string, string>().CreateMachineAsync(schematic, null, CancellationToken.None).Result;
+            var echoMachine = await REstateHost.Agent
+                .AsLocal()
+                .GetStateEngine<string, string>()
+                .CreateMachineAsync("EchoMachine", null, CancellationToken.None);
 
-            var graph = echoMachine.ToString();
+            var status = await echoMachine.SendAsync("Echo", "Hello!", CancellationToken.None);
+        }
 
-            var status = echoMachine.SendAsync("Echo", "Hello!", CancellationToken.None).Result;
+        private static void Main(string[] args)
+        {
+            GrpcEnvironment.SetLogger(new ConsoleLogger());
+
+            var service = MagicOnionEngine.BuildServerServiceDefinition(
+                targetTypes: new[]
+                {
+                    typeof(StateMachineService)
+                },
+                option: new MagicOnionOptions(isReturnExceptionStackTraceInErrorDetail: true));
+
+            var server = new Server
+            {
+                Services = { service },
+                Ports = { new ServerPort("localhost", 12345, ServerCredentials.Insecure) }
+            };
+
+            // launch gRPC Server.
+            server.Start();
+
+            // sample, launch server/client in same app.
+            Task.Run(async () =>
+            {
+                await ClientImpl();
+            }).Wait();
 
             Console.ReadLine();
         }
+    }
+
+    public class REstateRemoteHost
+    {
     }
 }
