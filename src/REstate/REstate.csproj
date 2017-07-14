@@ -14,8 +14,12 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NETSTANDARD1_3;BODI_LIMITEDRUNTIME</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;BODI_LIMITEDRUNTIME</DefineConstants>
     <OutputPath>bin\Debug\netstandard1.3\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;BODI_LIMITEDRUNTIME</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
