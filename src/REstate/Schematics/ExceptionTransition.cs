@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace REstate.Configuration
+namespace REstate.Schematics
 {
     public class ExceptionTransition<TInput>
     {

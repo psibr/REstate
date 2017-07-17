@@ -44,11 +44,7 @@ namespace Scratchpad
                 .WithState("EchoFailure", state => state
                     .AsSubStateOf("Ready")
                     .DescribedAs("An echo command failed to execute.")
-                    .WithTransitionFrom("Ready", "EchoFailure"))
-
-                .ToSchematic();
-
-            var diagram = schematic.WriteStateMap();
+                    .WithTransitionFrom("Ready", "EchoFailure"));
 
             var newSchematic = await stateEngine.StoreSchematicAsync(schematic, CancellationToken.None);
 
@@ -57,7 +53,11 @@ namespace Scratchpad
                 .GetStateEngine<string, string>()
                 .CreateMachineAsync("EchoMachine", null, CancellationToken.None);
 
+            echoMachine = await stateEngine.GetMachineAsync(echoMachine.MachineId, CancellationToken.None);
+
             var status = await echoMachine.SendAsync("Echo", "Hello!", CancellationToken.None);
+
+            await stateEngine.DeleteMachineAsync(echoMachine.MachineId, CancellationToken.None);
         }
 
         private static void Main(string[] args)

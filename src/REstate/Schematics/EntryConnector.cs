@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace REstate.Configuration
+namespace REstate.Schematics
 {
     public class EntryConnector<TInput>
+        : IEntryAction<TInput>
     {
         [Required]
         public string ConnectorKey { get; set; }
@@ -14,5 +16,11 @@ namespace REstate.Configuration
         public string Description { get; set; }
 
         public ExceptionTransition<TInput> FailureTransition { get; set; }
+
+        TInput IEntryAction<TInput>.OnFailureInput =>
+            FailureTransition.Input;
+
+        IReadOnlyDictionary<string, string> IEntryAction<TInput>.Settings =>
+            new ReadOnlyDictionary<string, string>(Configuration);
     }
 }

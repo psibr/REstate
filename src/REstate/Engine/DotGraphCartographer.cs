@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using REstate.Configuration;
+using REstate.Schematics;
 
 namespace REstate.Engine
 {
@@ -14,28 +14,34 @@ namespace REstate.Engine
         /// Produces a DOT GraphViz graph.
         /// </summary>
         /// <returns>DOT GraphViz text.</returns>
-        public string WriteMap(ICollection<StateConfiguration<TState, TInput>> configuration)
+        public string WriteMap(IEnumerable<IState<TState, TInput>> states)
         {
             var lines = new List<string>();
+            var onEntryActionLines = new List<string>();
 
-            foreach (var statePair in configuration)
+            foreach (var state in states)
             {
+                var source = state.Value;
 
-                var source = statePair.Value;
-                foreach (var transition in statePair.Transitions ?? new Transition<TState, TInput>[0])
+                lines.AddRange(state.Transitions.Values
+                    .Select(transition => 
+                        GetTransitionRepresentation(
+                            source.ToString(),
+                            transition.Input.ToString(),
+                            transition.ResultantState.ToString(),
+                            transition.Guard?.Description)));
+
+                if (state.OnEntry != null)
                 {
-                    HandleTransitions(ref lines, source.ToString(), transition.Input.ToString(), transition.ResultantState.ToString(), transition.Guard?.Description);
+                    onEntryActionLines.Add($" {state.Value} -> \"{state.OnEntry.Description ?? state.OnEntry.ConnectorKey}\" [label=\"On Entry\" style=dotted];");
                 }
             }
 
-            if (configuration.Any(s => s.OnEntry != null))
+            if (onEntryActionLines.Count > 0)
             {
                 lines.Add(" node [shape=box];");
 
-                lines.AddRange(configuration
-                    .Where(s => s.OnEntry != null)
-                    .Select(state =>
-                        $" {state.Value} -> \"{state.OnEntry.Description ?? state.OnEntry.ConnectorKey}\" [label=\"On Entry\" style=dotted];"));
+                lines.AddRange(onEntryActionLines);
             }
 
             return "digraph {" + "\r\n" +
@@ -43,13 +49,11 @@ namespace REstate.Engine
                    "}";
         }
 
-        private static void HandleTransitions(ref List<string> lines, string sourceState, string input, string destination, string guardDescription)
+        private static string GetTransitionRepresentation(string sourceState, string input, string destination, string guardDescription)
         {
-            var line = string.IsNullOrWhiteSpace(guardDescription) 
+            return string.IsNullOrWhiteSpace(guardDescription) 
                 ? $" \"{sourceState}\" -> \"{destination}\" [label=\"{input}\"];" 
                 : $" \"{sourceState}\" -> \"{destination}\" [label=\"{input} ({guardDescription})\"];";
-
-            lines.Add(line);
         }
     }
 }

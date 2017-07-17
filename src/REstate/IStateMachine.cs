@@ -2,37 +2,40 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using REstate.Schematics;
 
 namespace REstate
 {
     public interface IStateMachine<TState, TInput>
     {
+        ISchematic<TState, TInput> Schematic { get; }
+
         string MachineId { get; }
 
         Task<State<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
-            CancellationToken cancellationToken);
+            CancellationToken cancellationToken = default(CancellationToken));
 
         Task<State<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
             Guid? lastCommitTag,
-            CancellationToken cancellationToken);
+            CancellationToken cancellationToken = default(CancellationToken));
 
         Task<State<TState>> SendAsync(
             TInput input,
-            CancellationToken cancellationToken);
+            CancellationToken cancellationToken = default(CancellationToken));
 
         Task<State<TState>> SendAsync(
             TInput input,
             Guid? lastCommitTag,
-            CancellationToken cancellationToken);
+            CancellationToken cancellationToken = default(CancellationToken));
 
-        Task<bool> IsInStateAsync(State<TState> state, CancellationToken cancellationToken);
+        Task<bool> IsInStateAsync(State<TState> state, CancellationToken cancellationToken = default(CancellationToken));
 
-        Task<State<TState>> GetCurrentStateAsync(CancellationToken cancellationToken);
+        Task<State<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default(CancellationToken));
 
-        Task<ICollection<TInput>> GetPermittedInputAsync(CancellationToken cancellationToken);
+        Task<ICollection<TInput>> GetPermittedInputAsync(CancellationToken cancellationToken = default(CancellationToken));
     }
 }

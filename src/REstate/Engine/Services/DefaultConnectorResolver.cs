@@ -9,12 +9,6 @@ namespace REstate.Engine.Services
     {
         private readonly IDictionary<string, IConnector<TState, TInput>> _connectors;
 
-        //public DefaultConnectorResolver(IEnumerable<IConnector<TState>> connectors)
-        //{
-        //    _connectors = connectors
-        //        .ToDictionary(kvp => kvp.ConnectorKey, kvp => kvp);
-        //}
-
         public DefaultConnectorResolver(IEnumerable<IConnector<TState, TInput>> connectors)
         {
             _connectors = connectors

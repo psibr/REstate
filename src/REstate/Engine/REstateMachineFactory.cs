@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using REstate.Configuration;
 using REstate.Engine.Repositories;
 using REstate.Engine.Services;
+using REstate.Schematics;
 
 namespace REstate.Engine
 {
@@ -24,15 +24,12 @@ namespace REstate.Engine
             _cartographer = cartographer;
         }
 
-        public IStateMachine<TState, TInput> ConstructFromSchematic(string machineId, Schematic<TState, TInput> configuration)
+        public IStateMachine<TState, TInput> ConstructFromSchematic(string machineId, ISchematic<TState, TInput> schematic)
         {
-            if (configuration == null)
-                throw new ArgumentNullException(nameof(configuration));
+            if (schematic == null)
+                throw new ArgumentNullException(nameof(schematic));
 
-            var stateMappings = configuration.StateConfigurations
-                .ToDictionary(stateConfig => new State<TState>(stateConfig.Value), stateConfig => stateConfig);
-
-            var reStateMachine = new REstateMachine<TState, TInput>(_connectorResolver, _repositoryContextFactory, _cartographer, machineId, stateMappings);
+            var reStateMachine = new REstateMachine<TState, TInput>(_connectorResolver, _repositoryContextFactory, _cartographer, machineId, schematic);
 
             return reStateMachine;
         }

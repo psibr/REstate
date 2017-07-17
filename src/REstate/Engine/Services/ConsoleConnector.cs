@@ -10,7 +10,7 @@ namespace REstate.Engine.Services
     {
         string IConnector.ConnectorKey => ConnectorKey;
 
-        public Task OnEntryAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, State<TState> state, TInput input, TPayload payload, IDictionary<string, string> connectorSettings, CancellationToken cancellationToken)
+        public Task OnEntryAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, State<TState> state, TInput input, TPayload payload, IReadOnlyDictionary<string, string> connectorSettings, CancellationToken cancellationToken = default(CancellationToken))
         {
             string format = null;
             connectorSettings?.TryGetValue("Format", out format);
@@ -21,7 +21,7 @@ namespace REstate.Engine.Services
             return Task.CompletedTask;
         }
 
-        public async Task<bool> GuardAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, State<TState> state, TInput input, TPayload payload, IDictionary<string, string> connectorSettings, CancellationToken cancellationToken)
+        public async Task<bool> GuardAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, State<TState> state, TInput input, TPayload payload, IReadOnlyDictionary<string, string> connectorSettings, CancellationToken cancellationToken = default(CancellationToken))
         {
             string prompt = null;
             connectorSettings?.TryGetValue("Prompt", out prompt);

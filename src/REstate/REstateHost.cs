@@ -1,8 +1,8 @@
-﻿using REstate.Configuration;
-using REstate.Configuration.Builder;
-using REstate.Configuration.Builder.Implementation;
-using REstate.Engine;
+﻿using REstate.Engine;
 using REstate.IoC.BoDi;
+using REstate.Schematics;
+using REstate.Schematics.Builder;
+using REstate.Schematics.Builder.Implementation;
 
 namespace REstate
 {

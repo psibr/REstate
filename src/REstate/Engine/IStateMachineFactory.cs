@@ -1,9 +1,9 @@
-﻿using REstate.Configuration;
+﻿using REstate.Schematics;
 
 namespace REstate.Engine
 {
     public interface IStateMachineFactory<TState, TInput>
     {
-        IStateMachine<TState, TInput> ConstructFromSchematic(string machineId, Schematic<TState, TInput> configuration);
+        IStateMachine<TState, TInput> ConstructFromSchematic(string machineId, ISchematic<TState, TInput> schematic);
     }
 }

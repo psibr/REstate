@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace REstate.Configuration.Builder.Implementation
+namespace REstate.Schematics.Builder.Implementation
 {
     internal class GuardBuilder 
         : IGuardBuilder
@@ -55,15 +55,5 @@ namespace REstate.Configuration.Builder.Implementation
 
         public IGuardBuilder WithSetting((string, string) setting) =>
             WithSetting(setting.Item1, setting.Item2);
-
-        public GuardConnector ToGuardConnector()
-        {
-            return new GuardConnector
-            {
-                ConnectorKey = ConnectorKey,
-                Description = Description,
-                Configuration = _settings
-            };
-        }
     }
 }

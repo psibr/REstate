@@ -1,6 +1,6 @@
 using System;
 
-namespace REstate.Configuration.Builder.Implementation
+namespace REstate.Schematics.Builder.Implementation
 {
     internal class TransitionBuilder<TState, TInput>
         : ITransitionBuilder<TState, TInput>
@@ -24,15 +24,6 @@ namespace REstate.Configuration.Builder.Implementation
             Guard = guardBuilder;
 
             return this;
-        }
-        public Transition<TState, TInput> ToTransition()
-        {
-            return new Transition<TState, TInput>
-            {
-                Input = Input,
-                ResultantState = ResultantState,
-                Guard = Guard?.ToGuardConnector()
-            };
         }
     }
 }

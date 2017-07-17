@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using REstate.Configuration;
 using REstate.Engine.Repositories;
 using REstate.Engine.Services;
+using REstate.Schematics;
 
 namespace REstate.Engine
 {
@@ -16,14 +16,12 @@ namespace REstate.Engine
         private readonly IRepositoryContextFactory<TState, TInput> _repositoryContextFactory;
         private readonly ICartographer<TState, TInput> _cartographer;
 
-        protected IDictionary<State<TState>, StateConfiguration<TState, TInput>> StateMappings { get; }
-
         internal REstateMachine(
             IConnectorResolver<TState, TInput> connectorResolver,
             IRepositoryContextFactory<TState, TInput> repositoryContextFactory,
             ICartographer<TState, TInput> cartographer,
             string machineId,
-            IDictionary<State<TState>, StateConfiguration<TState, TInput>> stateMappings)
+            ISchematic<TState, TInput> schematic)
         {
             _connectorResolver = connectorResolver;
             _repositoryContextFactory = repositoryContextFactory;
@@ -31,21 +29,24 @@ namespace REstate.Engine
             
             MachineId = machineId;
 
-            StateMappings = stateMappings;
+            Schematic = schematic;
         }
+
+        public ISchematic<TState, TInput> Schematic { get; }
+
         public string MachineId { get; }
 
         public Task<State<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             return SendAsync(input, payload, null, cancellationToken);
         }
 
         public Task<State<TState>> SendAsync(
             TInput input,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             return SendAsync<object>(input, null, null, cancellationToken);
         }
@@ -53,7 +54,7 @@ namespace REstate.Engine
         public Task<State<TState>> SendAsync(
             TInput input,
             Guid? lastCommitTag,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             return SendAsync<object>(input, null, lastCommitTag, cancellationToken);
         }
@@ -62,18 +63,16 @@ namespace REstate.Engine
             TInput input,
             TPayload payload, 
             Guid? lastCommitTag,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             using (var dataContext = _repositoryContextFactory.OpenContext())
             {
                 var currentState = await dataContext.Machines
                     .GetMachineStateAsync(MachineId, cancellationToken).ConfigureAwait(false);
 
-                var stateConfig = StateMappings[currentState];
+                var stateConfig = Schematic.States[currentState.Value];
 
-                var transition = stateConfig.Transitions.SingleOrDefault(t => t.Input.Equals(input));
-
-                if(transition == null)
+                if(!stateConfig.Transitions.TryGetValue(input, out ITransition<TState, TInput> transition))
                 {
                     throw new InvalidOperationException($"No transition defined for state: '{currentState.Value}' using input: '{input}'");
                 }
@@ -82,7 +81,7 @@ namespace REstate.Engine
                 {
                     var guardConnector =  _connectorResolver.ResolveConnector(transition.Guard.ConnectorKey);
 
-                    if (!await guardConnector.GuardAsync(this, currentState, input, payload, transition.Guard.Configuration, cancellationToken).ConfigureAwait(false))
+                    if (!await guardConnector.GuardAsync(this, currentState, input, payload, transition.Guard.Settings, cancellationToken).ConfigureAwait(false))
                     {
                         throw new InvalidOperationException("Guard clause prevented transition.");
                     }
@@ -95,7 +94,7 @@ namespace REstate.Engine
                     lastCommitTag ?? currentState.CommitTag, 
                     cancellationToken).ConfigureAwait(false);
 
-                stateConfig = StateMappings[currentState];
+                stateConfig = Schematic.States[currentState.Value];
 
                 if (stateConfig.OnEntry == null) return currentState;
 
@@ -103,15 +102,15 @@ namespace REstate.Engine
                 {
                     var entryConnector = _connectorResolver.ResolveConnector(stateConfig.OnEntry.ConnectorKey);
                         
-                    await entryConnector.OnEntryAsync(this, currentState, input, payload, stateConfig.OnEntry.Configuration, cancellationToken).ConfigureAwait(false);
+                    await entryConnector.OnEntryAsync(this, currentState, input, payload, stateConfig.OnEntry.Settings, cancellationToken).ConfigureAwait(false);
                 }
                 catch
                 {
-                    if (stateConfig.OnEntry.FailureTransition == null)
+                    if (stateConfig.OnEntry.OnFailureInput == null)
                         throw;
 
                     currentState = await SendAsync(
-                        stateConfig.OnEntry.FailureTransition.Input,
+                        stateConfig.OnEntry.OnFailureInput,
                         payload,
                         currentState.CommitTag,
                         cancellationToken).ConfigureAwait(false);
@@ -121,7 +120,7 @@ namespace REstate.Engine
             }
         }
 
-        public async Task<bool> IsInStateAsync(State<TState> state, CancellationToken cancellationToken)
+        public async Task<bool> IsInStateAsync(State<TState> state, CancellationToken cancellationToken = default(CancellationToken))
         {
             var currentState = await GetCurrentStateAsync(cancellationToken);
 
@@ -129,7 +128,7 @@ namespace REstate.Engine
             if(state == currentState)
                 return true;
 
-            var configuration = StateMappings[currentState];
+            var configuration = Schematic.States[currentState.Value];
 
             //Recursively look for anscestors
             while(configuration.ParentState != null)
@@ -139,13 +138,13 @@ namespace REstate.Engine
                     return true;
                 
                 //No match, move one level up the tree
-                configuration = StateMappings[new State<TState>(configuration.ParentState)];
+                configuration = Schematic.States[configuration.ParentState];
             }
 
             return false;
         }
 
-        public async Task<State<TState>> GetCurrentStateAsync(CancellationToken cancellationToken)
+        public async Task<State<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             State<TState> currentState;
 
@@ -159,18 +158,18 @@ namespace REstate.Engine
             return currentState;
         }
 
-        public async Task<ICollection<TInput>> GetPermittedInputAsync(CancellationToken cancellationToken)
+        public async Task<ICollection<TInput>> GetPermittedInputAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             var currentState = await GetCurrentStateAsync(cancellationToken).ConfigureAwait(false);
 
-            var configuration = StateMappings[currentState];
+            var configuration = Schematic.States[currentState.Value];
 
-            return configuration.Transitions.Select(t => t.Input).ToList();
+            return configuration.Transitions.Values.Select(t => t.Input).ToList();
         }
 
         public override string ToString()
         {
-            return _cartographer.WriteMap(StateMappings.Values);
+            return _cartographer.WriteMap(Schematic.States.Values);
         }
     }
 }

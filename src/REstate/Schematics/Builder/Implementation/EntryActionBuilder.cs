@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace REstate.Configuration.Builder.Implementation
+namespace REstate.Schematics.Builder.Implementation
 {
     internal class EntryActionBuilder<TInput> 
         : IEntryActionBuilder<TInput>
@@ -61,17 +61,6 @@ namespace REstate.Configuration.Builder.Implementation
             OnFailureInput = input;
 
             return this;
-        }
-
-        public EntryConnector<TInput> ToEntryConnector()
-        {
-            return new EntryConnector<TInput>
-            {
-                ConnectorKey = ConnectorKey,
-                Description = Description,
-                Configuration = _settings,
-                FailureTransition = !OnFailureInput.Equals(default(TInput)) ? new ExceptionTransition<TInput> { Input = OnFailureInput } : null
-            };
         }
     }
 }

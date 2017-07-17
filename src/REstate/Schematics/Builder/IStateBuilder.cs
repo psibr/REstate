@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 
-namespace REstate.Configuration.Builder
+namespace REstate.Schematics.Builder
 {
     public interface IStateBuilder<TState, TInput>
         : IState<TState, TInput>
@@ -19,20 +18,5 @@ namespace REstate.Configuration.Builder
         IStateBuilder<TState, TInput> WithReentrance(TInput input, Action<ITransitionBuilder<TState, TInput>> transition = null);
 
         IStateBuilder<TState, TInput> WithOnEntry(string connectorKey, Action<IEntryActionBuilder<TInput>> onEntry = null);
-    }
-
-    public interface IState<TState, TInput>
-    {
-        TState Value { get; }
-
-        TState ParentState { get; }
-
-        string Description { get; }
-
-        IDictionary<TInput, ITransition<TState, TInput>> Transitions { get; }
-
-        IEntryAction<TInput> OnEntry { get; }
-
-        StateConfiguration<TState, TInput> ToStateConfiguration();
     }
 }

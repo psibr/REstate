@@ -5,7 +5,7 @@
         ILocalStateEngine<TState, TInput> GetStateEngine<TState, TInput>();
     }
 
-    public class LocalHost
+    internal class LocalHost
         : ILocalHost
     {
         private readonly IAgent _agent;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace REstate.Configuration.Builder.Implementation
+namespace REstate.Schematics.Builder.Implementation
 {
     public class SchematicBuilder<TState, TInput>
         : ISchematicBuilder<TState, TInput>
@@ -99,16 +99,6 @@ namespace REstate.Configuration.Builder.Implementation
             }
 
             return this;
-        }
-
-        public Schematic<TState, TInput> ToSchematic()
-        {
-            return new Schematic<TState, TInput>
-            {
-                SchematicName = SchematicName,
-                InitialState = InitialState,
-                StateConfigurations = _stateConfigurations.Values.Select(builder => builder.ToStateConfiguration()).ToArray()
-            };
         }
     }
 }

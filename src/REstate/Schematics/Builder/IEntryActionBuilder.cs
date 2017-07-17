@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace REstate.Configuration.Builder
+namespace REstate.Schematics.Builder
 {
     public interface IEntryActionBuilder<TInput> 
         : IEntryAction<TInput>
@@ -13,18 +13,5 @@ namespace REstate.Configuration.Builder
         IEntryActionBuilder<TInput> WithSetting(ValueTuple<string, string> setting);
 
         IEntryActionBuilder<TInput> OnFailureSend(TInput input);
-    }
-
-    public interface IEntryAction<TInput>
-    {
-        string ConnectorKey { get; }
-
-        string Description { get; }
-
-        TInput OnFailureInput { get; }
-
-        IReadOnlyDictionary<string, string> Settings { get; }
-
-        EntryConnector<TInput> ToEntryConnector();
     }
 }

@@ -1,10 +1,9 @@
-﻿using REstate.Configuration;
-using REstate.Engine.Repositories;
+﻿using REstate.Engine.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using REstate.Configuration.Builder;
+using REstate.Schematics;
 
 namespace REstate.Engine
 {
@@ -22,20 +21,24 @@ namespace REstate.Engine
             _repositoryContextFactory = repositoryContextFactory;
         }
 
-        public async Task<Schematic<TState, TInput>> GetSchematicAsync(string schematicName, CancellationToken cancellationToken)
+        public async Task<ISchematic<TState, TInput>> GetSchematicAsync(
+            string schematicName,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
-            Schematic<TState, TInput> configuration;
+            Schematic<TState, TInput> schematic;
             using (var repositories = _repositoryContextFactory.OpenContext())
             {
-                configuration = await repositories.Schematics
+                schematic = await repositories.Schematics
                     .RetrieveSchematicAsync(schematicName, cancellationToken)
                     .ConfigureAwait(false);
             }
 
-            return configuration;
+            return schematic;
         }
 
-        public async Task<Schematic<TState, TInput>> StoreSchematicAsync(Schematic<TState, TInput> schematic, CancellationToken cancellationToken)
+        public async Task<ISchematic<TState, TInput>> StoreSchematicAsync(
+            Schematic<TState, TInput> schematic,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             Schematic<TState, TInput> newSchematic;
             using (var repositories = _repositoryContextFactory.OpenContext())
@@ -48,14 +51,26 @@ namespace REstate.Engine
             return newSchematic;
         }
 
-        public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(Schematic<TState, TInput> schematic, IDictionary<string, string> metadata, CancellationToken cancellationToken)
+        public Task<ISchematic<TState, TInput>> StoreSchematicAsync(
+            ISchematic<TState, TInput> schematic,
+            CancellationToken cancellationToken = default(CancellationToken))
+            => StoreSchematicAsync(schematic.Copy(), cancellationToken);
+
+        public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(
+            Schematic<TState, TInput> schematic,
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             var machineId = Guid.NewGuid().ToString();
 
             using (var repositories = _repositoryContextFactory.OpenContext())
             {
                 await repositories.Machines
-                    .CreateMachineAsync(schematic, machineId, metadata, cancellationToken)
+                    .CreateMachineAsync(
+                        schematic,
+                        machineId,
+                        metadata,
+                        cancellationToken)
                     .ConfigureAwait(false);
             }
 
@@ -67,7 +82,16 @@ namespace REstate.Engine
             return machine;
         }
 
-        public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(string schematicName, IDictionary<string, string> metadata, CancellationToken cancellationToken)
+        public Task<IStateMachine<TState, TInput>> CreateMachineAsync(
+            ISchematic<TState, TInput> schematic,
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default(CancellationToken))
+            => CreateMachineAsync(schematic.Copy(), metadata, cancellationToken);
+
+        public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(
+            string schematicName,
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             var machineId = Guid.NewGuid().ToString();
 
@@ -79,7 +103,11 @@ namespace REstate.Engine
                     .RetrieveSchematicAsync(schematicName, cancellationToken);
 
                 await repositories.Machines
-                    .CreateMachineAsync(schematicName, machineId, metadata, cancellationToken)
+                    .CreateMachineAsync(
+                        schematicName,
+                        machineId,
+                        metadata,
+                        cancellationToken)
                     .ConfigureAwait(false);
             }
 
@@ -91,7 +119,9 @@ namespace REstate.Engine
             return machine;
         }
 
-        public async Task<IStateMachine<TState, TInput>> GetMachineAsync(string machineId, CancellationToken cancellationToken)
+        public async Task<IStateMachine<TState, TInput>> GetMachineAsync(
+            string machineId,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             Schematic<TState, TInput> schematic;
 
@@ -110,7 +140,9 @@ namespace REstate.Engine
             return machine;
         }
 
-        public async Task DeleteMachineAsync(string machineId, CancellationToken cancellationToken)
+        public async Task DeleteMachineAsync(
+            string machineId,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             using (var repositories = _repositoryContextFactory.OpenContext())
             {

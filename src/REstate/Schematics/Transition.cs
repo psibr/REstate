@@ -1,9 +1,9 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace REstate.Configuration
+namespace REstate.Schematics
 {
     public class Transition<TState, TInput>
+        : ITransition<TState, TInput>
     {
         [Required]
         public TInput Input { get; set; }
@@ -12,5 +12,7 @@ namespace REstate.Configuration
         public TState ResultantState { get; set; }
 
         public GuardConnector Guard { get; set; }
+
+        IGuard ITransition<TState, TInput>.Guard => Guard;
     }
 }

@@ -13,16 +13,16 @@ namespace REstate.Engine.Services
             State<TState> state,
             TInput input,
             TPayload payload,
-            IDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken);
+            IReadOnlyDictionary<string, string> connectorSettings,
+            CancellationToken cancellationToken = default(CancellationToken));
 
         Task<bool> GuardAsync<TPayload>(
             IStateMachine<TState, TInput> machine,
             State<TState> state,
             TInput input,
             TPayload payload,
-            IDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken);
+            IReadOnlyDictionary<string, string> connectorSettings,
+            CancellationToken cancellationToken = default(CancellationToken));
     }
 
     public interface IConnector

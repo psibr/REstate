@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MessagePack;
 using REstate.Remote.Models;
 using REstate.Remote.Services;
+using REstate.Schematics;
 
 namespace REstate.Remote
 {
@@ -13,15 +14,19 @@ namespace REstate.Remote
     {
         private readonly IStateMachineService _stateMachineService;
 
-        public GrpcStateMachine(IStateMachineService stateMachineService, string machineId)
+        public GrpcStateMachine(IStateMachineService stateMachineService, ISchematic<TState, TInput> schematic, string machineId)
         {
-            MachineId = machineId;
             _stateMachineService = stateMachineService;
+
+            Schematic = schematic;
+            MachineId = machineId;
         }
+
+        public ISchematic<TState, TInput> Schematic { get; }
 
         public string MachineId { get; }
 
-        public async Task<State<TState>> SendAsync<TPayload>(TInput input, TPayload payload, CancellationToken cancellationToken)
+        public async Task<State<TState>> SendAsync<TPayload>(TInput input, TPayload payload, CancellationToken cancellationToken = default(CancellationToken))
         {
             var response = await _stateMachineService.SendAsync(new SendRequest
             {
@@ -34,32 +39,32 @@ namespace REstate.Remote
                 response.CommitTag);
         }
 
-        public Task<State<TState>> SendAsync<TPayload>(TInput input, TPayload payload, Guid? lastCommitTag, CancellationToken cancellationToken)
+        public Task<State<TState>> SendAsync<TPayload>(TInput input, TPayload payload, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
         {
             return null;
         }
 
-        public Task<State<TState>> SendAsync(TInput input, CancellationToken cancellationToken)
+        public Task<State<TState>> SendAsync(TInput input, CancellationToken cancellationToken = default(CancellationToken))
         {
             return null;
         }
 
-        public Task<State<TState>> SendAsync(TInput input, Guid? lastCommitTag, CancellationToken cancellationToken)
+        public Task<State<TState>> SendAsync(TInput input, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
         {
             return null;
         }
 
-        public Task<bool> IsInStateAsync(State<TState> state, CancellationToken cancellationToken)
+        public Task<bool> IsInStateAsync(State<TState> state, CancellationToken cancellationToken = default(CancellationToken))
         {
             return null;
         }
 
-        public Task<State<TState>> GetCurrentStateAsync(CancellationToken cancellationToken)
+        public Task<State<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             return null;
         }
 
-        public Task<ICollection<TInput>> GetPermittedInputAsync(CancellationToken cancellationToken)
+        public Task<ICollection<TInput>> GetPermittedInputAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             return null;
         }

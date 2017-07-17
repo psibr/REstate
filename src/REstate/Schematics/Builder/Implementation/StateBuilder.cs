@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace REstate.Configuration.Builder.Implementation
+namespace REstate.Schematics.Builder.Implementation
 {
     internal class StateBuilder<TState, TInput>
         : IStateBuilder<TState, TInput>
@@ -87,18 +87,6 @@ namespace REstate.Configuration.Builder.Implementation
             OnEntry = onEntryBuilder;
 
             return this;
-        }
-
-        public StateConfiguration<TState, TInput> ToStateConfiguration()
-        {
-            return new StateConfiguration<TState, TInput>
-            {
-                Value = Value,
-                ParentState = ParentState,
-                Description = Description,
-                OnEntry = OnEntry?.ToEntryConnector(),
-                Transitions = Transitions.Values.Select(t => t.ToTransition()).ToArray()
-            };
         }
     }
 }
