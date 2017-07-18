@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MagicOnion.Server;
@@ -5,9 +6,9 @@ using REstate.Remote.Services;
 
 namespace REstate.Remote
 {
-    public class REstateGrpcServer
+    public class REstateGrpcServer : IDisposable
     {
-        private Server Server { get; }
+        private Server Server { get; set; }
 
         public REstateGrpcServer(params ServerPort[] bindings)
         {
@@ -63,6 +64,27 @@ namespace REstate.Remote
         public Task KillAsync()
         {
             return Server.KillAsync();
+        }
+
+        private void ReleaseUnmanagedResources()
+        {
+            KillAsync().Wait();
+        }
+
+        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+        public void Dispose()
+        {
+            ReleaseUnmanagedResources();
+
+            Server = null;
+
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>Allows an object to try to free resources and perform other cleanup operations before it is reclaimed by garbage collection.</summary>
+        ~REstateGrpcServer()
+        {
+            ReleaseUnmanagedResources();
         }
     }
 }

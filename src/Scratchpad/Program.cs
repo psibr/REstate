@@ -79,19 +79,18 @@ namespace Scratchpad
         {
             GrpcEnvironment.SetLogger(new ConsoleLogger());
 
-            var server = new REstateGrpcServer(new ServerPort("localhost", 12345, ServerCredentials.Insecure));
-
-            server.Start();
-
-            // sample, launch server/client in same app.
-            Task.Run(async () =>
+            using (var server = REstateHost.Agent
+                .AsRemote()
+                .CreateGrpcServer(new ServerPort("localhost", 12345, ServerCredentials.Insecure)))
             {
-                await ClientImpl();
-            }).Wait();
+                server.Start();
 
-            Console.ReadLine();
-
-            server.ShutdownAsync().Wait();
+                // sample, launch server/client in same app.
+                Task.Run(async () =>
+                {
+                    await ClientImpl();
+                }).Wait();
+            }
         }
     }
 }

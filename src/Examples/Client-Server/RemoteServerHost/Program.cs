@@ -2,6 +2,7 @@
 using Grpc.Core;
 using Grpc.Core.Logging;
 using MagicOnion.Server;
+using REstate;
 using REstate.Remote.Services;
 
 namespace RemoteServerHost
@@ -12,23 +13,14 @@ namespace RemoteServerHost
         {
             GrpcEnvironment.SetLogger(new ConsoleLogger());
 
-            var service = MagicOnionEngine
-                .BuildServerServiceDefinition(
-                    targetTypes: new[]
-                    {
-                        typeof(StateMachineService)
-                    },
-                    option: new MagicOnionOptions(
-                        isReturnExceptionStackTraceInErrorDetail: true));
-
-            var server = new Server
-            {
-                Services = { service },
-                Ports = { new ServerPort("localhost", 12345, ServerCredentials.Insecure) }
-            };
+            var server = REstateHost.Agent
+                .AsRemote()
+                .CreateGrpcServer(new ServerPort("localhost", 12345, ServerCredentials.Insecure));
 
             // launch gRPC Server.
             server.Start();
+
+            Console.ReadLine();
         }
     }
 }
