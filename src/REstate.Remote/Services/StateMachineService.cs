@@ -4,10 +4,12 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MagicOnion;
 using MagicOnion.Server;
 using MessagePack;
 using MessagePack.Resolvers;
+using REstate.Engine;
 using REstate.Remote.Models;
 using REstate.Schematics;
 
@@ -73,9 +75,18 @@ namespace REstate.Remote.Services
 
             var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
 
-            var newState = commitTag != null
-                ? await machine.SendAsync(input, commitTag.Value, cancellationToken).ConfigureAwait(false)
-                : await machine.SendAsync(input, cancellationToken).ConfigureAwait(false);
+            State<TState> newState;
+
+            try
+            {
+                newState = commitTag != null
+                    ? await machine.SendAsync(input, commitTag.Value, cancellationToken).ConfigureAwait(false)
+                    : await machine.SendAsync(input, cancellationToken).ConfigureAwait(false);
+            }
+            catch (StateConflictException conflictException)
+            {
+                throw new ReturnStatusException(StatusCode.AlreadyExists, conflictException.Message);
+            }
 
             return new SendResponse
             {
@@ -116,9 +127,18 @@ namespace REstate.Remote.Services
 
             var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
 
-            var newState = commitTag != null
-                ? await machine.SendAsync(input, payload, commitTag.Value, cancellationToken).ConfigureAwait(false)
-                : await machine.SendAsync(input, payload, cancellationToken).ConfigureAwait(false);
+            State<TState> newState;
+
+            try
+            {
+                newState = commitTag != null
+                    ? await machine.SendAsync(input, payload, commitTag.Value, cancellationToken).ConfigureAwait(false)
+                    : await machine.SendAsync(input, payload, cancellationToken).ConfigureAwait(false);
+            }
+            catch (StateConflictException conflictException)
+            {
+                throw new ReturnStatusException(StatusCode.AlreadyExists, conflictException.Message);
+            }
 
             return new SendResponse
             {

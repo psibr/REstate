@@ -5,10 +5,9 @@ using Grpc.Core;
 using MagicOnion.Server;
 using System.Threading.Tasks;
 using Grpc.Core.Logging;
-using Newtonsoft.Json;
+using REstate.Engine;
 using REstate.Remote;
 using REstate.Remote.Services;
-using REstate.Schematics;
 
 namespace Scratchpad
 {
@@ -50,14 +49,28 @@ namespace Scratchpad
             
             var newSchematic = await stateEngine.StoreSchematicAsync(schematic, CancellationToken.None);
 
-            var echoMachine = await REstateHost.Agent
-                .AsLocal()
-                .GetStateEngine<string, string>()
-                .CreateMachineAsync("EchoMachine", null, CancellationToken.None);
+            var echoMachine = await stateEngine.CreateMachineAsync("EchoMachine", null, CancellationToken.None);
+
+            echoMachine = await stateEngine.CreateMachineAsync(schematic, null, CancellationToken.None);
 
             echoMachine = await stateEngine.GetMachineAsync(echoMachine.MachineId, CancellationToken.None);
 
+            var machineSchematic = await echoMachine.GetSchematicAsync(CancellationToken.None);
+
             var status = await echoMachine.SendAsync("Echo", "Hello!", CancellationToken.None);
+
+            var commitTag = status.CommitTag;
+
+            status = await echoMachine.SendAsync("Echo", CancellationToken.None);
+
+            try
+            {
+                status = await echoMachine.SendAsync("Echo", commitTag, CancellationToken.None);
+            }
+            catch(StateConflictException)
+            {
+                // expected exception
+            }
 
             await stateEngine.DeleteMachineAsync(echoMachine.MachineId, CancellationToken.None);
         }
@@ -66,21 +79,8 @@ namespace Scratchpad
         {
             GrpcEnvironment.SetLogger(new ConsoleLogger());
 
-            var service = MagicOnionEngine.BuildServerServiceDefinition(
-                targetTypes: new[]
-                {
-                    typeof(StateMachineService)
-                },
-                option: new MagicOnionOptions(
-                    isReturnExceptionStackTraceInErrorDetail: true));
+            var server = new REstateGrpcServer(new ServerPort("localhost", 12345, ServerCredentials.Insecure));
 
-            var server = new Server
-            {
-                Services = { service },
-                Ports = { new ServerPort("localhost", 12345, ServerCredentials.Insecure) }
-            };
-
-            // launch gRPC Server.
             server.Start();
 
             // sample, launch server/client in same app.
@@ -90,10 +90,8 @@ namespace Scratchpad
             }).Wait();
 
             Console.ReadLine();
-        }
-    }
 
-    public class REstateRemoteHost
-    {
+            server.ShutdownAsync().Wait();
+        }
     }
 }

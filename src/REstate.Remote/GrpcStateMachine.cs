@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MessagePack;
 using MessagePack.Resolvers;
+using REstate.Engine;
 using REstate.Remote.Models;
 using REstate.Remote.Services;
 using REstate.Schematics;
@@ -24,13 +26,16 @@ namespace REstate.Remote
 
         public async Task<ISchematic<TState, TInput>> GetSchematicAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await _stateMachineService.GetMachineSchematicAsync(new GetMachineSchematicRequest
-            {
-                MachineId = MachineId
-            });
+            var response = await _stateMachineService
+                .WithCancellationToken(cancellationToken)
+                .GetMachineSchematicAsync(new GetMachineSchematicRequest
+                {
+                    MachineId = MachineId
+                });
 
             return MessagePackSerializer
-                .Deserialize<Schematic<TState, TInput>>(response.SchematicBytes,
+                .Deserialize<Schematic<TState, TInput>>(
+                    response.SchematicBytes,
                     ContractlessStandardResolver.Instance);
         }
 
@@ -38,15 +43,26 @@ namespace REstate.Remote
 
         public async Task<State<TState>> SendAsync<TPayload>(TInput input, TPayload payload, CancellationToken cancellationToken = default(CancellationToken))
         {
-            
-            var response = await _stateMachineService
-                .WithCancellationToken(cancellationToken)
-                .SendWithPayloadAsync(new SendWithPayloadRequest
-                {
-                    MachineId = MachineId,
-                    InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
-                    PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload)
-                });
+            SendResponse response;
+
+            try
+            {
+                response = await _stateMachineService
+                    .WithCancellationToken(cancellationToken)
+                    .SendWithPayloadAsync(new SendWithPayloadRequest
+                    {
+                        MachineId = MachineId,
+                        InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
+                        PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload)
+                    });
+            }
+            catch (RpcException exception)
+            {
+                if (exception.Status.StatusCode == StatusCode.AlreadyExists)
+                    throw new StateConflictException(exception.Status.Detail, exception);
+
+                throw;
+            }
 
             return new State<TState>(
                 MessagePackSerializer.Deserialize<TState>(
@@ -57,15 +73,27 @@ namespace REstate.Remote
 
         public async Task<State<TState>> SendAsync<TPayload>(TInput input, TPayload payload, Guid lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await _stateMachineService
-                .WithCancellationToken(cancellationToken)
-                .SendWithPayloadAsync(new SendWithPayloadRequest
-                {
-                    MachineId = MachineId,
-                    InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
-                    PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload),
-                    CommitTag = lastCommitTag
-                });
+            SendResponse response;
+
+            try
+            {
+                response = await _stateMachineService
+                    .WithCancellationToken(cancellationToken)
+                    .SendWithPayloadAsync(new SendWithPayloadRequest
+                    {
+                        MachineId = MachineId,
+                        InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
+                        PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload),
+                        CommitTag = lastCommitTag
+                    });
+            }
+            catch (RpcException exception)
+            {
+                if (exception.Status.StatusCode == StatusCode.AlreadyExists)
+                    throw new StateConflictException(exception.Status.Detail, exception);
+
+                throw;
+            }
 
             return new State<TState>(
                 MessagePackSerializer.Deserialize<TState>(
@@ -76,13 +104,25 @@ namespace REstate.Remote
 
         public async Task<State<TState>> SendAsync(TInput input, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await _stateMachineService
+            SendResponse response;
+
+            try
+            {
+                response = await _stateMachineService
                 .WithCancellationToken(cancellationToken)
                 .SendAsync(new SendRequest
                 {
                     MachineId = MachineId,
                     InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance)
                 });
+            }
+            catch (RpcException exception)
+            {
+                if (exception.Status.StatusCode == StatusCode.AlreadyExists)
+                    throw new StateConflictException(exception.Status.Detail, exception);
+
+                throw;
+            }
 
             return new State<TState>(
                 MessagePackSerializer.Deserialize<TState>(
@@ -93,14 +133,26 @@ namespace REstate.Remote
 
         public async Task<State<TState>> SendAsync(TInput input, Guid lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await _stateMachineService
-                .WithCancellationToken(cancellationToken)
-                .SendAsync(new SendRequest
-                {
-                    MachineId = MachineId,
-                    InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
-                    CommitTag = lastCommitTag
-                });
+            SendResponse response;
+
+            try
+            {
+                response = await _stateMachineService
+                    .WithCancellationToken(cancellationToken)
+                    .SendAsync(new SendRequest
+                    {
+                        MachineId = MachineId,
+                        InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
+                        CommitTag = lastCommitTag
+                    });
+            }
+            catch (RpcException exception)
+            {
+                if (exception.Status.StatusCode == StatusCode.AlreadyExists)
+                    throw new StateConflictException(exception.Status.Detail, exception);
+
+                throw;
+            }
 
             return new State<TState>(
                 MessagePackSerializer.Deserialize<TState>(

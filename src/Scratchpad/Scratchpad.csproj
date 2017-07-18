@@ -14,7 +14,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Best.Avro" Version="1.8.1.4" />
     <PackageReference Include="MagicOnion" Version="0.5.1" />
   </ItemGroup>
 

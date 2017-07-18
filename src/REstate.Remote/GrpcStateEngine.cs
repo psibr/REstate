@@ -36,11 +36,13 @@ namespace REstate.Remote
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await _stateMachineService.CreateMachineFromSchematicAsync(new CreateMachineFromSchematicRequest
-            {
-                SchematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance),
-                Metadata = metadata
-            });
+            var response = await _stateMachineService
+                .WithCancellationToken(cancellationToken)
+                .CreateMachineFromSchematicAsync(new CreateMachineFromSchematicRequest
+                {
+                    SchematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance),
+                    Metadata = metadata
+                });
 
             return new GrpcStateMachine<TState, TInput>(_stateMachineService, response.MachineId);
         }
@@ -50,24 +52,27 @@ namespace REstate.Remote
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await _stateMachineService.CreateMachineFromStoreAsync(new CreateMachineFromStoreRequest
-            {
-                SchematicName = schematicName,
-                Metadata = metadata
-            });
+            var response = await _stateMachineService
+                .WithCancellationToken(cancellationToken)
+                .CreateMachineFromStoreAsync(new CreateMachineFromStoreRequest
+                {
+                    SchematicName = schematicName,
+                    Metadata = metadata
+                });
 
             return new GrpcStateMachine<TState, TInput>(_stateMachineService, response.MachineId);
-
         }
 
         public async Task DeleteMachineAsync(
             string machineId,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            await _stateMachineService.DeleteMachineAsync(new DeleteMachineRequest
-            {
-                MachineId = machineId
-            });
+            await _stateMachineService
+                .WithCancellationToken(cancellationToken)
+                .DeleteMachineAsync(new DeleteMachineRequest
+                {
+                    MachineId = machineId
+                });
         }
 
         public Task<IStateMachine<TState, TInput>> GetMachineAsync(
@@ -80,10 +85,12 @@ namespace REstate.Remote
             string schematicName,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await _stateMachineService.GetSchematicAsync(new GetSchematicRequest
-            {
-                SchematicName = schematicName
-            });
+            var response = await _stateMachineService
+                .WithCancellationToken(cancellationToken)
+                .GetSchematicAsync(new GetSchematicRequest
+                {
+                    SchematicName = schematicName
+                });
 
             return MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
                 response.SchematicBytes,
@@ -94,12 +101,14 @@ namespace REstate.Remote
             Schematic<TState, TInput> schematic,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await _stateMachineService.StoreSchematicAsync(new StoreSchematicRequest
-            {
-                SchematicBytes = MessagePackSerializer.Serialize(
-                    schematic,
-                    ContractlessStandardResolver.Instance)
-            });
+            var response = await _stateMachineService
+                .WithCancellationToken(cancellationToken)
+                .StoreSchematicAsync(new StoreSchematicRequest
+                {
+                    SchematicBytes = MessagePackSerializer.Serialize(
+                        schematic,
+                        ContractlessStandardResolver.Instance)
+                });
 
             return MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
                 response.SchematicBytes,

@@ -45,7 +45,7 @@ using System.Reflection;
 
 #if !BODI_LIMITEDRUNTIME
 using System.Runtime.Serialization;
-using System.IrEstateConfiguration;
+using System.Configuration;
 #endif
 
 namespace REstate.IoC.BoDi
@@ -900,7 +900,7 @@ namespace REstate.IoC.BoDi
         }
     }
 
-#region IrEstateConfiguration handling
+#region Configuration handling
 #if !BODI_LIMITEDRUNTIME && !BODI_DISABLECONFIGFILESUPPORT
 
     public class BoDiConfigurationSection : ConfigurationSection
