@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using MagicOnion;
 using MagicOnion.Server;
 using MessagePack;
+using MessagePack.Resolvers;
 using REstate.Remote.Models;
 using REstate.Schematics;
 
@@ -25,6 +27,10 @@ namespace REstate.Remote.Services
         UnaryResult<GetSchematicResponse> GetSchematicAsync(GetSchematicRequest request);
 
         UnaryResult<Nil> DeleteMachineAsync(DeleteMachineRequest request);
+
+        UnaryResult<CreateMachineResponse> CreateMachineFromStoreAsync(CreateMachineFromStoreRequest request);
+
+        UnaryResult<CreateMachineResponse> CreateMachineFromSchematicAsync(CreateMachineFromSchematicRequest request);
     }
 
     public class StateMachineService
@@ -83,7 +89,7 @@ namespace REstate.Remote.Services
             var schematic = MessagePackSerializer.NonGeneric.Deserialize(
                 typeof(Schematic<,>).MakeGenericType(genericTypes),
                 request.SchematicBytes,
-                MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+                ContractlessStandardResolver.Instance);
 
             var storeSchematicAsyncMethod = typeof(StateMachineService)
                 .GetMethod(nameof(StoreSchematicAsync), BindingFlags.NonPublic | BindingFlags.Static)
@@ -139,10 +145,84 @@ namespace REstate.Remote.Services
             return new GetMachineResponse
             {
                 MachineId = machine.MachineId,
-                SchematicBytes = MessagePackSerializer.NonGeneric.Serialize(machine.Schematic.GetType(), machine.Schematic, MessagePack.Resolvers.ContractlessStandardResolver.Instance)
+                SchematicBytes = MessagePackSerializer.NonGeneric
+                    .Serialize(machine.Schematic.GetType(), machine.Schematic, ContractlessStandardResolver.Instance)
             };
         }
         #endregion GetMachineAsync
+
+        #region CreateMachineFromStoreAsync
+        public async UnaryResult<CreateMachineResponse> CreateMachineFromStoreAsync(CreateMachineFromStoreRequest request)
+        {
+            var genericTypes = GetGenericsFromHeaders();
+
+            var createMachineFromStoreAsyncMethod = typeof(StateMachineService)
+                .GetMethod(nameof(CreateMachineFromStoreAsync), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(genericTypes);
+
+            return await(Task<CreateMachineResponse>) createMachineFromStoreAsyncMethod
+                .Invoke(this, new object[]
+                {
+                    request.SchematicName,
+                    request.Metadata,
+                    Context.CallContext.CancellationToken
+                });
+        }
+
+        private static async Task<CreateMachineResponse> CreateMachineFromStoreAsync<TState, TInput>(string schematicName,
+            IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var engine = REstateHost.Agent
+                .AsLocal()
+                .GetStateEngine<TState, TInput>();
+
+            var machine = await engine.CreateMachineAsync(schematicName, metadata, cancellationToken);
+
+            return new CreateMachineResponse
+            {
+                MachineId = machine.MachineId
+            };
+        }
+        #endregion CreateMachineFromStoreAsync
+
+        #region CreateMachineFromSchematicAsync
+        public async UnaryResult<CreateMachineResponse> CreateMachineFromSchematicAsync(CreateMachineFromSchematicRequest request)
+        {
+            var genericTypes = GetGenericsFromHeaders();
+
+            var schematic = MessagePackSerializer.NonGeneric.Deserialize(
+                typeof(Schematic<,>).MakeGenericType(genericTypes),
+                request.SchematicBytes,
+                ContractlessStandardResolver.Instance);
+
+            var createMachineFromStoreAsyncMethod = typeof(StateMachineService)
+                .GetMethod(nameof(CreateMachineFromSchematicAsync), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(genericTypes);
+
+            return await (Task<CreateMachineResponse>)createMachineFromStoreAsyncMethod
+                .Invoke(this, new[]
+                {
+                    schematic,
+                    request.Metadata,
+                    Context.CallContext.CancellationToken
+                });
+        }
+
+        private static async Task<CreateMachineResponse> CreateMachineFromSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic,
+            IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var engine = REstateHost.Agent
+                .AsLocal()
+                .GetStateEngine<TState, TInput>();
+
+            var machine = await engine.CreateMachineAsync(schematic, metadata, cancellationToken);
+
+            return new CreateMachineResponse
+            {
+                MachineId = machine.MachineId
+            };
+        }
+        #endregion CreateMachineFromSchematicAsync
 
         #region GetSchematicAsync
         public async UnaryResult<GetSchematicResponse> GetSchematicAsync(GetSchematicRequest request)

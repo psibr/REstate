@@ -30,14 +30,26 @@ namespace REstate.Remote
             CancellationToken cancellationToken = default(CancellationToken))
             => CreateMachineAsync(schematic.Copy(), metadata, cancellationToken);
 
-        public Task<IStateMachine<TState, TInput>> CreateMachineAsync(Schematic<TState, TInput> schematic, IDictionary<string, string> metadata = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(Schematic<TState, TInput> schematic, IDictionary<string, string> metadata = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return null;
+            var response = await _stateMachineService.CreateMachineFromSchematicAsync(new CreateMachineFromSchematicRequest
+            {
+                SchematicBytes = MessagePackSerializer.Serialize(schematic, MessagePack.Resolvers.ContractlessStandardResolver.Instance),
+                Metadata = metadata
+            });
+
+            return new GrpcStateMachine<TState, TInput>(_stateMachineService, null, response.MachineId);
         }
 
-        public Task<IStateMachine<TState, TInput>> CreateMachineAsync(string schematicName, IDictionary<string, string> metadata = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(string schematicName, IDictionary<string, string> metadata = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return null;
+            var response = await _stateMachineService.CreateMachineFromStoreAsync(new CreateMachineFromStoreRequest
+            {
+                SchematicName = schematicName,
+                Metadata = metadata
+            });
+
+            return new GrpcStateMachine<TState, TInput>(_stateMachineService, null, response.MachineId);
         }
 
         public async Task DeleteMachineAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken))
