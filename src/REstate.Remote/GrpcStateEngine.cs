@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,7 +38,7 @@ namespace REstate.Remote
         {
             var response = await _stateMachineService.CreateMachineFromSchematicAsync(new CreateMachineFromSchematicRequest
             {
-                SchematicBytes = MessagePackSerializer.Serialize(schematic, MessagePack.Resolvers.ContractlessStandardResolver.Instance),
+                SchematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance),
                 Metadata = metadata
             });
 
@@ -76,7 +75,6 @@ namespace REstate.Remote
             CancellationToken cancellationToken = default(CancellationToken)) =>
                 Task.FromResult<IStateMachine<TState, TInput>>(
                     new GrpcStateMachine<TState, TInput>(_stateMachineService, machineId));
-
 
         public async Task<ISchematic<TState, TInput>> GetSchematicAsync(
             string schematicName,

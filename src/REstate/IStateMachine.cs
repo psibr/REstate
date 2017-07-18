@@ -21,7 +21,7 @@ namespace REstate
         Task<State<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
-            Guid? lastCommitTag,
+            Guid lastCommitTag,
             CancellationToken cancellationToken = default(CancellationToken));
 
         Task<State<TState>> SendAsync(
@@ -30,7 +30,7 @@ namespace REstate
 
         Task<State<TState>> SendAsync(
             TInput input,
-            Guid? lastCommitTag,
+            Guid lastCommitTag,
             CancellationToken cancellationToken = default(CancellationToken));
 
         Task<bool> IsInStateAsync(State<TState> state, CancellationToken cancellationToken = default(CancellationToken));

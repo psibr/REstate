@@ -4,7 +4,7 @@ using MessagePack;
 namespace REstate.Remote.Models
 {
     [MessagePackObject]
-    public class SendRequest
+    public class SendWithPayloadRequest
     {
         [Key(0)]
         public string MachineId { get; set; }
@@ -16,6 +16,19 @@ namespace REstate.Remote.Models
         public byte[] PayloadBytes { get; set; }
 
         [Key(3)]
+        public Guid? CommitTag { get; set; }
+    }
+
+    [MessagePackObject]
+    public class SendRequest
+    {
+        [Key(0)]
+        public string MachineId { get; set; }
+
+        [Key(1)]
+        public byte[] InputBytes { get; set; }
+
+        [Key(2)]
         public Guid? CommitTag { get; set; }
     }
 

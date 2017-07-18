@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MessagePack;
+using MessagePack.Resolvers;
 using REstate.Remote.Models;
 using REstate.Remote.Services;
 using REstate.Schematics;
@@ -30,37 +31,82 @@ namespace REstate.Remote
 
             return MessagePackSerializer
                 .Deserialize<Schematic<TState, TInput>>(response.SchematicBytes,
-                    MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+                    ContractlessStandardResolver.Instance);
         }
 
         public string MachineId { get; }
 
         public async Task<State<TState>> SendAsync<TPayload>(TInput input, TPayload payload, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var response = await _stateMachineService.SendAsync(new SendRequest
-            {
-                MachineId = MachineId,
-                InputBytes = MessagePackSerializer.Serialize(input, MessagePack.Resolvers.ContractlessStandardResolver.Instance),
-                PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload),
-            });
+            
+            var response = await _stateMachineService
+                .WithCancellationToken(cancellationToken)
+                .SendWithPayloadAsync(new SendWithPayloadRequest
+                {
+                    MachineId = MachineId,
+                    InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
+                    PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload)
+                });
 
-            return new State<TState>(MessagePackSerializer.Deserialize<TState>(response.StateBytes, MessagePack.Resolvers.ContractlessStandardResolver.Instance),
+            return new State<TState>(
+                MessagePackSerializer.Deserialize<TState>(
+                    response.StateBytes,
+                    ContractlessStandardResolver.Instance),
                 response.CommitTag);
         }
 
-        public Task<State<TState>> SendAsync<TPayload>(TInput input, TPayload payload, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<State<TState>> SendAsync<TPayload>(TInput input, TPayload payload, Guid lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return null;
+            var response = await _stateMachineService
+                .WithCancellationToken(cancellationToken)
+                .SendWithPayloadAsync(new SendWithPayloadRequest
+                {
+                    MachineId = MachineId,
+                    InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
+                    PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload),
+                    CommitTag = lastCommitTag
+                });
+
+            return new State<TState>(
+                MessagePackSerializer.Deserialize<TState>(
+                    response.StateBytes,
+                    ContractlessStandardResolver.Instance),
+                response.CommitTag);
         }
 
-        public Task<State<TState>> SendAsync(TInput input, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<State<TState>> SendAsync(TInput input, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return null;
+            var response = await _stateMachineService
+                .WithCancellationToken(cancellationToken)
+                .SendAsync(new SendRequest
+                {
+                    MachineId = MachineId,
+                    InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance)
+                });
+
+            return new State<TState>(
+                MessagePackSerializer.Deserialize<TState>(
+                    response.StateBytes,
+                    ContractlessStandardResolver.Instance),
+                response.CommitTag);
         }
 
-        public Task<State<TState>> SendAsync(TInput input, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<State<TState>> SendAsync(TInput input, Guid lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return null;
+            var response = await _stateMachineService
+                .WithCancellationToken(cancellationToken)
+                .SendAsync(new SendRequest
+                {
+                    MachineId = MachineId,
+                    InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
+                    CommitTag = lastCommitTag
+                });
+
+            return new State<TState>(
+                MessagePackSerializer.Deserialize<TState>(
+                    response.StateBytes,
+                    ContractlessStandardResolver.Instance),
+                response.CommitTag);
         }
 
         // TODO: Promote to the StateVisor system.

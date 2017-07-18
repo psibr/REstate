@@ -44,19 +44,19 @@ namespace REstate.Engine
             TPayload payload, 
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return SendAsync(input, payload, null, cancellationToken);
+            return SendAsync(input, payload, default(Guid), cancellationToken);
         }
 
         public Task<State<TState>> SendAsync(
             TInput input,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return SendAsync<object>(input, null, null, cancellationToken);
+            return SendAsync<object>(input, null, default(Guid), cancellationToken);
         }
 
         public Task<State<TState>> SendAsync(
             TInput input,
-            Guid? lastCommitTag,
+            Guid lastCommitTag,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             return SendAsync<object>(input, null, lastCommitTag, cancellationToken);
@@ -65,7 +65,7 @@ namespace REstate.Engine
         public async Task<State<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
-            Guid? lastCommitTag,
+            Guid lastCommitTag,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             using (var dataContext = _repositoryContextFactory.OpenContext())
@@ -94,7 +94,7 @@ namespace REstate.Engine
                     MachineId,
                     transition.ResultantState, 
                     input, 
-                    lastCommitTag ?? currentState.CommitTag, 
+                    lastCommitTag == default(Guid) ? currentState.CommitTag : lastCommitTag, 
                     cancellationToken).ConfigureAwait(false);
 
                 stateConfig = Schematic.States[currentState.Value];
