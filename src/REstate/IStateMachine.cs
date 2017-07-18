@@ -8,7 +8,8 @@ namespace REstate
 {
     public interface IStateMachine<TState, TInput>
     {
-        ISchematic<TState, TInput> Schematic { get; }
+        Task<ISchematic<TState, TInput>> GetSchematicAsync(
+            CancellationToken cancellationToken = default(CancellationToken));
 
         string MachineId { get; }
 

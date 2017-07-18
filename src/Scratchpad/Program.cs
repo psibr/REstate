@@ -5,8 +5,10 @@ using Grpc.Core;
 using MagicOnion.Server;
 using System.Threading.Tasks;
 using Grpc.Core.Logging;
+using Newtonsoft.Json;
 using REstate.Remote;
 using REstate.Remote.Services;
+using REstate.Schematics;
 
 namespace Scratchpad
 {
@@ -44,8 +46,8 @@ namespace Scratchpad
                 .WithState("EchoFailure", state => state
                     .AsSubStateOf("Ready")
                     .DescribedAs("An echo command failed to execute.")
-                    .WithTransitionFrom("Ready", "EchoFailure"));
-
+                    .WithTransitionFrom("Ready", "EchoFailure")).Copy();
+            
             var newSchematic = await stateEngine.StoreSchematicAsync(schematic, CancellationToken.None);
 
             var echoMachine = await REstateHost.Agent
@@ -69,7 +71,8 @@ namespace Scratchpad
                 {
                     typeof(StateMachineService)
                 },
-                option: new MagicOnionOptions(isReturnExceptionStackTraceInErrorDetail: true));
+                option: new MagicOnionOptions(
+                    isReturnExceptionStackTraceInErrorDetail: true));
 
             var server = new Server
             {

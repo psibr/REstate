@@ -1,23 +1,20 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using REstate.Schematics;
 
-namespace REstate.Engine.Repositories.InMemory
+namespace REstate.Engine.Repositories
 {
-    internal class MachineStatus<TState>
+    public class MachineStatus<TState, TInput>
     {
-        [Required]
-        public string SchematicName { get; set; }
+        public Schematic<TState, TInput> Schematic { get; set; }
 
-        [Required]
         public TState State { get; set; }
 
-        [Required]
         public Guid CommitTag { get; set; }
 
-        [Required]
         public DateTime StateChangedDateTime { get; set; }
 
-        public static implicit operator State<TState>(MachineStatus<TState> record)
+        public static implicit operator State<TState>(MachineStatus<TState, TInput> record)
         {
             return new State<TState>(record.State, record.CommitTag);
         }

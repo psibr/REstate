@@ -13,11 +13,11 @@ namespace REstate
             {
                 SchematicName = schematic.SchematicName,
                 InitialState = schematic.InitialState,
-                StateConfigurations = schematic.States.Values.Select(Copy).ToArray()
+                States = schematic.States.Values.Select(Copy).ToArray()
             };
 
-        public static StateConfiguration<TState, TInput> Copy<TState, TInput>(this IState<TState, TInput> state) =>
-            new StateConfiguration<TState, TInput>
+        public static State<TState, TInput> Copy<TState, TInput>(this IState<TState, TInput> state) =>
+            new State<TState, TInput>
             {
                 Value = state.Value,
                 ParentState = state.ParentState,

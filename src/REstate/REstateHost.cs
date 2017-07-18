@@ -21,7 +21,7 @@ namespace REstate
         public static string WriteStateMap<TState, TInput>(this Schematic<TState, TInput> schematic) => 
             HostConfiguration.Container
                 .Resolve<ICartographer<TState, TInput>>()
-                .WriteMap(schematic.StateConfigurations);
+                .WriteMap(schematic.States);
 
         public static IStateEngine<TState, TInput> GetStateEngine<TState, TInput>(this IAgent agent) =>
             HostConfiguration.Container.Resolve<IStateEngine<TState, TInput>>();
@@ -30,7 +30,8 @@ namespace REstate
             where TStateEngine : class, IStateEngine<TState, TInput> =>
                 HostConfiguration.Container.Resolve<TStateEngine>();
 
-        public static ISchematicBuilder<TState, TInput> CreateSchematic<TState, TInput>(this IAgent agent, string schematicName) =>
-            new SchematicBuilder<TState, TInput>(schematicName);
+        public static ISchematicBuilder<TState, TInput> CreateSchematic<TState, TInput>(
+            this IAgent agent, 
+            string schematicName) => new SchematicBuilder<TState, TInput>(schematicName);
     }
 }

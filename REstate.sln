@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.15
+VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate", "src\REstate\REstate.csproj", "{8B02FF53-A9F3-4004-8CDC-32831070957D}"
 EndProject
@@ -9,10 +9,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scratchpad", "src\Scratchpa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Remote", "src\REstate.Remote\REstate.Remote.csproj", "{9D9597DB-CC42-4CA3-9E65-A83B0C0EC664}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{20BCC0A3-8FEB-4EFF-A175-22D1E3E4E233}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client-Server", "Client-Server", "{F58A1F94-FACC-4179-B11B-BDA63E39154F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteServerHost", "src\Examples\Client-Server\RemoteServerHost\RemoteServerHost.csproj", "{F81DA280-DE37-4658-9970-7713B84B8486}"
+EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -30,9 +33,20 @@ Global
 		{9D9597DB-CC42-4CA3-9E65-A83B0C0EC664}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D9597DB-CC42-4CA3-9E65-A83B0C0EC664}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D9597DB-CC42-4CA3-9E65-A83B0C0EC664}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F81DA280-DE37-4658-9970-7713B84B8486}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F81DA280-DE37-4658-9970-7713B84B8486}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F81DA280-DE37-4658-9970-7713B84B8486}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F81DA280-DE37-4658-9970-7713B84B8486}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F58A1F94-FACC-4179-B11B-BDA63E39154F} = {20BCC0A3-8FEB-4EFF-A175-22D1E3E4E233}
+		{F81DA280-DE37-4658-9970-7713B84B8486} = {F58A1F94-FACC-4179-B11B-BDA63E39154F}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true

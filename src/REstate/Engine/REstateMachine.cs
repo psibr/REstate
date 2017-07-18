@@ -34,6 +34,9 @@ namespace REstate.Engine
 
         public ISchematic<TState, TInput> Schematic { get; }
 
+        Task<ISchematic<TState, TInput>> IStateMachine<TState, TInput>.GetSchematicAsync(
+            CancellationToken cancellationToken) => Task.FromResult(Schematic);
+
         public string MachineId { get; }
 
         public Task<State<TState>> SendAsync<TPayload>(
@@ -67,8 +70,8 @@ namespace REstate.Engine
         {
             using (var dataContext = _repositoryContextFactory.OpenContext())
             {
-                var currentState = await dataContext.Machines
-                    .GetMachineStateAsync(MachineId, cancellationToken).ConfigureAwait(false);
+                State<TState> currentState = await dataContext.Machines
+                    .GetMachineRecordAsync(MachineId, cancellationToken).ConfigureAwait(false);
 
                 var stateConfig = Schematic.States[currentState.Value];
 
@@ -151,7 +154,7 @@ namespace REstate.Engine
             using (var dataContext = _repositoryContextFactory.OpenContext())
             {
                 currentState = await dataContext.Machines
-                    .GetMachineStateAsync(MachineId, cancellationToken)
+                    .GetMachineRecordAsync(MachineId, cancellationToken)
                     .ConfigureAwait(false);
             }
 

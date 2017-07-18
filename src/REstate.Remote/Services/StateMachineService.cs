@@ -22,7 +22,7 @@ namespace REstate.Remote.Services
 
         UnaryResult<StoreSchematicResponse> StoreSchematicAsync(StoreSchematicRequest request);
 
-        UnaryResult<GetMachineResponse> GetMachineAsync(GetMachineRequest request);
+        UnaryResult<GetMachineSchematicResponse> GetMachineSchematicAsync(GetMachineSchematicRequest request);
 
         UnaryResult<GetSchematicResponse> GetSchematicAsync(GetSchematicRequest request);
 
@@ -37,8 +37,8 @@ namespace REstate.Remote.Services
         : ServiceBase<IStateMachineService>
         , IStateMachineService
     {
-        private const string StateTypeHeaderKey = "state-type";
-        private const string InputTypeHeaderKey = "input-type";
+        private const string StateTypeHeaderKey = "State-Type";
+        private const string InputTypeHeaderKey = "Input-Type";
 
         #region SendAsync
         public async UnaryResult<SendResponse> SendAsync(SendRequest request)
@@ -68,9 +68,9 @@ namespace REstate.Remote.Services
             var engine = REstateHost.Agent.AsLocal()
                 .GetStateEngine<TState, TInput>();
 
-            var machine = await engine.GetMachineAsync(machineId, cancellationToken);
+            var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
 
-            var newState = await machine.SendAsync(input, payload, commitTag, cancellationToken);
+            var newState = await machine.SendAsync(input, payload, commitTag, cancellationToken).ConfigureAwait(false);
 
             return new SendResponse
             {
@@ -108,7 +108,7 @@ namespace REstate.Remote.Services
             var engine = REstateHost.Agent.AsLocal()
                 .GetStateEngine<TState, TInput>();
 
-            var newSchematic = await engine.StoreSchematicAsync(schematic, cancellationToken);
+            var newSchematic = await engine.StoreSchematicAsync(schematic, cancellationToken).ConfigureAwait(false);
 
             return new StoreSchematicResponse
             {
@@ -117,16 +117,16 @@ namespace REstate.Remote.Services
         }
         #endregion StoreSchematicAsync
 
-        #region GetMachineAsync
-        public async UnaryResult<GetMachineResponse> GetMachineAsync(GetMachineRequest request)
+        #region GetMachineSchematicAsync
+        public async UnaryResult<GetMachineSchematicResponse> GetMachineSchematicAsync(GetMachineSchematicRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
 
             var getMachineAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(GetMachineAsync), BindingFlags.NonPublic | BindingFlags.Static)
+                .GetMethod(nameof(GetMachineSchematicAsync), BindingFlags.NonPublic | BindingFlags.Static)
                 .MakeGenericMethod(genericTypes);
 
-            return await (Task<GetMachineResponse>)getMachineAsyncMethod
+            return await (Task<GetMachineSchematicResponse>)getMachineAsyncMethod
                 .Invoke(this, new object[]
                 {
                     request.MachineId,
@@ -134,22 +134,24 @@ namespace REstate.Remote.Services
                 });
         }
 
-        private static async Task<GetMachineResponse> GetMachineAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default(CancellationToken))
+        private static async Task<GetMachineSchematicResponse> GetMachineSchematicAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default(CancellationToken))
         {
             var engine = REstateHost.Agent
                 .AsLocal()
                 .GetStateEngine<TState, TInput>();
 
-            var machine = await engine.GetMachineAsync(machineId, cancellationToken);
+            var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
 
-            return new GetMachineResponse
+            var schematic = await machine.GetSchematicAsync(cancellationToken).ConfigureAwait(false);
+
+            return new GetMachineSchematicResponse
             {
                 MachineId = machine.MachineId,
                 SchematicBytes = MessagePackSerializer.NonGeneric
                     .Serialize(machine.Schematic.GetType(), machine.Schematic, ContractlessStandardResolver.Instance)
             };
         }
-        #endregion GetMachineAsync
+        #endregion GetMachineSchematicAsync
 
         #region CreateMachineFromStoreAsync
         public async UnaryResult<CreateMachineResponse> CreateMachineFromStoreAsync(CreateMachineFromStoreRequest request)
@@ -247,7 +249,7 @@ namespace REstate.Remote.Services
                 .AsLocal()
                 .GetStateEngine<TState, TInput>();
 
-            var schematic = await stateEngine.GetSchematicAsync(schematicName, cancellationToken);
+            var schematic = await stateEngine.GetSchematicAsync(schematicName, cancellationToken).ConfigureAwait(false);
 
             return new GetSchematicResponse
             {
@@ -280,14 +282,14 @@ namespace REstate.Remote.Services
                 .AsLocal()
                 .GetStateEngine<TState, TInput>();
 
-            await stateEngine.DeleteMachineAsync(machineId, cancellationToken);
+            await stateEngine.DeleteMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
         }
         #endregion DeleteMachineAsync
 
         private Type[] GetGenericsFromHeaders()
         {
             return Context.CallContext.RequestHeaders
-                .Where(header => new[] { StateTypeHeaderKey, InputTypeHeaderKey }.Contains(header.Key))
+                .Where(header => new[] { StateTypeHeaderKey, InputTypeHeaderKey }.Contains(header.Key, StringComparer.OrdinalIgnoreCase))
                 .OrderByDescending(header => header.Key)
                 .Select(header => Type.GetType(header.Value))
                 .ToArray();

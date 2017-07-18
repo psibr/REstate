@@ -14,10 +14,10 @@ namespace REstate.Schematics
         public TState InitialState { get; set; }
 
         IReadOnlyDictionary<TState, IState<TState, TInput>> ISchematic<TState, TInput>.States => 
-            StateConfigurations.ToDictionary(
+            States.ToDictionary(
                 c => c.Value,
                 c => (IState<TState, TInput>)c);
 
-        public StateConfiguration<TState, TInput>[] StateConfigurations { get; set; }
+        public State<TState, TInput>[] States { get; set; }
     }
 }
