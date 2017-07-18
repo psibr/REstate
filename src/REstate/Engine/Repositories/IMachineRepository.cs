@@ -16,12 +16,10 @@ namespace REstate.Engine.Repositories
 
         Task DeleteMachineAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken));
 
-        Task<State<TState>> GetMachineStateAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MachineStatus<TState, TInput>> GetMachineRecordAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken));
 
-        Task<State<TState>> SetMachineStateAsync(string machineId, TState state, TInput input, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MachineStatus<TState, TInput>> SetMachineStateAsync(string machineId, TState state, TInput input, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken));
 
-        Task<State<TState>> SetMachineStateAsync(string machineId, TState state, TInput input, string parameterData, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken));
-
-        Task<IDictionary<string, string>> GetMachineMetadataAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MachineStatus<TState, TInput>> SetMachineStateAsync(string machineId, TState state, TInput input, string parameterData, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

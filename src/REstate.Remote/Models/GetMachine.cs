@@ -6,14 +6,14 @@ using MessagePack;
 namespace REstate.Remote.Models
 {
     [MessagePackObject]
-    public class GetMachineRequest
+    public class GetMachineSchematicRequest
     {
         [Key(0)]
         public string MachineId { get; set; }
     }
 
     [MessagePackObject]
-    public class GetMachineResponse
+    public class GetMachineSchematicResponse
     {
         [Key(0)]
         public string MachineId { get; set; }

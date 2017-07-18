@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace REstate.Schematics
 {
-    public class StateConfiguration<TState, TInput>
+    public class State<TState, TInput>
         : IState<TState, TInput>
     {
         [Required]

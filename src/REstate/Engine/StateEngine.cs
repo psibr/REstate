@@ -127,9 +127,11 @@ namespace REstate.Engine
 
             using (var repositories = _repositoryContextFactory.OpenContext())
             {
-                schematic = await repositories.Schematics
-                    .RetrieveSchematicForMachineAsync(machineId, cancellationToken)
+                var machineRecord = await repositories.Machines
+                    .GetMachineRecordAsync(machineId, cancellationToken)
                     .ConfigureAwait(false);
+
+                schematic = machineRecord.Schematic;
             }
 
             var machine = _stateMachineFactory
