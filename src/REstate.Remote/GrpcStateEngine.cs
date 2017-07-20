@@ -20,7 +20,7 @@ namespace REstate.Remote
             _stateMachineService = stateMachineService
                 .WithHeaders(new Metadata
                 {
-                    { "State-Type", typeof(TState).AssemblyQualifiedName },
+                    { "Status-Type", typeof(TState).AssemblyQualifiedName },
                     { "Input-Type", typeof(TInput).AssemblyQualifiedName }
                 });
         }

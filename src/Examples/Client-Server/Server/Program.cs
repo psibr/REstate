@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Grpc.Core;
 using Grpc.Core.Logging;
 using MagicOnion.Server;
@@ -19,6 +20,8 @@ namespace RemoteServerHost
 
             // launch gRPC Server.
             server.Start();
+
+            SpinWait.SpinUntil(() => server.ShutdownTask.IsCompleted);
 
             Console.ReadLine();
         }

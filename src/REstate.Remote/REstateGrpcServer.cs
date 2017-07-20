@@ -44,6 +44,8 @@ namespace REstate.Remote
             server.Services.Add(service);
         }
 
+        public Task ShutdownTask => Server.ShutdownTask;
+
         public Task StartAsync()
         {
             Server.Start();
@@ -66,15 +68,11 @@ namespace REstate.Remote
             return Server.KillAsync();
         }
 
-        private void ReleaseUnmanagedResources()
-        {
-            KillAsync().Wait();
-        }
-
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         public void Dispose()
         {
-            ReleaseUnmanagedResources();
+            if(!ShutdownTask.IsCompleted)
+                ShutdownAsync().Wait();
 
             Server = null;
 
@@ -84,7 +82,7 @@ namespace REstate.Remote
         /// <summary>Allows an object to try to free resources and perform other cleanup operations before it is reclaimed by garbage collection.</summary>
         ~REstateGrpcServer()
         {
-            ReleaseUnmanagedResources();
+            KillAsync().Wait();
         }
     }
 }

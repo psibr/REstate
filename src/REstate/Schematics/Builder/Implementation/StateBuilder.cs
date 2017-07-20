@@ -30,7 +30,7 @@ namespace REstate.Schematics.Builder.Implementation
             return this;
         }
 
-        public IStateBuilder<TState, TInput> AsSubStateOf(TState state)
+        public IStateBuilder<TState, TInput> AsSubstateOf(TState state)
         {
             if (!_builder.States.Keys.Contains(state))
             {

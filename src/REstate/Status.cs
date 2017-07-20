@@ -2,20 +2,20 @@
 
 namespace REstate
 {
-    public struct State<T>
-        : IEquatable<State<T>>
+    public struct Status<T>
+        : IEquatable<Status<T>>
     {
-        public State(T value, Guid commitTag)
+        public Status(T state, Guid commitTag)
         {
-            Value = value;
+            State = state;
             CommitTag = commitTag;
         }
 
-        public State(T value)
-            : this(value, Guid.Empty) { }
+        public Status(T state)
+            : this(state, Guid.Empty) { }
 
 
-        public T Value { get; }
+        public T State { get; }
 
         /// <summary>
         /// A value that indicates a unique interaction of state within a machine.
@@ -26,7 +26,7 @@ namespace REstate
 
         public override string ToString()
         {
-            return Value.ToString();
+            return State.ToString();
         }
 
         /// <summary>
@@ -36,9 +36,9 @@ namespace REstate
         /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
-        public bool Equals(State<T> other)
+        public bool Equals(Status<T> other)
         {
-            return Value.Equals(other.Value);
+            return State.Equals(other.State);
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace REstate
         /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
-            if (obj is State<T> state)
+            if (obj is Status<T> state)
                 return Equals(state);
 
             return false;
@@ -64,21 +64,21 @@ namespace REstate
         /// </returns>
         public override int GetHashCode()
         {
-            return Value.GetHashCode();
+            return State.GetHashCode();
         }
 
         /// <summary>
-        /// Verifies that both states have the same value 
+        /// Verifies that both statuses have the same state
         /// AND verifies the commit tags match and are not empty.
         /// </summary>
         /// <param name="a">The left state.</param>
         /// <param name="b">The right state.</param>
         /// <returns>
-        /// True if same commit of the same state value;
+        /// True if same commit of the same state;
         /// false if the values or commit tags do not match 
         /// OR if either commit tag is empty.
         /// </returns>
-        public static bool IsSameCommit(State<T> a, State<T> b)
+        public static bool IsSameCommit(Status<T> a, Status<T> b)
         {
             return a == b 
                 && a.CommitTag != Guid.Empty 
@@ -86,7 +86,7 @@ namespace REstate
         }
 
         /// <summary>
-        /// Verifies that both states have the same value 
+        /// Verifies that both statuses have the same state 
         /// AND verifies the commit tags match and are not empty.
         /// </summary>
         /// <param name="other">The state to compare against.</param>
@@ -95,17 +95,17 @@ namespace REstate
         /// false if the values or commit tags do not match 
         /// OR if either commit tag is empty.
         /// </returns>
-        public bool IsSameCommit(State<T> other)
+        public bool IsSameCommit(Status<T> other)
         {
             return IsSameCommit(this, other);
         }
 
-        public static bool operator ==(State<T> a, State<T> b)
+        public static bool operator ==(Status<T> a, Status<T> b)
         {
             return a.Equals(b);
         }
 
-        public static bool operator !=(State<T> a, State<T> b)
+        public static bool operator !=(Status<T> a, Status<T> b)
         {
             return !(a == b);
         }

@@ -7,7 +7,7 @@ namespace REstate.Schematics.Builder
     {
         IStateBuilder<TState, TInput> AsInitialState();
 
-        IStateBuilder<TState, TInput> AsSubStateOf(TState state);
+        IStateBuilder<TState, TInput> AsSubstateOf(TState state);
 
         IStateBuilder<TState, TInput> DescribedAs(string description);
 
