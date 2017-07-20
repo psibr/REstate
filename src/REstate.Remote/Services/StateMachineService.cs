@@ -41,7 +41,7 @@ namespace REstate.Remote.Services
         : ServiceBase<IStateMachineService>
         , IStateMachineService
     {
-        private const string StateTypeHeaderKey = "State-Type";
+        private const string StateTypeHeaderKey = "Status-Type";
         private const string InputTypeHeaderKey = "Input-Type";
 
         #region SendAsync
@@ -75,11 +75,11 @@ namespace REstate.Remote.Services
 
             var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
 
-            State<TState> newState;
+            Status<TState> newStatus;
 
             try
             {
-                newState = commitTag != null
+                newStatus = commitTag != null
                     ? await machine.SendAsync(input, commitTag.Value, cancellationToken).ConfigureAwait(false)
                     : await machine.SendAsync(input, cancellationToken).ConfigureAwait(false);
             }
@@ -91,8 +91,8 @@ namespace REstate.Remote.Services
             return new SendResponse
             {
                 MachineId = machineId,
-                CommitTag = newState.CommitTag,
-                StateBytes = MessagePackSerializer.Serialize(newState.Value, ContractlessStandardResolver.Instance)
+                CommitTag = newStatus.CommitTag,
+                StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance)
             };
         }
         #endregion SendAsync
@@ -127,11 +127,11 @@ namespace REstate.Remote.Services
 
             var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
 
-            State<TState> newState;
+            Status<TState> newStatus;
 
             try
             {
-                newState = commitTag != null
+                newStatus = commitTag != null
                     ? await machine.SendAsync(input, payload, commitTag.Value, cancellationToken).ConfigureAwait(false)
                     : await machine.SendAsync(input, payload, cancellationToken).ConfigureAwait(false);
             }
@@ -143,8 +143,8 @@ namespace REstate.Remote.Services
             return new SendResponse
             {
                 MachineId = machineId,
-                CommitTag = newState.CommitTag,
-                StateBytes = MessagePackSerializer.Serialize(newState.Value, ContractlessStandardResolver.Instance)
+                CommitTag = newStatus.CommitTag,
+                StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance)
             };
         }
         #endregion SendWithPayloadAsync

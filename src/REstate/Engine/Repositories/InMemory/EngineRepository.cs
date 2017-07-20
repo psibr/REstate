@@ -30,35 +30,39 @@ namespace REstate.Engine.Repositories.InMemory
             return Task.FromResult(machineRecord);
         }
 
-        public Task CreateMachineAsync(string schematicName, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
         {
             var schematic = Schematics[schematicName];
 
-            Machines.Add(machineId, (new MachineStatus<TState, TInput>
+            var record = new MachineStatus<TState, TInput>
             {
                 Schematic = schematic,
                 State = schematic.InitialState,
                 CommitTag = Guid.NewGuid(),
                 StateChangedDateTime = DateTime.UtcNow
-            }, metadata));
+            };
 
-            return Task.CompletedTask;
+            Machines.Add(machineId, (record, metadata));
+
+            return Task.FromResult(record);
         }
 
-        public Task CreateMachineAsync(Schematic<TState, TInput> schematic, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(Schematic<TState, TInput> schematic, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
         {
-            Machines.Add(machineId, (new MachineStatus<TState, TInput>
+            var record = new MachineStatus<TState, TInput>
             {
                 Schematic = schematic,
                 State = schematic.InitialState,
                 CommitTag = Guid.NewGuid(),
                 StateChangedDateTime = DateTime.UtcNow
-            }, metadata));
+            };
 
-            return Task.CompletedTask;
+            Machines.Add(machineId, (record, metadata));
+
+            return Task.FromResult(record);
         }
 
-        public Task CreateMachineAsync(string schematicName, string machineId, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, string machineId, CancellationToken cancellationToken = default(CancellationToken))
         {
             return CreateMachineAsync(schematicName, machineId, new Dictionary<string, string>(), cancellationToken);
         }

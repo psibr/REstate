@@ -8,11 +8,11 @@ namespace REstate.Engine.Repositories
 {
     public interface IMachineRepository<TState, TInput>
     {
-        Task CreateMachineAsync(string schematicName, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken));
 
-        Task CreateMachineAsync(Schematic<TState, TInput> schematic, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MachineStatus<TState, TInput>> CreateMachineAsync(Schematic<TState, TInput> schematic, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken));
 
-        Task CreateMachineAsync(string schematicName, string machineId, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, string machineId, CancellationToken cancellationToken = default(CancellationToken));
 
         Task DeleteMachineAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken));
 

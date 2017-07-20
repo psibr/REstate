@@ -10,26 +10,26 @@ namespace REstate.Engine.Services
     {
         string IConnector.ConnectorKey => ConnectorKey;
 
-        public Task OnEntryAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, State<TState> state, TInput input, TPayload payload, IReadOnlyDictionary<string, string> connectorSettings, CancellationToken cancellationToken = default(CancellationToken))
+        public Task OnEntryAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, Status<TState> status, TInput input, TPayload payload, IReadOnlyDictionary<string, string> connectorSettings, CancellationToken cancellationToken = default(CancellationToken))
         {
             string format = null;
             connectorSettings?.TryGetValue("Format", out format);
-            format = format ?? "Machine {{{0}}} entered state {{{1}}}";
+            format = format ?? "Machine {{{0}}} entered status {{{1}}}";
 
-            Console.WriteLine(format, machineInstance.MachineId, state.Value, payload);
+            Console.WriteLine(format, machineInstance.MachineId, status.State, payload);
 
             return Task.CompletedTask;
         }
 
-        public async Task<bool> GuardAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, State<TState> state, TInput input, TPayload payload, IReadOnlyDictionary<string, string> connectorSettings, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<bool> GuardAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, Status<TState> status, TInput input, TPayload payload, IReadOnlyDictionary<string, string> connectorSettings, CancellationToken cancellationToken = default(CancellationToken))
         {
             string prompt = null;
             connectorSettings?.TryGetValue("Prompt", out prompt);
-            prompt = prompt ?? "Machine {{{0}}} in state {{{1}}} is attempting to transition with input {{{2}}}, allow? (y/n)";
+            prompt = prompt ?? "Machine {{{0}}} in status {{{1}}} is attempting to transition with input {{{2}}}, allow? (y/n)";
 
             while (true)
             {
-                Console.WriteLine(prompt, machineInstance.MachineId, state.Value, input, payload);
+                Console.WriteLine(prompt, machineInstance.MachineId, status.State, input, payload);
                 var response = await Task.Run(() => Console.ReadLine()?.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
 
                 switch (response)

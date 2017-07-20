@@ -2,12 +2,10 @@
 using System.Threading;
 using REstate;
 using Grpc.Core;
-using MagicOnion.Server;
 using System.Threading.Tasks;
 using Grpc.Core.Logging;
 using REstate.Engine;
 using REstate.Remote;
-using REstate.Remote.Services;
 
 namespace Scratchpad
 {
@@ -15,6 +13,11 @@ namespace Scratchpad
     {
         private static async Task ClientImpl()
         {
+            var visor = new InMemoryStateVisor();
+
+            REstateHost.Agent.Configuration
+                .RegisterComponent(new InMemoryStateVisorComponent(visor));
+
             REstateHost.Agent.Configuration
                 .RegisterComponent(
                     new GrpcRemoteHostComponent(
@@ -25,7 +28,6 @@ namespace Scratchpad
                         }));
 
             var stateEngine = REstateHost.Agent
-                .AsRemote()
                 .GetStateEngine<string, string>();
 
             var schematic = REstateHost.Agent
@@ -43,13 +45,15 @@ namespace Scratchpad
                             .WithSetting("Prompt", "Are you sure you want to echo \"{3}\"? (y/n)"))))
 
                 .WithState("EchoFailure", state => state
-                    .AsSubStateOf("Ready")
+                    .AsSubstateOf("Ready")
                     .DescribedAs("An echo command failed to execute.")
                     .WithTransitionFrom("Ready", "EchoFailure")).Copy();
             
             var newSchematic = await stateEngine.StoreSchematicAsync(schematic, CancellationToken.None);
 
             var echoMachine = await stateEngine.CreateMachineAsync("EchoMachine", null, CancellationToken.None);
+
+            await stateEngine.DeleteMachineAsync(echoMachine.MachineId, CancellationToken.None);
 
             echoMachine = await stateEngine.CreateMachineAsync(schematic, null, CancellationToken.None);
 
@@ -65,12 +69,14 @@ namespace Scratchpad
 
             try
             {
-                status = await echoMachine.SendAsync("Echo", commitTag, CancellationToken.None);
+                status = await echoMachine.SendAsync("Echo", "Fail", commitTag, CancellationToken.None);
             }
-            catch(StateConflictException)
+            catch(StateConflictException ex)
             {
-                // expected exception
+                Console.WriteLine(ex.Message);
             }
+
+            Console.WriteLine($"EchoMachine ended with state: { visor.GetStatus(echoMachine).State }.");
 
             await stateEngine.DeleteMachineAsync(echoMachine.MachineId, CancellationToken.None);
         }
@@ -90,6 +96,8 @@ namespace Scratchpad
                 {
                     await ClientImpl();
                 }).Wait();
+
+                Console.ReadLine();
             }
         }
     }

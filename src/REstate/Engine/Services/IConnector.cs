@@ -10,7 +10,7 @@ namespace REstate.Engine.Services
     {
         Task OnEntryAsync<TPayload>(
             IStateMachine<TState, TInput> machine,
-            State<TState> state,
+            Status<TState> status,
             TInput input,
             TPayload payload,
             IReadOnlyDictionary<string, string> connectorSettings,
@@ -18,7 +18,7 @@ namespace REstate.Engine.Services
 
         Task<bool> GuardAsync<TPayload>(
             IStateMachine<TState, TInput> machine,
-            State<TState> state,
+            Status<TState> status,
             TInput input,
             TPayload payload,
             IReadOnlyDictionary<string, string> connectorSettings,

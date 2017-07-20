@@ -14,9 +14,9 @@ namespace REstate.Engine.Repositories
 
         public DateTime StateChangedDateTime { get; set; }
 
-        public static implicit operator State<TState>(MachineStatus<TState, TInput> record)
+        public static implicit operator Status<TState>(MachineStatus<TState, TInput> record)
         {
-            return new State<TState>(record.State, record.CommitTag);
+            return new Status<TState>(record.State, record.CommitTag);
         }
     }
 }
