@@ -56,18 +56,17 @@ It can also be created in YML or JSON, or any format:
 ```yml
 SchematicName: EchoMachine
 InitialState: Ready
-StateConfigurations:
-- StateName: Ready
+States:
+- Value: Ready
   Transitions:
-  - InputName: Echo
-    ResultantStateName: Ready
+  - Input: Echo
+    ResultantState: Ready
     Guard:
       ConnectorKey: Console
       Configuration:
         Prompt: Are you sure you want to echo "{3}"? (y/n)
-      Description: Verfies action OK to take with y/n from console.
-  - InputName: EchoFailure
-    ResultantStateName: EchoFailure
+  - Input: EchoFailure
+    ResultantState: EchoFailure
   OnEntry:
     ConnectorKey: Console
     Configuration:
@@ -75,8 +74,8 @@ StateConfigurations:
     Description: Echoes the payload to the console.
     FailureTransition:
       Input: EchoFailure
-- StateName: EchoFailure
-  ParentStateName: Ready
+- Value: EchoFailure
+  ParentState: Ready
   Description: An echo command failed to execute.
   Transitions: []
 ```
