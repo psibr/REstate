@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace REstate.Engine.Repositories.InMemory
 {
     public class InMemoryRepositoryContextFactory<TState, TInput>
         : IRepositoryContextFactory<TState, TInput>
     {
-        public IEngineRepositoryContext<TState, TInput> OpenContext()
+        public Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return new EngineRepositoryContext<TState, TInput>();
+            return Task.FromResult<IEngineRepositoryContext<TState, TInput>>(new EngineRepositoryContext<TState, TInput>());
         }
     }
 }

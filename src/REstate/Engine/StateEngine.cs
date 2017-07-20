@@ -26,7 +26,7 @@ namespace REstate.Engine
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Schematic<TState, TInput> schematic;
-            using (var repositories = _repositoryContextFactory.OpenContext())
+            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 schematic = await repositories.Schematics
                     .RetrieveSchematicAsync(schematicName, cancellationToken)
@@ -41,7 +41,7 @@ namespace REstate.Engine
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Schematic<TState, TInput> newSchematic;
-            using (var repositories = _repositoryContextFactory.OpenContext())
+            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 newSchematic = await repositories.Schematics
                     .StoreSchematicAsync(schematic, cancellationToken)
@@ -63,7 +63,7 @@ namespace REstate.Engine
         {
             var machineId = Guid.NewGuid().ToString();
 
-            using (var repositories = _repositoryContextFactory.OpenContext())
+            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 await repositories.Machines
                     .CreateMachineAsync(
@@ -97,7 +97,7 @@ namespace REstate.Engine
 
             Schematic<TState, TInput> schematic;
 
-            using (var repositories = _repositoryContextFactory.OpenContext())
+            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 schematic = await repositories.Schematics
                     .RetrieveSchematicAsync(schematicName, cancellationToken);
@@ -125,7 +125,7 @@ namespace REstate.Engine
         {
             Schematic<TState, TInput> schematic;
 
-            using (var repositories = _repositoryContextFactory.OpenContext())
+            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 var machineRecord = await repositories.Machines
                     .GetMachineRecordAsync(machineId, cancellationToken)
@@ -146,7 +146,7 @@ namespace REstate.Engine
             string machineId,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            using (var repositories = _repositoryContextFactory.OpenContext())
+            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 await repositories.Machines
                     .DeleteMachineAsync(machineId, cancellationToken)

@@ -1,7 +1,10 @@
-﻿namespace REstate.Engine.Repositories
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace REstate.Engine.Repositories
 {
     public interface IRepositoryContextFactory<TState, TInput>
     {
-        IEngineRepositoryContext<TState, TInput> OpenContext();
+        Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(CancellationToken cancellationToken = default(CancellationToken));
     }
 }
