@@ -8,15 +8,15 @@ namespace REstate.Engine.Repositories
 {
     public interface IMachineRepository<TState, TInput>
     {
-        Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken));
 
-        Task<MachineStatus<TState, TInput>> CreateMachineAsync(Schematic<TState, TInput> schematic, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MachineStatus<TState, TInput>> CreateMachineAsync(Schematic<TState, TInput> schematic, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken));
 
-        Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, string machineId, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, CancellationToken cancellationToken = default(CancellationToken));
 
         Task DeleteMachineAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken));
 
-        Task<MachineStatus<TState, TInput>> GetMachineRecordAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken));
 
         Task<MachineStatus<TState, TInput>> SetMachineStateAsync(string machineId, TState state, TInput input, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken));
 

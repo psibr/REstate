@@ -6,6 +6,8 @@ namespace REstate.Engine.Repositories
 {
     public class MachineStatus<TState, TInput>
     {
+        public string MachineId { get; set; }
+
         public Schematic<TState, TInput> Schematic { get; set; }
 
         public TState State { get; set; }

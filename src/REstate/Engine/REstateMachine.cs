@@ -74,11 +74,11 @@ namespace REstate.Engine
             using (var dataContext = _repositoryContextFactory.OpenContext())
             {
                 Status<TState> currentStatus = await dataContext.Machines
-                    .GetMachineRecordAsync(MachineId, cancellationToken).ConfigureAwait(false);
+                    .GetMachineStatusAsync(MachineId, cancellationToken).ConfigureAwait(false);
 
-                var stateConfig = Schematic.States[currentStatus.State];
+                var schematicState = Schematic.States[currentStatus.State];
 
-                if(!stateConfig.Transitions.TryGetValue(input, out ITransition<TState, TInput> transition))
+                if(!schematicState.Transitions.TryGetValue(input, out ITransition<TState, TInput> transition))
                 {
                     throw new InvalidOperationException($"No transition defined for status: '{currentStatus.State}' using input: '{input}'");
                 }
@@ -87,7 +87,7 @@ namespace REstate.Engine
                 {
                     var guardConnector =  _connectorResolver.ResolveConnector(transition.Guard.ConnectorKey);
 
-                    if (!await guardConnector.GuardAsync(this, currentStatus, input, payload, transition.Guard.Settings, cancellationToken).ConfigureAwait(false))
+                    if (!await guardConnector.GuardAsync(Schematic, this, currentStatus, input, payload, transition.Guard.Settings, cancellationToken).ConfigureAwait(false))
                     {
                         throw new InvalidOperationException("Guard clause prevented transition.");
                     }
@@ -100,35 +100,50 @@ namespace REstate.Engine
                     lastCommitTag == default(Guid) ? currentStatus.CommitTag : lastCommitTag, 
                     cancellationToken).ConfigureAwait(false);
 
-                stateConfig = Schematic.States[currentStatus.State];
+                schematicState = Schematic.States[currentStatus.State];
 
                 var preActionState = currentStatus;
-                Task.Run(async () => await Task.WhenAll(_listeners.Select((listener) => listener.OnTransition(this, Schematic, preActionState, input, payload, cancellationToken))), cancellationToken);
 
-                if (stateConfig.OnEntry == null) return currentStatus;
+                NotifyOnTransition(input, payload, preActionState);
+
+                if (schematicState.OnEntry == null) return currentStatus;
 
                 try
                 {
-                    var entryConnector = _connectorResolver.ResolveConnector(stateConfig.OnEntry.ConnectorKey);
+                    var entryConnector = _connectorResolver.ResolveConnector(schematicState.OnEntry.ConnectorKey);
                         
-                    await entryConnector.OnEntryAsync(this, currentStatus, input, payload, stateConfig.OnEntry.Settings, cancellationToken).ConfigureAwait(false);
+                    await entryConnector.OnEntryAsync(Schematic, this, currentStatus, input, payload, schematicState.OnEntry.Settings, cancellationToken).ConfigureAwait(false);
                 }
                 catch
                 {
-                    if (stateConfig.OnEntry.OnFailureInput == null)
+                    if (schematicState.OnEntry.OnFailureInput == null)
                         throw;
 
                     currentStatus = await SendAsync(
-                        stateConfig.OnEntry.OnFailureInput,
+                        schematicState.OnEntry.OnFailureInput,
                         payload,
                         currentStatus.CommitTag,
                         cancellationToken).ConfigureAwait(false);
-
-                    Task.Run(async () => await Task.WhenAll(_listeners.Select((listener) => listener.OnTransition(this, Schematic, currentStatus, input, payload, cancellationToken))), cancellationToken);
                 }
 
                 return currentStatus;
             }
+        }
+
+        private void NotifyOnTransition<TPayload>(TInput input, TPayload payload, Status<TState> status)
+        {
+#pragma warning disable 4014
+            Task.Run(async () => await Task.WhenAll(
+                    _listeners.Select(listener =>
+                        listener.OnTransition(
+                            this,
+                            Schematic,
+                            status,
+                            input,
+                            payload,
+                            CancellationToken.None))),
+                CancellationToken.None);
+#pragma warning restore 4014
         }
 
         public async Task<bool> IsInStateAsync(Status<TState> status, CancellationToken cancellationToken = default(CancellationToken))
@@ -162,7 +177,7 @@ namespace REstate.Engine
             using (var dataContext = _repositoryContextFactory.OpenContext())
             {
                 currentStatus = await dataContext.Machines
-                    .GetMachineRecordAsync(MachineId, cancellationToken)
+                    .GetMachineStatusAsync(MachineId, cancellationToken)
                     .ConfigureAwait(false);
             }
 

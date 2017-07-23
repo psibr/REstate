@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using REstate.Schematics;
 
 namespace REstate.Engine.Services
 {
@@ -9,6 +10,7 @@ namespace REstate.Engine.Services
         : IConnector
     {
         Task OnEntryAsync<TPayload>(
+            ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status,
             TInput input,
@@ -16,13 +18,23 @@ namespace REstate.Engine.Services
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default(CancellationToken));
 
+        Task OnInitialEntryAsync(
+            ISchematic<TState, TInput> schematic,
+            IStateMachine<TState, TInput> machine,
+            Status<TState> status,
+            IReadOnlyDictionary<string, string> connectorSettings,
+            CancellationToken cancellationToken = default(CancellationToken));
+
         Task<bool> GuardAsync<TPayload>(
+            ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status,
             TInput input,
             TPayload payload,
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default(CancellationToken));
+
+        IBulkEntryConnector<TState, TInput> GetBulkEntryConnector();
     }
 
     public interface IConnector

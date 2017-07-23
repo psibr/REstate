@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using REstate.Schematics;
 
 namespace REstate.Engine.Services
 {
@@ -10,18 +11,46 @@ namespace REstate.Engine.Services
     {
         string IConnector.ConnectorKey => ConnectorKey;
 
-        public Task OnEntryAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, Status<TState> status, TInput input, TPayload payload, IReadOnlyDictionary<string, string> connectorSettings, CancellationToken cancellationToken = default(CancellationToken))
+        public Task OnEntryAsync<TPayload>(
+            ISchematic<TState, TInput> schematic,
+            IStateMachine<TState, TInput> machine,
+            Status<TState> status,
+            TInput input,
+            TPayload payload,
+            IReadOnlyDictionary<string, string> connectorSettings,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             string format = null;
             connectorSettings?.TryGetValue("Format", out format);
             format = format ?? "Machine {{{0}}} entered status {{{1}}}";
 
-            Console.WriteLine(format, machineInstance.MachineId, status.State, payload);
+            Console.WriteLine(format, machine.MachineId, status.State, payload);
 
             return Task.CompletedTask;
         }
 
-        public async Task<bool> GuardAsync<TPayload>(IStateMachine<TState, TInput> machineInstance, Status<TState> status, TInput input, TPayload payload, IReadOnlyDictionary<string, string> connectorSettings, CancellationToken cancellationToken = default(CancellationToken))
+        public Task OnInitialEntryAsync(
+            ISchematic<TState, TInput> schematic,
+            IStateMachine<TState, TInput> machine, 
+            Status<TState> status, 
+            IReadOnlyDictionary<string, string> connectorSettings,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            const string format = "Machine {{{0}}} entered status {{{1}}}";
+
+            Console.WriteLine(format, machine.MachineId, status.State);
+
+            return Task.CompletedTask;
+        }
+
+        public async Task<bool> GuardAsync<TPayload>(
+            ISchematic<TState, TInput> schematic,
+            IStateMachine<TState, TInput> machine,
+            Status<TState> status,
+            TInput input,
+            TPayload payload,
+            IReadOnlyDictionary<string, string> connectorSettings,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             string prompt = null;
             connectorSettings?.TryGetValue("Prompt", out prompt);
@@ -29,7 +58,7 @@ namespace REstate.Engine.Services
 
             while (true)
             {
-                Console.WriteLine(prompt, machineInstance.MachineId, status.State, input, payload);
+                Console.WriteLine(prompt, machine.MachineId, status.State, input, payload);
                 var response = await Task.Run(() => Console.ReadLine()?.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
 
                 switch (response)
@@ -43,6 +72,9 @@ namespace REstate.Engine.Services
                 }
             }
         }
+
+        public IBulkEntryConnector<TState, TInput> GetBulkEntryConnector() => 
+            new ConsoleBulkEntryConnector<TState, TInput>();
 
         public static string ConnectorKey => "Console";
     }

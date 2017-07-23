@@ -4,24 +4,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using REstate.Engine.Services;
 using REstate.Schematics;
 
 namespace REstate.Engine
 {
-    public class StateEngine<TState, TInput> 
+    public class StateEngine<TState, TInput>
         : ILocalStateEngine<TState, TInput>
     {
         private readonly IStateMachineFactory<TState, TInput> _stateMachineFactory;
         private readonly IRepositoryContextFactory<TState, TInput> _repositoryContextFactory;
+        private readonly IConnectorResolver<TState, TInput> _connectorResolver;
         private readonly IReadOnlyCollection<IEventListener> _listeners;
 
         public StateEngine(
             IStateMachineFactory<TState, TInput> stateMachineFactory,
             IRepositoryContextFactory<TState, TInput> repositoryContextFactory,
+            IConnectorResolver<TState, TInput> connectorResolver,
             IEnumerable<IEventListener> listeners)
         {
             _stateMachineFactory = stateMachineFactory;
             _repositoryContextFactory = repositoryContextFactory;
+            _connectorResolver = connectorResolver;
             _listeners = listeners.ToList();
         }
 
@@ -65,7 +69,6 @@ namespace REstate.Engine
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var machineId = Guid.NewGuid().ToString();
             MachineStatus<TState, TInput> newMachineStatus;
 
             using (var repositories = _repositoryContextFactory.OpenContext())
@@ -73,7 +76,6 @@ namespace REstate.Engine
                 newMachineStatus = await repositories.Machines
                     .CreateMachineAsync(
                         schematic,
-                        machineId,
                         metadata,
                         cancellationToken)
                     .ConfigureAwait(false);
@@ -81,12 +83,34 @@ namespace REstate.Engine
 
             var machine = _stateMachineFactory
                 .ConstructFromSchematic(
-                    machineId,
+                    newMachineStatus.MachineId,
                     schematic);
 
-            Task.Run(async () => await Task.WhenAll(_listeners.Select(listener => listener.OnMachineCreated(machine, schematic, newMachineStatus, CancellationToken.None))), CancellationToken.None);
+            NotifyOnMachineCreated(schematic, newMachineStatus, machine);
+
+            await CallOnInitialEntryAction(schematic, newMachineStatus, machine, cancellationToken);
 
             return machine;
+        }
+
+        private async Task CallOnInitialEntryAction(
+            ISchematic<TState, TInput> schematic,
+            Status<TState> status,
+            IStateMachine<TState, TInput> machine,
+            CancellationToken cancellationToken)
+        {
+            var initialAction = schematic.States[schematic.InitialState].OnEntry;
+
+            if (initialAction == null) return;
+
+            var connector = _connectorResolver.ResolveConnector(initialAction.ConnectorKey);
+
+            await connector.OnInitialEntryAsync(
+                schematic,
+                machine,
+                status,
+                initialAction.Settings,
+                cancellationToken);
         }
 
         public Task<IStateMachine<TState, TInput>> CreateMachineAsync(
@@ -100,8 +124,6 @@ namespace REstate.Engine
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var machineId = Guid.NewGuid().ToString();
-
             Schematic<TState, TInput> schematic;
 
             MachineStatus<TState, TInput> newMachineStatus;
@@ -114,7 +136,6 @@ namespace REstate.Engine
                 newMachineStatus = await repositories.Machines
                     .CreateMachineAsync(
                         schematicName,
-                        machineId,
                         metadata,
                         cancellationToken)
                     .ConfigureAwait(false);
@@ -122,12 +143,88 @@ namespace REstate.Engine
 
             var machine = _stateMachineFactory
                 .ConstructFromSchematic(
-                    machineId,
+                    newMachineStatus.MachineId,
                     schematic);
 
-            Task.Run(async () => await Task.WhenAll(_listeners.Select(listener => listener.OnMachineCreated(machine, schematic, newMachineStatus, CancellationToken.None))), CancellationToken.None);
+            NotifyOnMachineCreated(schematic, newMachineStatus, machine);
+
+            await CallOnInitialEntryAction(schematic, newMachineStatus, machine, cancellationToken);
 
             return machine;
+        }
+
+        private void NotifyOnMachineCreated(
+            ISchematic<TState, TInput> schematic,
+            MachineStatus<TState, TInput> machineStatus,
+            IStateMachine<TState, TInput> machine)
+        {
+#pragma warning disable 4014
+            Task.Run(async () => await Task.WhenAll(
+                _listeners.Select(listener =>
+                    listener.OnMachineCreated(
+                        new[] { machine },
+                        schematic,
+                        machineStatus,
+                        CancellationToken.None))),
+                CancellationToken.None);
+#pragma warning restore 4014
+        }
+
+        public async Task CreateMachinesBulkAsync(
+            string schematicName,
+            IEnumerable<IDictionary<string, string>> metadata,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            Schematic<TState, TInput> schematic;
+
+            using (var repositories = _repositoryContextFactory.OpenContext())
+            {
+                schematic = await repositories.Schematics
+                    .RetrieveSchematicAsync(schematicName, cancellationToken);
+
+                // TODO: bulk create records (repo call)
+            }
+
+            await BulkCallOnInitialEntryAction(schematic, cancellationToken);
+
+        }
+
+        private async Task BulkCallOnInitialEntryAction(
+            ISchematic<TState, TInput> schematic,
+            CancellationToken cancellationToken)
+        {
+            var initialAction = schematic.States[schematic.InitialState].OnEntry;
+
+            if (initialAction == null) return;
+
+            var connector = _connectorResolver.ResolveConnector(initialAction.ConnectorKey);
+
+            IBulkEntryConnector<TState, TInput> bulkConnector = null;
+
+            Func<
+                ISchematic<TState, TInput>,
+                IStateMachine<TState, TInput>,
+                Status<TState>,
+                IReadOnlyDictionary<string, string>,
+                CancellationToken,
+            Task> onInitialEntry;
+
+            try
+            {
+                bulkConnector = connector.GetBulkEntryConnector();
+
+                onInitialEntry = bulkConnector.OnInitialEntryAsync;
+            }
+            catch (NotSupportedException)
+            {
+                // Bulk not supported, falling back to individual.
+                onInitialEntry = connector.OnInitialEntryAsync;
+            }
+
+            await onInitialEntry(schematic, null, default(Status<TState>), initialAction.Settings, cancellationToken);
+
+            if (bulkConnector != null)
+                await bulkConnector.ExecuteBulkEntryAsync(cancellationToken);
         }
 
         public async Task<IStateMachine<TState, TInput>> GetMachineAsync(
@@ -138,11 +235,11 @@ namespace REstate.Engine
 
             using (var repositories = _repositoryContextFactory.OpenContext())
             {
-                var machineRecord = await repositories.Machines
-                    .GetMachineRecordAsync(machineId, cancellationToken)
+                var machineStatus = await repositories.Machines
+                    .GetMachineStatusAsync(machineId, cancellationToken)
                     .ConfigureAwait(false);
 
-                schematic = machineRecord.Schematic;
+                schematic = machineStatus.Schematic;
             }
 
             var machine = _stateMachineFactory
@@ -164,7 +261,19 @@ namespace REstate.Engine
                     .ConfigureAwait(false);
             }
 
-            Task.Run(async () => await Task.WhenAll(_listeners.Select(listener => listener.OnMachineDeleted(machineId, CancellationToken.None))), CancellationToken.None);
+            NotifyOnMachineDeleted(machineId);
+        }
+
+        private void NotifyOnMachineDeleted(string machineId)
+        {
+#pragma warning disable 4014
+            Task.Run(async () => await Task.WhenAll(
+                _listeners.Select(listener =>
+                    listener.OnMachineDeleted(
+                        new[] { machineId },
+                        CancellationToken.None))),
+                CancellationToken.None);
+#pragma warning restore 4014
         }
     }
 }

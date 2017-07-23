@@ -9,7 +9,7 @@ namespace REstate
     public interface IEventListener
     {
         Task OnMachineCreated<TState, TInput>(
-            IStateMachine<TState, TInput> machine,
+            IEnumerable<IStateMachine<TState, TInput>> machines,
             ISchematic<TState, TInput> schematic,
             Status<TState> initialStatus,
             CancellationToken cancellation = default(CancellationToken));
@@ -23,7 +23,7 @@ namespace REstate
             CancellationToken cancellation = default(CancellationToken));
 
         Task OnMachineDeleted(
-            string machineId,
+            IEnumerable<string> machineIds,
             CancellationToken cancellation = default(CancellationToken));
     }
 }

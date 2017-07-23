@@ -16,26 +16,34 @@ namespace REstate.Engine.Repositories.InMemory
 
         public Task<Schematic<TState, TInput>> RetrieveSchematicAsync(string schematicName, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var machineRecord = Schematics[schematicName];
+            var schematic = Schematics[schematicName];
 
-            return Task.FromResult(machineRecord);
+            return Task.FromResult(schematic);
         }
 
         public Task<Schematic<TState, TInput>> StoreSchematicAsync(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default(CancellationToken))
         {
             Schematics.Add(schematic.SchematicName, schematic);
 
-            var machineRecord = Schematics[schematic.SchematicName];
+            var storedSchematic = Schematics[schematic.SchematicName];
 
-            return Task.FromResult(machineRecord);
+            return Task.FromResult(storedSchematic);
         }
 
-        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
         {
             var schematic = Schematics[schematicName];
 
+            return CreateMachineAsync(schematic, metadata, cancellationToken);
+        }
+
+        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(Schematic<TState, TInput> schematic, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var machineId = Guid.NewGuid().ToString();
+
             var record = new MachineStatus<TState, TInput>
             {
+                MachineId = machineId,
                 Schematic = schematic,
                 State = schematic.InitialState,
                 CommitTag = Guid.NewGuid(),
@@ -47,24 +55,9 @@ namespace REstate.Engine.Repositories.InMemory
             return Task.FromResult(record);
         }
 
-        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(Schematic<TState, TInput> schematic, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var record = new MachineStatus<TState, TInput>
-            {
-                Schematic = schematic,
-                State = schematic.InitialState,
-                CommitTag = Guid.NewGuid(),
-                StateChangedDateTime = DateTime.UtcNow
-            };
-
-            Machines.Add(machineId, (record, metadata));
-
-            return Task.FromResult(record);
-        }
-
-        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, string machineId, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return CreateMachineAsync(schematicName, machineId, new Dictionary<string, string>(), cancellationToken);
+            return CreateMachineAsync(schematicName, new Dictionary<string, string>(), cancellationToken);
         }
 
         public Task DeleteMachineAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken))
@@ -74,7 +67,7 @@ namespace REstate.Engine.Repositories.InMemory
             return Task.CompletedTask;
         }
 
-        public Task<MachineStatus<TState, TInput>> GetMachineRecordAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken))
         {
             var (machine, _) = Machines[machineId];
 
