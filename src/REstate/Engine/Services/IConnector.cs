@@ -13,15 +13,7 @@ namespace REstate.Engine.Services
             ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status,
-            TInput input,
-            TPayload payload,
-            IReadOnlyDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken = default(CancellationToken));
-
-        Task OnInitialEntryAsync(
-            ISchematic<TState, TInput> schematic,
-            IStateMachine<TState, TInput> machine,
-            Status<TState> status,
+            InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default(CancellationToken));
 
@@ -29,8 +21,7 @@ namespace REstate.Engine.Services
             ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status,
-            TInput input,
-            TPayload payload,
+            InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default(CancellationToken));
 

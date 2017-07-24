@@ -14,31 +14,20 @@ namespace REstate.Engine.Services
         public Task OnEntryAsync<TPayload>(
             ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
-            Status<TState> status,
-            TInput input,
-            TPayload payload,
+            Status<TState> status, 
+            InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             string format = null;
             connectorSettings?.TryGetValue("Format", out format);
-            format = format ?? "Machine {{{0}}} entered status {{{1}}}";
+            const string machineEnteredStatus = "Machine {{{0}}} entered status {{{1}}}";
+            format = format ?? machineEnteredStatus;
 
-            Console.WriteLine(format, machine.MachineId, status.State, payload);
-
-            return Task.CompletedTask;
-        }
-
-        public Task OnInitialEntryAsync(
-            ISchematic<TState, TInput> schematic,
-            IStateMachine<TState, TInput> machine, 
-            Status<TState> status, 
-            IReadOnlyDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken = new CancellationToken())
-        {
-            const string format = "Machine {{{0}}} entered status {{{1}}}";
-
-            Console.WriteLine(format, machine.MachineId, status.State);
+            if(inputParameters != null)
+                Console.WriteLine(format, machine.MachineId, status.State, inputParameters.Input, inputParameters.Payload);
+            else
+                Console.WriteLine(machineEnteredStatus, machine.MachineId, status.State, null, null);
 
             return Task.CompletedTask;
         }
@@ -47,8 +36,7 @@ namespace REstate.Engine.Services
             ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status,
-            TInput input,
-            TPayload payload,
+            InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -58,8 +46,8 @@ namespace REstate.Engine.Services
 
             while (true)
             {
-                Console.WriteLine(prompt, machine.MachineId, status.State, input, payload);
-                var response = await Task.Run(() => Console.ReadLine()?.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
+                Console.WriteLine(prompt, machine.MachineId, status.State, inputParameters.Input, inputParameters.Payload);
+                var response = Console.ReadLine()?.ToLowerInvariant();
 
                 switch (response)
                 {

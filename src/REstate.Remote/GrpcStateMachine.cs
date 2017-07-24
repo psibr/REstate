@@ -65,6 +65,7 @@ namespace REstate.Remote
             }
 
             return new Status<TState>(
+                MachineId,
                 MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
@@ -96,6 +97,7 @@ namespace REstate.Remote
             }
 
             return new Status<TState>(
+                MachineId,
                 MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
@@ -125,6 +127,7 @@ namespace REstate.Remote
             }
 
             return new Status<TState>(
+                MachineId,
                 MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
@@ -155,6 +158,7 @@ namespace REstate.Remote
             }
 
             return new Status<TState>(
+                MachineId,
                 MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),

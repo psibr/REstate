@@ -18,7 +18,7 @@ namespace REstate.Engine.Repositories
 
         public static implicit operator Status<TState>(MachineStatus<TState, TInput> record)
         {
-            return new Status<TState>(record.State, record.CommitTag);
+            return new Status<TState>(record.MachineId, record.State, record.CommitTag);
         }
     }
 }

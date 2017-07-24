@@ -105,10 +105,11 @@ namespace REstate.Engine
 
             var connector = _connectorResolver.ResolveConnector(initialAction.ConnectorKey);
 
-            await connector.OnInitialEntryAsync(
+            await connector.OnEntryAsync<object>(
                 schematic,
                 machine,
                 status,
+                null,
                 initialAction.Settings,
                 cancellationToken);
         }
@@ -162,35 +163,89 @@ namespace REstate.Engine
             Task.Run(async () => await Task.WhenAll(
                 _listeners.Select(listener =>
                     listener.OnMachineCreated(
-                        new[] { machine },
                         schematic,
-                        machineStatus,
+                        new [] { (Status<TState>)machineStatus },
                         CancellationToken.None))),
                 CancellationToken.None);
 #pragma warning restore 4014
         }
 
-        public async Task CreateMachinesBulkAsync(
+        public Task BulkCreateMachinesAsync(
+            ISchematic<TState, TInput> schematic,
+            IEnumerable<IDictionary<string, string>> metadata,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return BulkCreateMachinesAsync(schematic.Copy(), metadata, cancellationToken);
+        }
+
+        public async Task BulkCreateMachinesAsync(
+            Schematic<TState, TInput> schematic,
+            IEnumerable<IDictionary<string, string>> metadata,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            ICollection<MachineStatus<TState, TInput>> machineStatuses;
+
+            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken))
+            {
+                machineStatuses = await repositories.Machines.BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
+            }
+
+            List<(IStateMachine<TState, TInput> Machine, MachineStatus<TState, TInput> MachineStatus)> machines =
+                machineStatuses.Select(status => (_stateMachineFactory
+                    .ConstructFromSchematic(
+                        status.MachineId,
+                        schematic), status)).ToList();
+
+            NotifyBulkOnMachineCreated(schematic, machineStatuses);
+
+            await BulkCallOnInitialEntryAction(schematic, machines, cancellationToken);
+        }
+
+        private void NotifyBulkOnMachineCreated(ISchematic<TState, TInput> schematic, IEnumerable<MachineStatus<TState, TInput>> machineStatuses)
+        {
+#pragma warning disable 4014
+            Task.Run(async () => await Task.WhenAll(
+                    _listeners.Select(listener =>
+                        listener.OnMachineCreated(
+                            schematic,
+                            machineStatuses.Select(s => (Status<TState>)s).ToList(),
+                            CancellationToken.None))),
+                CancellationToken.None);
+#pragma warning restore 4014
+        }
+
+        public async Task BulkCreateMachinesAsync(
             string schematicName,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Schematic<TState, TInput> schematic;
 
-            using (var repositories = _repositoryContextFactory.OpenContext())
+            ICollection<MachineStatus<TState, TInput>> machineStatuses;
+
+            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken))
             {
                 schematic = await repositories.Schematics
                     .RetrieveSchematicAsync(schematicName, cancellationToken);
 
-                // TODO: bulk create records (repo call)
+                machineStatuses = await repositories.Machines.BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
             }
 
-            await BulkCallOnInitialEntryAction(schematic, cancellationToken);
+            List<(IStateMachine<TState, TInput> Machine, MachineStatus<TState, TInput> MachineStatus)> machines =
+                machineStatuses.Select(status => (_stateMachineFactory
+                    .ConstructFromSchematic(
+                        status.MachineId,
+                        schematic), status)).ToList();
+
+            NotifyBulkOnMachineCreated(schematic, machineStatuses);
+
+            await BulkCallOnInitialEntryAction(schematic, machines, cancellationToken);
 
         }
 
         private async Task BulkCallOnInitialEntryAction(
             ISchematic<TState, TInput> schematic,
+            IEnumerable<(IStateMachine<TState, TInput> Machine, MachineStatus<TState, TInput> MachineStatus)> machines,
             CancellationToken cancellationToken)
         {
             var initialAction = schematic.States[schematic.InitialState].OnEntry;
@@ -205,6 +260,7 @@ namespace REstate.Engine
                 ISchematic<TState, TInput>,
                 IStateMachine<TState, TInput>,
                 Status<TState>,
+                InputParameters<TInput, object>,
                 IReadOnlyDictionary<string, string>,
                 CancellationToken,
             Task> onInitialEntry;
@@ -213,15 +269,24 @@ namespace REstate.Engine
             {
                 bulkConnector = connector.GetBulkEntryConnector();
 
-                onInitialEntry = bulkConnector.OnInitialEntryAsync;
+                onInitialEntry = bulkConnector.OnEntryAsync;
             }
             catch (NotSupportedException)
             {
                 // Bulk not supported, falling back to individual.
-                onInitialEntry = connector.OnInitialEntryAsync;
+                onInitialEntry = connector.OnEntryAsync;
             }
 
-            await onInitialEntry(schematic, null, default(Status<TState>), initialAction.Settings, cancellationToken);
+            foreach (var machine in machines)
+            {
+                await onInitialEntry(
+                    schematic,
+                    machine.Machine,
+                    machine.MachineStatus,
+                    null,
+                    initialAction.Settings,
+                    cancellationToken);
+            }
 
             if (bulkConnector != null)
                 await bulkConnector.ExecuteBulkEntryAsync(cancellationToken);

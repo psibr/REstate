@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using REstate.Schematics;
@@ -55,9 +56,33 @@ namespace REstate.Engine.Repositories.InMemory
             return Task.FromResult(record);
         }
 
-        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(Schematic<TState, TInput> schematic, IEnumerable<IDictionary<string, string>> metadata,
+            CancellationToken cancellationToken = new CancellationToken())
         {
-            return CreateMachineAsync(schematicName, new Dictionary<string, string>(), cancellationToken);
+            List<(MachineStatus<TState, TInput> MachineStatus, IDictionary<string, string> Metadata)> machineRecords = metadata.Select(m => 
+                (new MachineStatus<TState, TInput>
+                    {
+                        MachineId = Guid.NewGuid().ToString(),
+                        Schematic = schematic,
+                        State = schematic.InitialState,
+                        CommitTag = Guid.NewGuid(),
+                        StateChangedDateTime = DateTime.UtcNow
+                    },
+                m)).ToList();
+
+            foreach (var machineRecord in machineRecords)
+            {
+                Machines.Add(machineRecord.MachineStatus.MachineId, machineRecord);
+            }
+
+            return Task.FromResult<ICollection<MachineStatus<TState, TInput>>>(machineRecords.Select(r => r.MachineStatus).ToList());
+        }
+
+        public Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(string schematicName, IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var schematic = Schematics[schematicName];
+
+            return BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
         }
 
         public Task DeleteMachineAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken))

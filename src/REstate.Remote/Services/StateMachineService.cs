@@ -35,6 +35,10 @@ namespace REstate.Remote.Services
         UnaryResult<CreateMachineResponse> CreateMachineFromStoreAsync(CreateMachineFromStoreRequest request);
 
         UnaryResult<CreateMachineResponse> CreateMachineFromSchematicAsync(CreateMachineFromSchematicRequest request);
+
+        UnaryResult<Nil> BulkCreateMachineFromStoreAsync(BulkCreateMachineFromStoreRequest request);
+
+        UnaryResult<Nil> BulkCreateMachineFromSchematicAsync(BulkCreateMachineFromSchematicRequest request);
     }
 
     public class StateMachineService
@@ -294,6 +298,73 @@ namespace REstate.Remote.Services
         }
         #endregion CreateMachineFromSchematicAsync
 
+        #region BulkCreateMachineFromStoreAsync
+        public async UnaryResult<Nil> BulkCreateMachineFromStoreAsync(BulkCreateMachineFromStoreRequest request)
+        {
+            var genericTypes = GetGenericsFromHeaders();
+
+            var bulkCreateMachineFromStoreAsyncMethod = typeof(StateMachineService)
+                .GetMethod(nameof(BulkCreateMachineFromStoreAsync), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(genericTypes);
+
+            await (Task)bulkCreateMachineFromStoreAsyncMethod
+                .Invoke(this, new object[]
+                {
+                    request.SchematicName,
+                    request.Metadata,
+                    Context.CallContext.CancellationToken
+                });
+
+            return Nil.Default;
+        }
+
+        private static async Task BulkCreateMachineFromStoreAsync<TState, TInput>(string schematicName,
+            IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var engine = REstateHost.Agent
+                .AsLocal()
+                .GetStateEngine<TState, TInput>();
+
+            await engine.BulkCreateMachinesAsync(schematicName, metadata, cancellationToken);
+        }
+        #endregion BulkCreateMachineFromStoreAsync
+
+        #region BulkCreateMachineFromSchematicAsync
+        public async UnaryResult<Nil> BulkCreateMachineFromSchematicAsync(BulkCreateMachineFromSchematicRequest request)
+        {
+            var genericTypes = GetGenericsFromHeaders();
+
+            var schematic = MessagePackSerializer.NonGeneric.Deserialize(
+                typeof(Schematic<,>).MakeGenericType(genericTypes),
+                request.SchematicBytes,
+                ContractlessStandardResolver.Instance);
+
+            var bulkCreateMachineFromSchematicAsyncMethod = typeof(StateMachineService)
+                .GetMethod(nameof(BulkCreateMachineFromSchematicAsync), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(genericTypes);
+
+            await (Task)bulkCreateMachineFromSchematicAsyncMethod
+                .Invoke(this, new []
+                {
+                    schematic,
+                    request.Metadata,
+                    Context.CallContext.CancellationToken
+                });
+
+            return Nil.Default;
+        }
+
+        private static async Task BulkCreateMachineFromSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic,
+            IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var engine = REstateHost.Agent
+                .AsLocal()
+                .GetStateEngine<TState, TInput>();
+
+            await engine.BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
+        }
+        #endregion BulkCreateMachineFromSchematicAsync
+
         #region GetSchematicAsync
         public async UnaryResult<GetSchematicResponse> GetSchematicAsync(GetSchematicRequest request)
         {
@@ -357,7 +428,8 @@ namespace REstate.Remote.Services
         private Type[] GetGenericsFromHeaders()
         {
             return Context.CallContext.RequestHeaders
-                .Where(header => new[] { StateTypeHeaderKey, InputTypeHeaderKey }.Contains(header.Key, StringComparer.OrdinalIgnoreCase))
+                .Where(header => new[] { StateTypeHeaderKey, InputTypeHeaderKey }
+                    .Contains(header.Key, StringComparer.OrdinalIgnoreCase))
                 .OrderByDescending(header => header.Key)
                 .Select(header => Type.GetType(header.Value))
                 .ToArray();

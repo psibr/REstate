@@ -1,18 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace REstate
 {
     public struct Status<T>
         : IEquatable<Status<T>>
     {
-        public Status(T state, Guid commitTag)
+        public Status(string machineId, T state, Guid commitTag)
         {
+            MachineId = machineId;
             State = state;
             CommitTag = commitTag;
         }
 
-        public Status(T state)
-            : this(state, Guid.Empty) { }
+        public Status(string machineId, T state)
+            : this(machineId, state, Guid.Empty) { }
 
 
         public T State { get; }
@@ -23,6 +25,8 @@ namespace REstate
         /// Empty Guid represents the absence of a commit tag and should not be used.
         /// </summary>
         public Guid CommitTag { get; }
+
+        public string MachineId { get; }
 
         public override string ToString()
         {
@@ -38,7 +42,7 @@ namespace REstate
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(Status<T> other)
         {
-            return State.Equals(other.State);
+            return MachineId.Equals(other.MachineId) && State.Equals(other.State);
         }
 
         /// <summary>
@@ -56,16 +60,18 @@ namespace REstate
             return false;
         }
 
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
-        /// <returns>
-        /// A hash code for the current object.
-        /// </returns>
+        /// <summary>Returns the hash code for this instance.</summary>
+        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return State.GetHashCode();
+            unchecked
+            {
+                var hashCode = EqualityComparer<T>.Default.GetHashCode(State);
+                hashCode = (hashCode * 397) ^ MachineId.GetHashCode();
+                return hashCode;
+            }
         }
+
 
         /// <summary>
         /// Verifies that both statuses have the same state

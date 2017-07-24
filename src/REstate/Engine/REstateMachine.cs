@@ -87,7 +87,7 @@ namespace REstate.Engine
                 {
                     var guardConnector =  _connectorResolver.ResolveConnector(transition.Guard.ConnectorKey);
 
-                    if (!await guardConnector.GuardAsync(Schematic, this, currentStatus, input, payload, transition.Guard.Settings, cancellationToken).ConfigureAwait(false))
+                    if (!await guardConnector.GuardAsync(Schematic, this, currentStatus, new InputParameters<TInput, TPayload>(input, payload), transition.Guard.Settings, cancellationToken).ConfigureAwait(false))
                     {
                         throw new InvalidOperationException("Guard clause prevented transition.");
                     }
@@ -112,7 +112,7 @@ namespace REstate.Engine
                 {
                     var entryConnector = _connectorResolver.ResolveConnector(schematicState.OnEntry.ConnectorKey);
                         
-                    await entryConnector.OnEntryAsync(Schematic, this, currentStatus, input, payload, schematicState.OnEntry.Settings, cancellationToken).ConfigureAwait(false);
+                    await entryConnector.OnEntryAsync(Schematic, this, currentStatus, new InputParameters<TInput,TPayload>(input, payload), schematicState.OnEntry.Settings, cancellationToken).ConfigureAwait(false);
                 }
                 catch
                 {
@@ -136,7 +136,6 @@ namespace REstate.Engine
             Task.Run(async () => await Task.WhenAll(
                     _listeners.Select(listener =>
                         listener.OnTransition(
-                            this,
                             Schematic,
                             status,
                             input,

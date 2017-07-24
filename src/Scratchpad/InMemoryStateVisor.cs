@@ -12,28 +12,26 @@ namespace Scratchpad
         private readonly Dictionary<string, (string SchematicName, Stack<object> States)> _machineStates = new Dictionary<string, (string, Stack<object>)>();
 
         Task IEventListener.OnMachineCreated<TState, TInput>(
-            IEnumerable<IStateMachine<TState, TInput>> machines,
             ISchematic<TState, TInput> schematic,
-            Status<TState> initialStatus,
+            ICollection<Status<TState>> initialStatuses,
             CancellationToken cancellationToken)
         {
-            foreach (var machine in machines)
+            foreach (var status in initialStatuses)
             {
-                _machineStates.Add(machine.MachineId, (schematic.SchematicName, new Stack<object>(new object[] { initialStatus })));
+                _machineStates.Add(status.MachineId, (schematic.SchematicName, new Stack<object>(new object[] { status })));
             }
 
             return Task.CompletedTask;
         }
 
         Task IEventListener.OnTransition<TState, TInput, TPayload>(
-            IStateMachine<TState, TInput> machine,
             ISchematic<TState, TInput> schematic,
             Status<TState> status,
             TInput input,
             TPayload payload,
             CancellationToken cancellation)
         {
-            _machineStates[machine.MachineId].States.Push(status);
+            _machineStates[status.MachineId].States.Push(status);
 
             return Task.CompletedTask;
         }

@@ -9,13 +9,11 @@ namespace REstate
     public interface IEventListener
     {
         Task OnMachineCreated<TState, TInput>(
-            IEnumerable<IStateMachine<TState, TInput>> machines,
             ISchematic<TState, TInput> schematic,
-            Status<TState> initialStatus,
+            ICollection<Status<TState>> initialStatuses,
             CancellationToken cancellation = default(CancellationToken));
 
         Task OnTransition<TState, TInput, TPayload>(
-            IStateMachine<TState, TInput> machine,
             ISchematic<TState, TInput> schematic,
             Status<TState> status,
             TInput input,

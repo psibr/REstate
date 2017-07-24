@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using REstate;
 using Grpc.Core;
@@ -50,6 +51,9 @@ namespace Scratchpad
                     .WithTransitionFrom("Ready", "EchoFailure")).Copy();
             
             var newSchematic = await stateEngine.StoreSchematicAsync(schematic, CancellationToken.None);
+
+            await stateEngine.BulkCreateMachinesAsync("EchoMachine", new IDictionary<string, string>[10],
+                CancellationToken.None);
 
             var echoMachine = await stateEngine.CreateMachineAsync("EchoMachine", null, CancellationToken.None);
 
