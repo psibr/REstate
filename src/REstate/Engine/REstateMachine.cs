@@ -71,7 +71,7 @@ namespace REstate.Engine
             Guid lastCommitTag,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            using (var dataContext = _repositoryContextFactory.OpenContext())
+            using (var dataContext = await  _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 Status<TState> currentStatus = await dataContext.Machines
                     .GetMachineStatusAsync(MachineId, cancellationToken).ConfigureAwait(false);
@@ -174,7 +174,7 @@ namespace REstate.Engine
         {
             Status<TState> currentStatus;
 
-            using (var dataContext = _repositoryContextFactory.OpenContext())
+            using (var dataContext = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 currentStatus = await dataContext.Machines
                     .GetMachineStatusAsync(MachineId, cancellationToken)
