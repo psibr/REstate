@@ -29,10 +29,16 @@ namespace REstate.Engine.Services
             else
                 Console.WriteLine(machineEnteredStatus, machine.MachineId, status.State, null, null);
 
+#if NET45
+            return Task.FromResult(0);
+#else
             return Task.CompletedTask;
+#endif
         }
 
+#pragma warning disable 1998
         public async Task<bool> GuardAsync<TPayload>(
+#pragma warning restore 1998
             ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status,

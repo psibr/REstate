@@ -3,32 +3,44 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MessagePack;
+using MessagePack.Resolvers;
 using REstate.Schematics;
+using StackExchange.Redis;
 
-namespace REstate.Engine.Repositories.InMemory
+namespace REstate.Engine.Repositories.Redis
 {
-    public class EngineRepository<TState, TInput> 
+    public class RedisEngineRepository<TState, TInput>
         : ISchematicRepository<TState, TInput>
         , IMachineRepository<TState, TInput>
     {
+        private readonly IDatabaseAsync _restateDatabase;
+
+        public RedisEngineRepository(IDatabaseAsync restateDatabase)
+        {
+            _restateDatabase = restateDatabase;
+        }
+
         private static IDictionary<string, Schematic<TState, TInput>> Schematics { get; } = new Dictionary<string, Schematic<TState, TInput>>();
         private static IDictionary<string, ValueTuple<MachineStatus<TState, TInput>, IDictionary<string, string>>> Machines { get; } =
             new Dictionary<string, ValueTuple<MachineStatus<TState, TInput>, IDictionary<string, string>>>();
 
-        public Task<Schematic<TState, TInput>> RetrieveSchematicAsync(string schematicName, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Schematic<TState, TInput>> RetrieveSchematicAsync(string schematicName, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var schematic = Schematics[schematicName];
+            var value = await _restateDatabase.StringGetAsync(schematicName);
 
-            return Task.FromResult(schematic);
+            var schematic = MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(value,
+                ContractlessStandardResolver.Instance);
+
+            return schematic;
         }
 
-        public Task<Schematic<TState, TInput>> StoreSchematicAsync(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Schematic<TState, TInput>> StoreSchematicAsync(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default(CancellationToken))
         {
-            Schematics.Add(schematic.SchematicName, schematic);
+            await _restateDatabase.StringSetAsync(schematic.SchematicName,
+                MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance));
 
-            var storedSchematic = Schematics[schematic.SchematicName];
-
-            return Task.FromResult(storedSchematic);
+            return schematic;
         }
 
         public Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
@@ -59,15 +71,15 @@ namespace REstate.Engine.Repositories.InMemory
         public Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(Schematic<TState, TInput> schematic, IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = new CancellationToken())
         {
-            List<(MachineStatus<TState, TInput> MachineStatus, IDictionary<string, string> Metadata)> machineRecords = metadata.Select(m => 
+            List<(MachineStatus<TState, TInput> MachineStatus, IDictionary<string, string> Metadata)> machineRecords = metadata.Select(m =>
                 (new MachineStatus<TState, TInput>
-                    {
-                        MachineId = Guid.NewGuid().ToString(),
-                        Schematic = schematic,
-                        State = schematic.InitialState,
-                        CommitTag = Guid.NewGuid(),
-                        StateChangedDateTime = DateTime.UtcNow
-                    },
+                {
+                    MachineId = Guid.NewGuid().ToString(),
+                    Schematic = schematic,
+                    State = schematic.InitialState,
+                    CommitTag = Guid.NewGuid(),
+                    StateChangedDateTime = DateTime.UtcNow
+                },
                 m)).ToList();
 
             foreach (var machineRecord in machineRecords)
@@ -89,11 +101,7 @@ namespace REstate.Engine.Repositories.InMemory
         {
             Machines.Remove(machineId);
 
-#if NET45
-            return Task.FromResult(0);
-#else
             return Task.CompletedTask;
-#endif
         }
 
         public Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken))
@@ -112,7 +120,7 @@ namespace REstate.Engine.Repositories.InMemory
         {
             var (machine, _) = Machines[machineId];
 
-            lock(machine)
+            lock (machine)
             {
                 if (lastCommitTag == null || machine.CommitTag == lastCommitTag)
                 {

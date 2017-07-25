@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.15
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate", "src\REstate\REstate.csproj", "{8B02FF53-A9F3-4004-8CDC-32831070957D}"
 EndProject
@@ -19,7 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "src\Examples\Clie
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JobSystem", "JobSystem", "{235D6821-398C-4083-9AFE-97FA0C19D31A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Supervisor", "src\Examples\JobSystem\Supervisor\Supervisor.csproj", "{9991D081-2D18-410E-832F-05D7735758BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Supervisor", "src\Examples\JobSystem\Supervisor\Supervisor.csproj", "{9991D081-2D18-410E-832F-05D7735758BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "REstate.Engine.Repositories.Redis", "src\REstate.Engine.Repositories.Redis\REstate.Engine.Repositories.Redis.csproj", "{C72B33ED-2EDE-4705-81A6-8174F2577632}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{9991D081-2D18-410E-832F-05D7735758BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9991D081-2D18-410E-832F-05D7735758BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9991D081-2D18-410E-832F-05D7735758BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C72B33ED-2EDE-4705-81A6-8174F2577632}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C72B33ED-2EDE-4705-81A6-8174F2577632}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C72B33ED-2EDE-4705-81A6-8174F2577632}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C72B33ED-2EDE-4705-81A6-8174F2577632}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

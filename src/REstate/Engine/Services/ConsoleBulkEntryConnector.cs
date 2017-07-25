@@ -23,7 +23,11 @@ namespace REstate.Engine.Services
 
             _lines.Add(string.Format(format, machine.MachineId, status.State));
 
+#if NET45
+            return Task.FromResult(0);
+#else
             return Task.CompletedTask;
+#endif
         }
 
         public Task ExecuteBulkEntryAsync(CancellationToken cancellationToken = new CancellationToken())
@@ -33,7 +37,11 @@ namespace REstate.Engine.Services
                 Console.WriteLine(line);
             }
 
+#if NET45
+            return Task.FromResult(0);
+#else
             return Task.CompletedTask;
+#endif
         }
     }
 }

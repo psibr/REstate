@@ -6,7 +6,9 @@ using Grpc.Core;
 using System.Threading.Tasks;
 using Grpc.Core.Logging;
 using REstate.Engine;
+using REstate.Engine.Repositories.Redis;
 using REstate.Remote;
+using StackExchange.Redis;
 
 namespace Scratchpad
 {
@@ -14,10 +16,20 @@ namespace Scratchpad
     {
         private static async Task ClientImpl()
         {
+            var multiplexer = await ConnectionMultiplexer
+                .ConnectAsync(
+                    "restate.redis.cache.windows.net:6380," +
+                    "password=dN6XUc+8udtI2j6CO14bCXBJu98b1ITIzkr/jbmq4bg=," +
+                    "ssl=True," +
+                    "abortConnect=False");
+
             var visor = new InMemoryStateVisor();
 
             REstateHost.Agent.Configuration
                 .RegisterComponent(new InMemoryStateVisorComponent(visor));
+
+            REstateHost.Agent.Configuration
+                .RegisterComponent(new RedisRepositoryComponent(multiplexer.GetDatabase()));
 
             REstateHost.Agent.Configuration
                 .RegisterComponent(
