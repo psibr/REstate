@@ -65,18 +65,8 @@ namespace Supervisor
                     .WithTransitionFrom(JobStatus.Active, JobActions.Complete))
                 .Copy()
                 .WriteStateMap();
-
-
-            GrpcEnvironment.SetLogger(new ConsoleLogger());
-
-            var server = REstateHost.Agent
-                .AsRemote()
-                .CreateGrpcServer(new ServerPort("localhost", 12345, ServerCredentials.Insecure));
-
-            // launch gRPC Server.
-            server.Start();
-
-            SpinWait.SpinUntil(() => server.ShutdownTask.IsCompleted);
+            
+            Console.WriteLine(jobDiagram);
 
             Console.ReadLine();
         }
