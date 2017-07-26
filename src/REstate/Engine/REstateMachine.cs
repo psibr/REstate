@@ -87,18 +87,23 @@ namespace REstate.Engine
                 {
                     var guardConnector =  _connectorResolver.ResolveConnector(transition.Guard.ConnectorKey);
 
-                    if (!await guardConnector.GuardAsync(Schematic, this, currentStatus, new InputParameters<TInput, TPayload>(input, payload), transition.Guard.Settings, cancellationToken).ConfigureAwait(false))
+                    if (!await guardConnector.GuardAsync(
+                        schematic: Schematic, 
+                        machine: this, 
+                        status: currentStatus, 
+                        inputParameters: new InputParameters<TInput, TPayload>(input, payload),
+                        connectorSettings: transition.Guard.Settings,
+                        cancellationToken: cancellationToken).ConfigureAwait(false))
                     {
                         throw new InvalidOperationException("Guard clause prevented transition.");
                     }
                 }
 
                 currentStatus = await dataContext.Machines.SetMachineStateAsync(
-                    MachineId,
-                    transition.ResultantState, 
-                    input, 
-                    lastCommitTag == default(Guid) ? currentStatus.CommitTag : lastCommitTag, 
-                    cancellationToken).ConfigureAwait(false);
+                    machineId: MachineId,
+                    state: transition.ResultantState,
+                    lastCommitTag: lastCommitTag == default(Guid) ? currentStatus.CommitTag : lastCommitTag, 
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
 
                 schematicState = Schematic.States[currentStatus.State];
 
@@ -112,7 +117,13 @@ namespace REstate.Engine
                 {
                     var entryConnector = _connectorResolver.ResolveConnector(schematicState.OnEntry.ConnectorKey);
                         
-                    await entryConnector.OnEntryAsync(Schematic, this, currentStatus, new InputParameters<TInput,TPayload>(input, payload), schematicState.OnEntry.Settings, cancellationToken).ConfigureAwait(false);
+                    await entryConnector.OnEntryAsync(
+                        schematic: Schematic,
+                        machine: this,
+                        status: currentStatus,
+                        inputParameters: new InputParameters<TInput,TPayload>(input, payload),
+                        connectorSettings: schematicState.OnEntry.Settings,
+                        cancellationToken: cancellationToken).ConfigureAwait(false);
                 }
                 catch
                 {
@@ -120,10 +131,10 @@ namespace REstate.Engine
                         throw;
 
                     currentStatus = await SendAsync(
-                        schematicState.OnEntry.OnFailureInput,
-                        payload,
-                        currentStatus.CommitTag,
-                        cancellationToken).ConfigureAwait(false);
+                        input: schematicState.OnEntry.OnFailureInput,
+                        payload: payload,
+                        lastCommitTag: currentStatus.CommitTag,
+                        cancellationToken: cancellationToken).ConfigureAwait(false);
                 }
 
                 return currentStatus;
@@ -136,11 +147,11 @@ namespace REstate.Engine
             Task.Run(async () => await Task.WhenAll(
                     _listeners.Select(listener =>
                         listener.OnTransition(
-                            Schematic,
-                            status,
-                            input,
-                            payload,
-                            CancellationToken.None))),
+                            schematic: Schematic,
+                            status: status,
+                            input: input,
+                            payload: payload,
+                            cancellation: CancellationToken.None))),
                 CancellationToken.None);
 #pragma warning restore 4014
         }

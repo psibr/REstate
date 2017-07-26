@@ -10,9 +10,9 @@ namespace REstate.Engine.Repositories.Redis
     {
         private readonly IDatabaseAsync _restateDatabase;
 
-        public RedisRepositoryContextFactory(IDatabaseAsync restateDatabase)
+        public RedisRepositoryContextFactory(REstateRedisDatabase restateDatabase)
         {
-            _restateDatabase = restateDatabase;
+            _restateDatabase = restateDatabase.RedisDatabase;
         }
 
         public Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(CancellationToken cancellationToken = default(CancellationToken))

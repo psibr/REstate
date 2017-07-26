@@ -24,8 +24,6 @@ namespace REstate.Engine.Repositories
 
         Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken));
 
-        Task<MachineStatus<TState, TInput>> SetMachineStateAsync(string machineId, TState state, TInput input, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken));
-
-        Task<MachineStatus<TState, TInput>> SetMachineStateAsync(string machineId, TState state, TInput input, string parameterData, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken));
+        Task<MachineStatus<TState, TInput>> SetMachineStateAsync(string machineId, TState state, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

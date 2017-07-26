@@ -9,7 +9,8 @@ namespace Scratchpad
     public class InMemoryStateVisor
         : IEventListener
     {
-        private readonly Dictionary<string, (string SchematicName, Stack<object> States)> _machineStates = new Dictionary<string, (string, Stack<object>)>();
+        private readonly Dictionary<string, (string SchematicName, Stack<object> States)> _machineStates = 
+            new Dictionary<string, (string, Stack<object>)>();
 
         Task IEventListener.OnMachineCreated<TState, TInput>(
             ISchematic<TState, TInput> schematic,

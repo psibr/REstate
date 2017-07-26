@@ -111,12 +111,7 @@ namespace REstate.Engine.Repositories.Redis
             return Task.FromResult(machine);
         }
 
-        public Task<MachineStatus<TState, TInput>> SetMachineStateAsync(string machineId, TState state, TInput input, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return SetMachineStateAsync(machineId, state, input, null, lastCommitTag, cancellationToken);
-        }
-
-        public Task<MachineStatus<TState, TInput>> SetMachineStateAsync(string machineId, TState state, TInput input, string parameterData, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<MachineStatus<TState, TInput>> SetMachineStateAsync(string machineId, TState state, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
         {
             var (machine, _) = Machines[machineId];
 
