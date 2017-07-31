@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -163,24 +162,6 @@ namespace REstate.Remote
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
                 response.CommitTag);
-        }
-
-        // TODO: Move to a lookup extension method on Status<T> given a status. IsSubstateOf
-        public Task<bool> IsInStateAsync(Status<TState> status, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return null;
-        }
-
-        // TODO: Promote to the StateVisor system.
-        public Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return null;
-        }
-
-        // TODO: Move to a lookup extension method on ISchematic and IMachine given a status.
-        public Task<ICollection<TInput>> GetPermittedInputAsync(CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return null;
         }
     }
 }

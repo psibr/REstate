@@ -8,7 +8,7 @@ namespace REstate.Engine.Repositories.Redis
     public class RedisRepositoryContextFactory<TState, TInput>
         : IRepositoryContextFactory<TState, TInput>
     {
-        private readonly IDatabaseAsync _restateDatabase;
+        private readonly IDatabase _restateDatabase;
 
         public RedisRepositoryContextFactory(REstateRedisDatabase restateDatabase)
         {

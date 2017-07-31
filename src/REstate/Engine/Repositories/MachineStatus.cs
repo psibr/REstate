@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using REstate.Schematics;
 
@@ -15,6 +16,8 @@ namespace REstate.Engine.Repositories
         public Guid CommitTag { get; set; }
 
         public DateTime StateChangedDateTime { get; set; }
+
+        public IDictionary<string, string> Metadata { get; set; }
 
         public static implicit operator Status<TState>(MachineStatus<TState, TInput> record)
         {

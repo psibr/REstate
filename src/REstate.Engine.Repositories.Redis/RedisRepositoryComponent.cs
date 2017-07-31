@@ -8,9 +8,9 @@ namespace REstate.Engine.Repositories.Redis
     public class RedisRepositoryComponent
         : IComponent
     {
-        private readonly  IDatabaseAsync _restateDatabase;
+        private readonly IDatabase _restateDatabase;
 
-        public RedisRepositoryComponent(IDatabaseAsync restateDatabase)
+        public RedisRepositoryComponent(IDatabase restateDatabase)
         {
             _restateDatabase = restateDatabase;
         }
@@ -24,11 +24,11 @@ namespace REstate.Engine.Repositories.Redis
 
     public class REstateRedisDatabase
     {
-        public REstateRedisDatabase(IDatabaseAsync redisDatabase)
+        public REstateRedisDatabase(IDatabase redisDatabase)
         {
             RedisDatabase = redisDatabase;
         }
 
-        public IDatabaseAsync RedisDatabase { get; }
+        public IDatabase RedisDatabase { get; }
     }
 }

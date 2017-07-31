@@ -7,7 +7,7 @@ namespace REstate.Engine.Repositories.Redis
         : IEngineRepositoryContext<TState, TInput>
     {
 
-        public RedisEngineRepositoryContext(IDatabaseAsync redisDatabase)
+        public RedisEngineRepositoryContext(IDatabase redisDatabase)
         {
             // No need to seperate the implementations, so we use a shared repo.
             var repo = new RedisEngineRepository<TState, TInput>(redisDatabase);

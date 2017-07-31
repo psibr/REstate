@@ -32,11 +32,5 @@ namespace REstate
             TInput input,
             Guid lastCommitTag,
             CancellationToken cancellationToken = default(CancellationToken));
-
-        Task<bool> IsInStateAsync(Status<TState> status, CancellationToken cancellationToken = default(CancellationToken));
-
-        Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default(CancellationToken));
-
-        Task<ICollection<TInput>> GetPermittedInputAsync(CancellationToken cancellationToken = default(CancellationToken));
     }
 }

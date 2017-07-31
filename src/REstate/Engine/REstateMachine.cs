@@ -180,7 +180,7 @@ namespace REstate.Engine
             return false;
         }
 
-        public async Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default(CancellationToken))
+        protected async Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             Status<TState> currentStatus;
 
@@ -192,15 +192,6 @@ namespace REstate.Engine
             }
 
             return currentStatus;
-        }
-
-        public async Task<ICollection<TInput>> GetPermittedInputAsync(CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var currentState = await GetCurrentStateAsync(cancellationToken).ConfigureAwait(false);
-
-            var configuration = Schematic.States[currentState.State];
-
-            return configuration.Transitions.Values.Select(t => t.Input).ToList();
         }
 
         public override string ToString()

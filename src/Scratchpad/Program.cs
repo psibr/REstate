@@ -21,6 +21,14 @@ namespace Scratchpad
             REstateHost.Agent.Configuration
                 .RegisterComponent(new InMemoryStateVisorComponent(visor));
 
+            var connection = await ConnectionMultiplexer.ConnectAsync(".redis.cache.windows.net:6380," +
+                                                                "password=," +
+                                                                "ssl=True," +
+                                                                "abortConnect=False");
+
+            REstateHost.Agent.Configuration
+                .RegisterComponent(new RedisRepositoryComponent(connection.GetDatabase()));
+
             REstateHost.Agent.Configuration
                 .RegisterComponent(
                     new GrpcRemoteHostComponent(
@@ -54,7 +62,7 @@ namespace Scratchpad
             
             var newSchematic = await stateEngine.StoreSchematicAsync(schematic, CancellationToken.None);
 
-            await stateEngine.BulkCreateMachinesAsync("EchoMachine", new IDictionary<string, string>[10],
+            await stateEngine.BulkCreateMachinesAsync("EchoMachine", new IDictionary<string, string>[350000],
                 CancellationToken.None);
 
             var echoMachine = await stateEngine.CreateMachineAsync("EchoMachine", null, CancellationToken.None);

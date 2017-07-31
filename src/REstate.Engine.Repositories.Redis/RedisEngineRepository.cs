@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,125 +11,242 @@ using StackExchange.Redis;
 
 namespace REstate.Engine.Repositories.Redis
 {
+    using Metadata = IDictionary<string, string>;
+
     public class RedisEngineRepository<TState, TInput>
         : ISchematicRepository<TState, TInput>
         , IMachineRepository<TState, TInput>
     {
-        private readonly IDatabaseAsync _restateDatabase;
+        private const string SchematicKeyPrefix = "REstate/Schematics";
+        private const string MachinesKeyPrefix = "REstate/Machines";
 
-        public RedisEngineRepository(IDatabaseAsync restateDatabase)
+        private const string MachineSchematicsKeyPrefix = "REstate/MachineSchematics";
+
+        private readonly IDatabase _restateDatabase;
+
+        public RedisEngineRepository(IDatabase restateDatabase)
         {
             _restateDatabase = restateDatabase;
         }
 
-        private static IDictionary<string, Schematic<TState, TInput>> Schematics { get; } = new Dictionary<string, Schematic<TState, TInput>>();
-        private static IDictionary<string, ValueTuple<MachineStatus<TState, TInput>, IDictionary<string, string>>> Machines { get; } =
-            new Dictionary<string, ValueTuple<MachineStatus<TState, TInput>, IDictionary<string, string>>>();
+        private static IDictionary<string, (MachineStatus<TState, TInput> MachineStatus, Metadata Metadata)> Machines { get; } =
+            new Dictionary<string, (MachineStatus<TState, TInput>, Metadata)>();
 
-        public async Task<Schematic<TState, TInput>> RetrieveSchematicAsync(string schematicName, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Schematic<TState, TInput>> RetrieveSchematicAsync(
+            string schematicName,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
-            var value = await _restateDatabase.StringGetAsync(schematicName);
+            var value = await _restateDatabase.StringGetAsync($"{SchematicKeyPrefix}/{schematicName}").ConfigureAwait(false);
 
-            var schematic = MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(value,
+            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(value,
                 ContractlessStandardResolver.Instance);
 
             return schematic;
         }
 
-        public async Task<Schematic<TState, TInput>> StoreSchematicAsync(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Schematic<TState, TInput>> StoreSchematicAsync(
+            Schematic<TState, TInput> schematic,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
-            await _restateDatabase.StringSetAsync(schematic.SchematicName,
-                MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance));
+            var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
+
+            await _restateDatabase.StringSetAsync($"{SchematicKeyPrefix}/{schematic.SchematicName}", schematicBytes);
 
             return schematic;
         }
 
-        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(
+            string schematicName,
+            Metadata metadata,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
-            var schematic = Schematics[schematicName];
+            var schematic = await RetrieveSchematicAsync(schematicName, cancellationToken).ConfigureAwait(false);
 
-            return CreateMachineAsync(schematic, metadata, cancellationToken);
+            return await CreateMachineAsync(schematic, metadata, cancellationToken).ConfigureAwait(false);
         }
 
-        public Task<MachineStatus<TState, TInput>> CreateMachineAsync(Schematic<TState, TInput> schematic, IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(
+            Schematic<TState, TInput> schematic,
+            Metadata metadata,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             var machineId = Guid.NewGuid().ToString();
 
-            var record = new MachineStatus<TState, TInput>
+            var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
+
+            var hash = Convert.ToBase64String(Murmur3.ComputeHashBytes(schematicBytes));
+
+            var schematicResult = await _restateDatabase.StringGetAsync($"{MachineSchematicsKeyPrefix}/{hash}");
+
+            if (!schematicResult.HasValue)
+            {
+                await _restateDatabase.StringSetAsync($"{MachineSchematicsKeyPrefix}/{hash}", schematicBytes);
+            }
+
+            var commitTag = Guid.NewGuid();
+            var stateChangedDateTime = DateTime.UtcNow;
+
+            var record = new RedisMachineStatus<TState, TInput>
+            {
+                MachineId = machineId,
+                SchematicHash = hash,
+                State = schematic.InitialState,
+                CommitTag = commitTag,
+                StateChangedDateTime = stateChangedDateTime,
+                Metadata = metadata
+            };
+
+            var recordBytes = MessagePackSerializer.Serialize(record);
+
+            await _restateDatabase.StringSetAsync($"{MachinesKeyPrefix}/{machineId}", recordBytes).ConfigureAwait(false);
+
+            return new MachineStatus<TState, TInput>
             {
                 MachineId = machineId,
                 Schematic = schematic,
                 State = schematic.InitialState,
-                CommitTag = Guid.NewGuid(),
-                StateChangedDateTime = DateTime.UtcNow
+                CommitTag = commitTag,
+                StateChangedDateTime = stateChangedDateTime,
+                Metadata = metadata
             };
-
-            Machines.Add(machineId, (record, metadata));
-
-            return Task.FromResult(record);
         }
 
-        public Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(Schematic<TState, TInput> schematic, IEnumerable<IDictionary<string, string>> metadata,
+        public async Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(
+            Schematic<TState, TInput> schematic,
+            IEnumerable<Metadata> metadata,
             CancellationToken cancellationToken = new CancellationToken())
         {
-            List<(MachineStatus<TState, TInput> MachineStatus, IDictionary<string, string> Metadata)> machineRecords = metadata.Select(m =>
-                (new MachineStatus<TState, TInput>
-                {
-                    MachineId = Guid.NewGuid().ToString(),
-                    Schematic = schematic,
-                    State = schematic.InitialState,
-                    CommitTag = Guid.NewGuid(),
-                    StateChangedDateTime = DateTime.UtcNow
-                },
-                m)).ToList();
+            var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
 
-            foreach (var machineRecord in machineRecords)
+            var hash = Convert.ToBase64String(Murmur3.ComputeHashBytes(schematicBytes));
+
+            var machineRecords =
+                metadata.Select(meta =>
+                    new MachineStatus<TState, TInput>
+                    {
+                        MachineId = Guid.NewGuid().ToString(),
+                        Schematic = schematic,
+                        State = schematic.InitialState,
+                        CommitTag = Guid.NewGuid(),
+                        StateChangedDateTime = DateTime.UtcNow,
+                        Metadata = meta
+                    }).ToList();
+
+            await _restateDatabase.StringSetAsync($"{MachineSchematicsKeyPrefix}/{hash}", schematicBytes, null, When.NotExists);
+
+            var batchOps = machineRecords.Select(s =>
+                _restateDatabase.StringSetAsync($"{MachinesKeyPrefix}/{s.MachineId}", MessagePackSerializer.Serialize(
+                    new RedisMachineStatus<TState, TInput>
+                    {
+                        MachineId = s.MachineId,
+                        SchematicHash = hash,
+                        State = s.State,
+                        CommitTag = s.CommitTag,
+                        StateChangedDateTime = s.StateChangedDateTime,
+                        Metadata = s.Metadata
+                    }))
+            );
+
+            await Task.WhenAll(batchOps).ConfigureAwait(false);
+
+            return machineRecords;
+        }
+
+        public async Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(
+            string schematicName,
+            IEnumerable<Metadata> metadata,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var schematic = await RetrieveSchematicAsync(schematicName, cancellationToken).ConfigureAwait(false);
+
+            
+            return await BulkCreateMachinesAsync(schematic, metadata, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task DeleteMachineAsync(
+            string machineId,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            await _restateDatabase.KeyDeleteAsync($"{MachinesKeyPrefix}/{machineId}").ConfigureAwait(false);
+        }
+
+        public async Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(
+            string machineId,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var machineBytes = await _restateDatabase.StringGetAsync($"{MachinesKeyPrefix}/{machineId}").ConfigureAwait(false);
+
+            var redisRecord = MessagePackSerializer.Deserialize<RedisMachineStatus<TState, TInput>>(
+                machineBytes);
+
+            var schematicBytes = await _restateDatabase
+                .StringGetAsync($"{MachineSchematicsKeyPrefix}/{redisRecord.SchematicHash}").ConfigureAwait(false);
+
+            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
+                schematicBytes,
+                ContractlessStandardResolver.Instance);
+
+            return new MachineStatus<TState, TInput>
             {
-                Machines.Add(machineRecord.MachineStatus.MachineId, machineRecord);
+                MachineId = redisRecord.MachineId,
+                Schematic = schematic,
+                CommitTag = redisRecord.CommitTag,
+                State = redisRecord.State,
+                StateChangedDateTime = redisRecord.StateChangedDateTime,
+                Metadata = redisRecord.Metadata
+            };
+        }
+
+        public async Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
+            string machineId,
+            TState state,
+            Guid? lastCommitTag,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+
+            var machineKey = $"{MachinesKeyPrefix}/{machineId}";
+            var machineBytes = await _restateDatabase.StringGetAsync(machineKey).ConfigureAwait(false);
+
+            var status = MessagePackSerializer.Deserialize<RedisMachineStatus<TState, TInput>>(
+                machineBytes);
+
+            if (lastCommitTag == null || status.CommitTag == lastCommitTag)
+            {
+                status.State = state;
+                status.CommitTag = Guid.NewGuid();
+            }
+            else
+            {
+                throw new StateConflictException("CommitTag did not match.");
             }
 
-            return Task.FromResult<ICollection<MachineStatus<TState, TInput>>>(machineRecords.Select(r => r.MachineStatus).ToList());
-        }
+            var newMachineBytes = MessagePackSerializer.Serialize(status);
+            
+            var transaction = _restateDatabase.CreateTransaction();
+            transaction.AddCondition(Condition.StringEqual(machineKey, machineBytes));
+            var setTask = transaction.StringSetAsync(machineKey, newMachineBytes);
+            var schematicBytesTask = transaction.StringGetAsync($"{MachineSchematicsKeyPrefix}/{status.SchematicHash}");
+            var committed = await transaction.ExecuteAsync().ConfigureAwait(false);
 
-        public Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(string schematicName, IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var schematic = Schematics[schematicName];
+            await setTask.ConfigureAwait(false);
 
-            return BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
-        }
+            if(!committed)
+                throw new StateConflictException("CommitTag did not match.");
 
-        public Task DeleteMachineAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            Machines.Remove(machineId);
+            var schematicBytes = await schematicBytesTask.ConfigureAwait(false);
 
-            return Task.CompletedTask;
-        }
+            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(schematicBytes,
+                ContractlessStandardResolver.Instance);
 
-        public Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(string machineId, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var (machine, _) = Machines[machineId];
-
-            return Task.FromResult(machine);
-        }
-
-        public Task<MachineStatus<TState, TInput>> SetMachineStateAsync(string machineId, TState state, Guid? lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var (machine, _) = Machines[machineId];
-
-            lock (machine)
+            return new MachineStatus<TState, TInput>
             {
-                if (lastCommitTag == null || machine.CommitTag == lastCommitTag)
-                {
-                    machine.State = state;
-                    machine.CommitTag = Guid.NewGuid();
-                }
-                else
-                {
-                    throw new StateConflictException("CommitTag did not match.");
-                }
-            }
-
-            return Task.FromResult(machine);
+                MachineId = status.MachineId,
+                Schematic = schematic,
+                State = status.State,
+                CommitTag = status.CommitTag,
+                StateChangedDateTime = status.StateChangedDateTime,
+                Metadata = status.Metadata
+            };
         }
     }
 }
