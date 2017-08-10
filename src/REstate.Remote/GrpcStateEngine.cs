@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MessagePack;
 using MessagePack.Resolvers;
+using REstate.Engine.Repositories;
 using REstate.Remote.Models;
 using REstate.Remote.Services;
 using REstate.Schematics;
@@ -14,6 +16,8 @@ namespace REstate.Remote
         : IRemoteStateEngine<TState, TInput>
     {
         private readonly IStateMachineService _stateMachineService;
+
+        private readonly ICollection<IEventListener> _listeners = new List<IEventListener>();
 
         public GrpcStateEngine(IStateMachineService stateMachineService)
         {

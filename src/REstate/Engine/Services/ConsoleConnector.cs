@@ -21,7 +21,7 @@ namespace REstate.Engine.Services
         {
             string format = null;
             connectorSettings?.TryGetValue("Format", out format);
-            const string machineEnteredStatus = "Machine {{{0}}} entered status {{{1}}}";
+            const string machineEnteredStatus = "Machine {0} entered status {1}";
             format = format ?? machineEnteredStatus;
 
             if(inputParameters != null)

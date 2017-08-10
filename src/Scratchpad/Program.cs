@@ -8,6 +8,8 @@ using Grpc.Core.Logging;
 using REstate.Engine;
 using REstate.Engine.Repositories.Redis;
 using REstate.Remote;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 using StackExchange.Redis;
 
 namespace Scratchpad
@@ -21,10 +23,11 @@ namespace Scratchpad
             REstateHost.Agent.Configuration
                 .RegisterComponent(new InMemoryStateVisorComponent(visor));
 
-            var connection = await ConnectionMultiplexer.ConnectAsync(".redis.cache.windows.net:6380," +
-                                                                "password=," +
-                                                                "ssl=True," +
-                                                                "abortConnect=False");
+            var connection = await ConnectionMultiplexer.ConnectAsync(
+                "restate.redis.cache.windows.net:6380," +
+                "password=m7+cQKqV3x2KQaAOned8xGj62/0E2t0DrLk/KEElfH0=," +
+                "ssl=True," +
+                "abortConnect=False");
 
             REstateHost.Agent.Configuration
                 .RegisterComponent(new RedisRepositoryComponent(connection.GetDatabase()));
@@ -43,12 +46,20 @@ namespace Scratchpad
 
             var schematic = REstateHost.Agent
                 .CreateSchematic<string, string>("EchoMachine")
+                
+                .WithState("Created", state => state
+                    .DescribedAs("EchoMachine was created, but no echo has occured.")
+                    .AsInitialState())
 
                 .WithState("Ready", state => state
-                    .AsInitialState()
-                    .WithOnEntry("Console", onEntry => onEntry
+                    .DescribedAs("EchoMachine has received an echo command, and is ready to echo again.")
+                    .WithTransitionFrom("Created", "Echo", transition => transition
+                        .WithGuard("Console", guard => guard
+                            .DescribedAs("Verfies action OK to take with y/n from console.")
+                            .WithSetting("Prompt", "Are you sure you want to echo \"{3}\"? (y/n)")))
+                    .WithOnEntry("Log", onEntry => onEntry
                         .DescribedAs("Echoes the payload to the console.")
-                        .WithSetting("Format", "{2}")
+                        .WithSetting("message", "{3}")
                         .OnFailureSend("EchoFailure"))
                     .WithReentrance("Echo", transition => transition
                         .WithGuard("Console", guard => guard
@@ -56,9 +67,13 @@ namespace Scratchpad
                             .WithSetting("Prompt", "Are you sure you want to echo \"{3}\"? (y/n)"))))
 
                 .WithState("EchoFailure", state => state
-                    .AsSubstateOf("Ready")
                     .DescribedAs("An echo command failed to execute.")
-                    .WithTransitionFrom("Ready", "EchoFailure")).Copy();
+                    .WithTransitionFrom("Ready", "EchoFailure")
+                    .WithOnEntry("Log", onEntry => onEntry
+                        .DescribedAs("Echoes the payload to the console.")
+                        .WithSetting("severity", "fatal")))
+
+                .Build();
             
             var newSchematic = await stateEngine.StoreSchematicAsync(schematic, CancellationToken.None);
 
@@ -87,7 +102,7 @@ namespace Scratchpad
             }
             catch(StateConflictException ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Logger.Error(ex, "State conflict occured.");
             }
 
             Console.WriteLine($"EchoMachine ended with state: { visor.GetStatus(echoMachine).State }.");
@@ -97,6 +112,11 @@ namespace Scratchpad
 
         private static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Console(theme: AnsiConsoleTheme.Literate)
+                .CreateLogger();
+
             GrpcEnvironment.SetLogger(new ConsoleLogger());
 
             using (var server = REstateHost.Agent

@@ -3,6 +3,7 @@ using REstate.Engine;
 using REstate.Engine.Repositories.InMemory;
 using REstate.Engine.Services;
 using REstate.IoC;
+using REstate.Logging;
 
 namespace REstate
 {
@@ -22,6 +23,8 @@ namespace REstate
     internal class HostConfiguration
         : IHostConfiguration
     {
+        private static ILog Logger => LogProvider.For<HostConfiguration>();
+
         internal IComponentContainer Container;
 
         public HostConfiguration(IComponentContainer container)
@@ -41,6 +44,8 @@ namespace REstate
         /// <param name="container">An adapter to an IoC/DI container.</param>
         public void Register(IComponentContainer container)
         {
+            Logger.DebugFormat("Registering components into container of runtime type: {containerType}.", container.GetType());
+
             container.Register(typeof(IConnectorResolver<,>), typeof(DefaultConnectorResolver<,>));
 
             container.Register(typeof(IStateMachineFactory<,>), typeof(REstateMachineFactory<,>));
@@ -55,6 +60,9 @@ namespace REstate
             Container = container;
 
             RegisterConnector("Console", typeof(ConsoleConnector<,>));
+            RegisterConnector(LogConnector<object, object>.ConnectorKey, typeof(LogConnector<,>));
+
+            container.Register<IEventListener>(new TraceEventListener(), nameof(TraceEventListener));
         }
     }
 }

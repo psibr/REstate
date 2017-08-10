@@ -7,6 +7,8 @@ namespace REstate.Schematics.Builder.Implementation
     public class SchematicBuilder<TState, TInput>
         : ISchematicBuilder<TState, TInput>
     {
+        private bool _hasInitialState;
+
         public SchematicBuilder(string schematicName)
         {
             if (schematicName == null)
@@ -21,9 +23,10 @@ namespace REstate.Schematics.Builder.Implementation
 
         public TState InitialState { get; private set; }
 
-        internal void SetInitialState(TState state)
+        internal void SetInitialState(TState state)  
         {
             InitialState = state;
+            _hasInitialState = true;
         }
 
         private readonly Dictionary<TState, IStateBuilder<TState, TInput>> _stateConfigurations = new Dictionary<TState, IStateBuilder<TState, TInput>>();
@@ -99,6 +102,22 @@ namespace REstate.Schematics.Builder.Implementation
             }
 
             return this;
+        }
+
+        public Schematic<TState, TInput> Build()
+        {
+            if (!_hasInitialState)
+                throw new ArgumentException("Cannot build a schematic with no initial state.");
+
+            var schematic = this as ISchematic<TState, TInput>;
+
+            return new Schematic<TState, TInput>
+            {
+                SchematicName = schematic.SchematicName,
+                InitialState = schematic.InitialState,
+                States = schematic.States.Values.Select(SchematicExtensions.Copy).ToArray()
+            };
+            
         }
     }
 }
