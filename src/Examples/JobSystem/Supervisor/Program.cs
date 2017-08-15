@@ -2,11 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
-using Grpc.Core;
-using Grpc.Core.Logging;
 using REstate;
 using REstate.Engine.Services;
 using REstate.Schematics;
@@ -76,13 +73,13 @@ namespace Supervisor
                         .DescribedAs("Log the failure as an error.")
                         .WithSetting("severity", "error")
                         .WithSetting("message", "Job failed to complete.")))
-                        
+
                 .WithState(JobStatus.Complete, entry => entry
                     .DescribedAs("Job has finished processing without errors.")
                     .WithTransitionFrom(JobStatus.Active, JobActions.Complete))
 
                 .Build();
-            
+
             var cancellationSource = new CancellationTokenSource();
 
             var jobHandler = EnqueueConnector<JobStatus, JobActions>.Queue;
@@ -128,48 +125,44 @@ namespace Supervisor
 
         private static void ProcessJob(CancellationTokenSource cancellationSource, BlockingCollection<Status<JobStatus>> jobHandler, IStateEngine<JobStatus, JobActions> jobEngine)
         {
-            while (true)
+            Log.Logger.Debug("Awaiting job message...");
+
+            try
             {
-                Status<JobStatus> message;
-
-                Log.Logger.Debug("Awaiting job message...");
-
-                try
+                foreach (var message in jobHandler.GetConsumingEnumerable(cancellationSource.Token))
                 {
-                    message = jobHandler.Take(cancellationSource.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
+                    var jobMachine = jobEngine.GetMachineAsync(message.MachineId).Result;
 
-                var jobMachine = jobEngine.GetMachineAsync(message.MachineId).Result;
+                    // Notify the job, we have the message.
+                    var status = jobMachine.SendAsync(JobActions.Dequeued).Result;
 
-                // Notify the job, we have the message.
-                var status = jobMachine.SendAsync(JobActions.Dequeued).Result;
+                    if (status.State != JobStatus.Active)
+                        continue;
 
-                if (status.State != JobStatus.Active)
-                    continue;
-
-                try
-                {
-                    // Job actions here...
-                    jobMachine.SendAsync(JobActions.Complete, status.CommitTag).Wait();
+                    try
+                    {
+                        // Job actions here...
+                        jobMachine.SendAsync(JobActions.Complete, status.CommitTag).Wait();
+                    }
+                    // Exception was transient, suspend/retry flow
+                    catch (Exception e) when (e.Message.Contains("Transient"))
+                    {
+                        jobMachine.SendAsync(JobActions.Suspend, e, status.CommitTag).Wait();
+                    }
+                    // Exception is unrecoverable, no need to retry.
+                    catch (Exception e)
+                    {
+                        jobMachine.SendAsync(JobActions.Fail, e, status.CommitTag).Wait();
+                    }
                 }
-                // Exception was transient, suspend/retry flow
-                catch (Exception e) when (e.Message.Contains("Transient"))
-                {
-                    jobMachine.SendAsync(JobActions.Suspend, e, status.CommitTag).Wait();
-                }
-                // Exception is unrecoverable, no need to retry.
-                catch (Exception e)
-                {
-                    jobMachine.SendAsync(JobActions.Fail, e, status.CommitTag).Wait();
-                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Ends peacefully
             }
         }
 
-        public static Dictionary<string, string>[] GetAllSubscriptions() => 
+        public static Dictionary<string, string>[] GetAllSubscriptions() =>
             Enumerable
             .Range(0, 200)
             .Select(i =>

@@ -68,6 +68,7 @@ namespace REstate.Remote
                 MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
+                response.UpdatedTime,
                 response.CommitTag);
         }
 
@@ -100,6 +101,7 @@ namespace REstate.Remote
                 MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
+                response.UpdatedTime,
                 response.CommitTag);
         }
 
@@ -130,6 +132,7 @@ namespace REstate.Remote
                 MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
+                response.UpdatedTime,
                 response.CommitTag);
         }
 
@@ -161,6 +164,7 @@ namespace REstate.Remote
                 MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
+                response.UpdatedTime,
                 response.CommitTag);
         }
     }

@@ -6,15 +6,13 @@ namespace REstate
     public struct Status<T>
         : IEquatable<Status<T>>
     {
-        public Status(string machineId, T state, Guid commitTag)
+        public Status(string machineId, T state, DateTimeOffset updatedTime, Guid commitTag)
         {
             MachineId = machineId;
             State = state;
+            UpdatedTime = updatedTime;
             CommitTag = commitTag;
         }
-
-        public Status(string machineId, T state)
-            : this(machineId, state, Guid.Empty) { }
 
 
         public T State { get; }
@@ -27,6 +25,8 @@ namespace REstate
         public Guid CommitTag { get; }
 
         public string MachineId { get; }
+
+        public DateTimeOffset UpdatedTime { get; }
 
         public override string ToString()
         {

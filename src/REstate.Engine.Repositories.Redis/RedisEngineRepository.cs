@@ -84,7 +84,7 @@ namespace REstate.Engine.Repositories.Redis
             }
 
             var commitTag = Guid.NewGuid();
-            var stateChangedDateTime = DateTime.UtcNow;
+            var updatedTime = DateTimeOffset.UtcNow;
 
             var record = new RedisMachineStatus<TState, TInput>
             {
@@ -92,7 +92,7 @@ namespace REstate.Engine.Repositories.Redis
                 SchematicHash = hash,
                 State = schematic.InitialState,
                 CommitTag = commitTag,
-                StateChangedDateTime = stateChangedDateTime,
+                UpdatedTime = updatedTime,
                 Metadata = metadata
             };
 
@@ -106,7 +106,7 @@ namespace REstate.Engine.Repositories.Redis
                 Schematic = schematic,
                 State = schematic.InitialState,
                 CommitTag = commitTag,
-                StateChangedDateTime = stateChangedDateTime,
+                UpdatedTime = updatedTime,
                 Metadata = metadata
             };
         }
@@ -128,7 +128,7 @@ namespace REstate.Engine.Repositories.Redis
                         Schematic = schematic,
                         State = schematic.InitialState,
                         CommitTag = Guid.NewGuid(),
-                        StateChangedDateTime = DateTime.UtcNow,
+                        UpdatedTime = DateTime.UtcNow,
                         Metadata = meta
                     }).ToList();
 
@@ -142,7 +142,7 @@ namespace REstate.Engine.Repositories.Redis
                         SchematicHash = hash,
                         State = s.State,
                         CommitTag = s.CommitTag,
-                        StateChangedDateTime = s.StateChangedDateTime,
+                        UpdatedTime = s.UpdatedTime,
                         Metadata = s.Metadata
                     }))
             );
@@ -192,7 +192,7 @@ namespace REstate.Engine.Repositories.Redis
                 Schematic = schematic,
                 CommitTag = redisRecord.CommitTag,
                 State = redisRecord.State,
-                StateChangedDateTime = redisRecord.StateChangedDateTime,
+                UpdatedTime = redisRecord.UpdatedTime,
                 Metadata = redisRecord.Metadata
             };
         }
@@ -244,7 +244,7 @@ namespace REstate.Engine.Repositories.Redis
                 Schematic = schematic,
                 State = status.State,
                 CommitTag = status.CommitTag,
-                StateChangedDateTime = status.StateChangedDateTime,
+                UpdatedTime = status.UpdatedTime,
                 Metadata = status.Metadata
             };
         }

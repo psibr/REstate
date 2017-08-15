@@ -21,7 +21,7 @@ namespace REstate.Engine.Repositories.Redis
         public Guid CommitTag { get; set; }
 
         [Key(4)]
-        public DateTime StateChangedDateTime { get; set; }
+        public DateTimeOffset UpdatedTime { get; set; }
 
         [Key(5)]
         public IDictionary<string, string> Metadata { get; set; }

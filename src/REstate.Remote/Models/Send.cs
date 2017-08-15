@@ -43,5 +43,8 @@ namespace REstate.Remote.Models
 
         [Key(3)]
         public byte[] StateBytes { get; set; }
+
+        [Key(4)]
+        public DateTimeOffset UpdatedTime { get; }
     }
 }

@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using REstate;
 using REstate.Logging;
 using REstate.Schematics;
 
@@ -10,6 +11,20 @@ namespace REstate
     public class TraceEventListener
         : IEventListener
     {
+        public TraceEventListener()
+        {
+            Task.Run(() =>
+            {
+                foreach (var action in LoggerQueue.GetConsumingEnumerable())
+                {
+                    action();
+                }
+            });
+        }
+
+        private static readonly BlockingCollection<Action> LoggerQueue = 
+            new BlockingCollection<Action>(new ConcurrentQueue<Action>());
+
         private static ILog Logger => LogProvider.For<TraceEventListener>();
 
         Task IEventListener.OnMachineCreated<TState, TInput>(
@@ -19,11 +34,12 @@ namespace REstate
         {
             foreach (var status in initialStatuses)
             {
-                Logger.TraceFormat(
-                    "Machine {machineId} created in state {state} with commit tag of {commitTag}.",
-                    status.MachineId,
-                    status.State,
-                    status.CommitTag);
+                LoggerQueue.Add(() =>
+                    Logger.TraceFormat(
+                        "Machine {machineId} created in state {state} with commit tag of {commitTag}.",
+                        status.MachineId,
+                        status.State,
+                        status.CommitTag), CancellationToken.None);
             }
 
 #if NET45
@@ -40,12 +56,13 @@ namespace REstate
             TPayload payload,
             CancellationToken cancellation)
         {
-            Logger.TraceFormat("Machine {machineId} transitioned to {state} with input {input}.",
-                status.MachineId,
-                status.State,
-                input,
-                payload,
-                status.CommitTag);
+            LoggerQueue.Add(() =>
+                Logger.TraceFormat("Machine {machineId} transitioned to {state} with input {input}.",
+                    status.MachineId,
+                    status.State,
+                    input,
+                    payload,
+                    status.CommitTag), CancellationToken.None);
 
 #if NET45
             return Task.FromResult(0);
@@ -60,9 +77,10 @@ namespace REstate
         {
             foreach (var machineId in machineIds)
             {
-                Logger.TraceFormat(
-                    "Machine {machineId} deleted.",
-                    machineId);
+                LoggerQueue.Add(() =>
+                    Logger.TraceFormat(
+                        "Machine {machineId} deleted.",
+                        machineId), CancellationToken.None);
             }
 
 #if NET45

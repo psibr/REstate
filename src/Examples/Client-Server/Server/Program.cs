@@ -2,9 +2,7 @@
 using System.Threading;
 using Grpc.Core;
 using Grpc.Core.Logging;
-using MagicOnion.Server;
 using REstate;
-using REstate.Remote.Services;
 
 namespace RemoteServerHost
 {
