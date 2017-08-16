@@ -29,11 +29,13 @@ namespace REstate
 
         Task IEventListener.OnMachineCreated<TState, TInput>(
             ISchematic<TState, TInput> schematic,
-            ICollection<Status<TState>> initialStatuses,
+            ICollection<(Status<TState> Status, IReadOnlyDictionary<string, string> Metadata)> initialStatuses,
             CancellationToken cancellationToken)
         {
-            foreach (var status in initialStatuses)
+            foreach (var machineInfo in initialStatuses)
             {
+                var status = machineInfo.Status;
+
                 LoggerQueue.Add(() =>
                     Logger.TraceFormat(
                         "Machine {machineId} created in state {state} with commit tag of {commitTag}.",
@@ -52,6 +54,7 @@ namespace REstate
         Task IEventListener.OnTransition<TState, TInput, TPayload>(
             ISchematic<TState, TInput> schematic,
             Status<TState> status,
+            IReadOnlyDictionary<string, string> metadata,
             TInput input,
             TPayload payload,
             CancellationToken cancellation)

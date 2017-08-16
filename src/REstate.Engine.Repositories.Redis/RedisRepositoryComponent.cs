@@ -21,14 +21,4 @@ namespace REstate.Engine.Repositories.Redis
             registrar.Register(typeof(IRepositoryContextFactory<,>), typeof(RedisRepositoryContextFactory<,>));
         }
     }
-
-    public class REstateRedisDatabase
-    {
-        public REstateRedisDatabase(IDatabase redisDatabase)
-        {
-            RedisDatabase = redisDatabase;
-        }
-
-        public IDatabase RedisDatabase { get; }
-    }
 }

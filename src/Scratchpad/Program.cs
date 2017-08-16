@@ -18,11 +18,6 @@ namespace Scratchpad
     {
         private static async Task ClientImpl()
         {
-            var visor = new InMemoryStateVisor();
-
-            REstateHost.Agent.Configuration
-                .RegisterComponent(new InMemoryStateVisorComponent(visor));
-
             var connection = await ConnectionMultiplexer.ConnectAsync(
                 "restate.redis.cache.windows.net:6380," +
                 "password=m7+cQKqV3x2KQaAOned8xGj62/0E2t0DrLk/KEElfH0=," +
@@ -104,8 +99,6 @@ namespace Scratchpad
             {
                 Log.Logger.Error(ex, "State conflict occured.");
             }
-
-            Console.WriteLine($"EchoMachine ended with state: { visor.GetStatus(echoMachine).State }.");
 
             await stateEngine.DeleteMachineAsync(echoMachine.MachineId, CancellationToken.None);
         }

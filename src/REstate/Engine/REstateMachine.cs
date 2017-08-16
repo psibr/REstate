@@ -15,6 +15,7 @@ namespace REstate.Engine
         private readonly IConnectorResolver<TState, TInput> _connectorResolver;
         private readonly IRepositoryContextFactory<TState, TInput> _repositoryContextFactory;
         private readonly ICartographer<TState, TInput> _cartographer;
+        private readonly IReadOnlyDictionary<string, string> _metadata;
         private readonly IReadOnlyCollection<IEventListener> _listeners;
 
         internal REstateMachine(
@@ -23,11 +24,13 @@ namespace REstate.Engine
             ICartographer<TState, TInput> cartographer,
             IEnumerable<IEventListener> listeners,
             string machineId,
-            ISchematic<TState, TInput> schematic)
+            ISchematic<TState, TInput> schematic,
+            IReadOnlyDictionary<string, string> metadata)
         {
             _connectorResolver = connectorResolver;
             _repositoryContextFactory = repositoryContextFactory;
             _cartographer = cartographer;
+            _metadata = metadata;
             _listeners = listeners.ToList();
 
             MachineId = machineId;
@@ -42,28 +45,26 @@ namespace REstate.Engine
 
         public string MachineId { get; }
 
+        public Task<IReadOnlyDictionary<string, string>> GetMetadataAsync(
+            CancellationToken cancellationToken = default(CancellationToken)) 
+            => Task.FromResult(_metadata);
+
         public Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return SendAsync(input, payload, default(Guid), cancellationToken);
-        }
+            CancellationToken cancellationToken = default(CancellationToken)) 
+            => SendAsync(input, payload, default(Guid), cancellationToken);
 
         public Task<Status<TState>> SendAsync(
             TInput input,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return SendAsync<object>(input, null, default(Guid), cancellationToken);
-        }
+            CancellationToken cancellationToken = default(CancellationToken)) 
+            => SendAsync<object>(input, null, default(Guid), cancellationToken);
 
         public Task<Status<TState>> SendAsync(
             TInput input,
             Guid lastCommitTag,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return SendAsync<object>(input, null, lastCommitTag, cancellationToken);
-        }
+            CancellationToken cancellationToken = default(CancellationToken)) 
+            => SendAsync<object>(input, null, lastCommitTag, cancellationToken);
 
         public async Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
@@ -149,6 +150,7 @@ namespace REstate.Engine
                         listener.OnTransition(
                             schematic: Schematic,
                             status: status,
+                            metadata: _metadata,
                             input: input,
                             payload: payload,
                             cancellation: CancellationToken.None))),
@@ -194,9 +196,7 @@ namespace REstate.Engine
             return currentStatus;
         }
 
-        public override string ToString()
-        {
-            return _cartographer.WriteMap(Schematic.States.Values);
-        }
+        public override string ToString() =>
+            _cartographer.WriteMap(Schematic.States.Values);
     }
 }

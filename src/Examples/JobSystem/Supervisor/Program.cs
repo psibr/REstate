@@ -4,35 +4,40 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
+using Grpc.Core.Logging;
 using REstate;
 using REstate.Engine.Services;
+using REstate.Remote;
 using REstate.Schematics;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using REstate.Engine.Repositories.Redis;
+using StackExchange.Redis;
 
 namespace Supervisor
 {
+    public enum JobStatus
+    {
+        Enqueued,
+        Active,
+        Suspended,
+        Failed,
+        Complete
+    }
+
+    public enum JobActions
+    {
+        Retry,
+        Enqueued,
+        Dequeued,
+        Suspend,
+        Fail,
+        Complete
+    }
+
     class Program
     {
-        public enum JobStatus
-        {
-            Enqueued,
-            Active,
-            Suspended,
-            Failed,
-            Complete
-        }
-
-        public enum JobActions
-        {
-            Retry,
-            Enqueued,
-            Dequeued,
-            Suspend,
-            Fail,
-            Complete
-        }
-
         static void Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
@@ -41,6 +46,33 @@ namespace Supervisor
                 .CreateLogger();
 
             REstateHost.Agent.Configuration.RegisterConnector("Enqueue", typeof(EnqueueConnector<,>));
+
+            var connection = ConnectionMultiplexer.ConnectAsync(
+                "restate.redis.cache.windows.net:6380," +
+                "password=m7+cQKqV3x2KQaAOned8xGj62/0E2t0DrLk/KEElfH0=," +
+                "ssl=True," +
+                "abortConnect=False").Result;
+
+            REstateHost.Agent.Configuration
+                .RegisterComponent(new RedisRepositoryComponent(connection.GetDatabase()));
+
+            REstateHost.Agent.Configuration
+                .RegisterComponent(
+                    new GrpcRemoteHostComponent(
+                        new GrpcHostOptions
+                        {
+                            Channel = new Channel("localhost", 12345, ChannelCredentials.Insecure),
+                            UseAsDefaultEngine = true
+                        }));
+
+            GrpcEnvironment.SetLogger(new ConsoleLogger());
+
+            var server = REstateHost.Agent
+                .AsRemote()
+                .CreateGrpcServer(new ServerPort("localhost", 12345, ServerCredentials.Insecure));
+
+            server.Start();
+
 
             var jobSchematic = REstateHost.Agent.CreateSchematic<JobStatus, JobActions>("Job")
 
@@ -93,11 +125,15 @@ namespace Supervisor
 
             Console.ReadLine();
 
-            jobEngine.CreateMachineAsync(jobSchematic, new Dictionary<string, string>
+            var machine = jobEngine.CreateMachineAsync(jobSchematic, new Dictionary<string, string>
             {
                 ["ServiceId"] = "066f5d62-8d36-4ad1-833e-9e874d0215f8",
                 ["SubscriptionId"] = "f59447fc-277a-4dfd-baaf-f6fde6de1865"
-            }).Wait();
+            }).Result;
+
+            var metadata = machine.GetMetadataAsync().Result;
+
+            metadata = jobEngine.GetMachineAsync(machine.MachineId).Result.GetMetadataAsync().Result;
 
             Console.ReadLine();
 
@@ -111,6 +147,7 @@ namespace Supervisor
 
 
             processor.Wait();
+            server.ShutdownAsync().Wait();
 
             Console.WriteLine("Processor terminated.");
 

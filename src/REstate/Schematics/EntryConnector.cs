@@ -21,6 +21,6 @@ namespace REstate.Schematics
             FailureTransition.Input;
 
         IReadOnlyDictionary<string, string> IEntryAction<TInput>.Settings =>
-            new ReadOnlyDictionary<string, string>(Configuration);
+            new ReadOnlyDictionary<string, string>(Configuration ?? new Dictionary<string, string>(0));
     }
 }

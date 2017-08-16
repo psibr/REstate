@@ -1,6 +1,7 @@
 ﻿using REstate.Engine.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -84,9 +85,10 @@ namespace REstate.Engine
             var machine = _stateMachineFactory
                 .ConstructFromSchematic(
                     newMachineStatus.MachineId,
-                    schematic);
+                    schematic,
+                    new ReadOnlyDictionary<string, string>(newMachineStatus.Metadata ?? new Dictionary<string, string>(0)));
 
-            NotifyOnMachineCreated(schematic, newMachineStatus, machine);
+            NotifyOnMachineCreated(schematic, newMachineStatus);
 
             await CallOnInitialEntryAction(schematic, newMachineStatus, machine, cancellationToken);
 
@@ -145,9 +147,10 @@ namespace REstate.Engine
             var machine = _stateMachineFactory
                 .ConstructFromSchematic(
                     newMachineStatus.MachineId,
-                    schematic);
+                    schematic,
+                    new ReadOnlyDictionary<string, string>(newMachineStatus.Metadata ?? new Dictionary<string, string>(0)));
 
-            NotifyOnMachineCreated(schematic, newMachineStatus, machine);
+            NotifyOnMachineCreated(schematic, newMachineStatus);
 
             await CallOnInitialEntryAction(schematic, newMachineStatus, machine, cancellationToken);
 
@@ -156,15 +159,21 @@ namespace REstate.Engine
 
         private void NotifyOnMachineCreated(
             ISchematic<TState, TInput> schematic,
-            MachineStatus<TState, TInput> machineStatus,
-            IStateMachine<TState, TInput> machine)
+            MachineStatus<TState, TInput> machineStatus)
         {
 #pragma warning disable 4014
             Task.Run(async () => await Task.WhenAll(
                 _listeners.Select(listener =>
                     listener.OnMachineCreated(
                         schematic,
-                        new [] { (Status<TState>)machineStatus },
+                        new []
+                        {
+                            (
+                                (Status<TState>)machineStatus,
+                                (IReadOnlyDictionary<string, string>)new ReadOnlyDictionary<string, string>(
+                                    machineStatus.Metadata ?? new Dictionary<string, string>(0))
+                            )
+                        },
                         CancellationToken.None))),
                 CancellationToken.None);
 #pragma warning restore 4014
@@ -194,7 +203,8 @@ namespace REstate.Engine
                 machineStatuses.Select(status => (_stateMachineFactory
                     .ConstructFromSchematic(
                         status.MachineId,
-                        schematic), status)).ToList();
+                        schematic,
+                        new ReadOnlyDictionary<string, string>(status.Metadata ?? new Dictionary<string, string>(0))), status)).ToList();
 
             NotifyBulkOnMachineCreated(schematic, machineStatuses);
 
@@ -208,7 +218,12 @@ namespace REstate.Engine
                     _listeners.Select(listener =>
                         listener.OnMachineCreated(
                             schematic,
-                            machineStatuses.Select(s => (Status<TState>)s).ToList(),
+                            machineStatuses.Select(s => 
+                            (
+                                (Status<TState>)s,
+                                (IReadOnlyDictionary<string, string>)new ReadOnlyDictionary<string, string>(
+                                    s.Metadata ?? new Dictionary<string, string>(0))
+                            )).ToList(),
                             CancellationToken.None))),
                 CancellationToken.None);
 #pragma warning restore 4014
@@ -235,7 +250,8 @@ namespace REstate.Engine
                 machineStatuses.Select(status => (_stateMachineFactory
                     .ConstructFromSchematic(
                         status.MachineId,
-                        schematic), status)).ToList();
+                        schematic,
+                        new ReadOnlyDictionary<string, string>(status.Metadata ?? new Dictionary<string, string>(0))), status)).ToList();
 
             NotifyBulkOnMachineCreated(schematic, machineStatuses);
 
@@ -297,20 +313,25 @@ namespace REstate.Engine
             CancellationToken cancellationToken = default(CancellationToken))
         {
             Schematic<TState, TInput> schematic;
+            IReadOnlyDictionary<string, string> metadata;
 
-            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
+            using (var repositories = await _repositoryContextFactory
+                .OpenContextAsync(cancellationToken)
+                .ConfigureAwait(false))
             {
                 var machineStatus = await repositories.Machines
                     .GetMachineStatusAsync(machineId, cancellationToken)
                     .ConfigureAwait(false);
 
                 schematic = machineStatus.Schematic;
+                metadata = new ReadOnlyDictionary<string, string>(machineStatus.Metadata ?? new Dictionary<string, string>(0));
             }
 
             var machine = _stateMachineFactory
                 .ConstructFromSchematic(
                     machineId,
-                    schematic);
+                    schematic,
+                    metadata);
 
             return machine;
         }

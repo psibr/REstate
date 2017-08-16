@@ -16,6 +16,6 @@ namespace REstate.Schematics
         public string Description { get; set; }
 
         IReadOnlyDictionary<string, string> IGuard.Settings =>
-            new ReadOnlyDictionary<string, string>(Configuration);
+            new ReadOnlyDictionary<string, string>(Configuration ?? new Dictionary<string, string>(0));
     }
 }

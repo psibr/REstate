@@ -61,7 +61,8 @@ namespace REstate.Engine.Repositories.InMemory
                 Schematic = schematic,
                 State = schematic.InitialState,
                 CommitTag = Guid.NewGuid(),
-                UpdatedTime = DateTime.UtcNow
+                UpdatedTime = DateTime.UtcNow,
+                Metadata = metadata
             };
 
             Machines.Add(machineId, (record, metadata));
@@ -82,7 +83,8 @@ namespace REstate.Engine.Repositories.InMemory
                             Schematic = schematic,
                             State = schematic.InitialState,
                             CommitTag = Guid.NewGuid(),
-                            UpdatedTime = DateTime.UtcNow
+                            UpdatedTime = DateTime.UtcNow,
+                            Metadata = meta
                         },
                     meta)).ToList();
 

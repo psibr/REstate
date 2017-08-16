@@ -27,12 +27,12 @@ namespace REstate.Engine
             _listeners = listeners;
         }
 
-        public IStateMachine<TState, TInput> ConstructFromSchematic(string machineId, ISchematic<TState, TInput> schematic)
+        public IStateMachine<TState, TInput> ConstructFromSchematic(string machineId, ISchematic<TState, TInput> schematic, IReadOnlyDictionary<string, string> metadata)
         {
             if (schematic == null)
                 throw new ArgumentNullException(nameof(schematic));
 
-            var reStateMachine = new REstateMachine<TState, TInput>(_connectorResolver, _repositoryContextFactory, _cartographer, _listeners, machineId, schematic);
+            var reStateMachine = new REstateMachine<TState, TInput>(_connectorResolver, _repositoryContextFactory, _cartographer, _listeners, machineId, schematic, metadata);
 
             return reStateMachine;
         }

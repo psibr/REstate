@@ -1,5 +1,4 @@
-﻿using System;
-using StackExchange.Redis;
+﻿using StackExchange.Redis;
 
 namespace REstate.Engine.Repositories.Redis
 {

@@ -6,7 +6,8 @@ using REstate.Remote.Services;
 
 namespace REstate.Remote
 {
-    public class REstateGrpcServer : IDisposable
+    public class REstateGrpcServer 
+        : IDisposable
     {
         private Server Server { get; set; }
 

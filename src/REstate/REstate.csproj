@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>netstandard1.3;net45</TargetFrameworks>
     <Authors>Ovan Crone</Authors>
     <Company>Psibernetic Solutions</Company>
     <Description>Create state-machines for complicated flows, in a serializable and pluggable system.</Description>
@@ -39,7 +39,7 @@
     <PackageReference Include="System.ValueTuple" Version="4.3.1" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3'">
-    <DefineConstants>NETSTANDARD1_3;BODI_LIMITEDRUNTIME</DefineConstants>
+    <DefineConstants>DEBUG;BODI_LIMITEDRUNTIME</DefineConstants>
   </PropertyGroup>
 
   <!-- .NET 4.5 references, compilation flags and build options -->

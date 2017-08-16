@@ -15,9 +15,11 @@ namespace REstate.Engine.Repositories.Redis
             _restateDatabase = restateDatabase.RedisDatabase;
         }
 
-        public Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(
+            CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.FromResult<IEngineRepositoryContext<TState, TInput>>(new RedisEngineRepositoryContext<TState, TInput>(_restateDatabase));
+            return Task.FromResult<IEngineRepositoryContext<TState, TInput>>(
+                new RedisEngineRepositoryContext<TState, TInput>(_restateDatabase));
         }
     }
 }

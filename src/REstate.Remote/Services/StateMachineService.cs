@@ -28,6 +28,8 @@ namespace REstate.Remote.Services
 
         UnaryResult<GetMachineSchematicResponse> GetMachineSchematicAsync(GetMachineSchematicRequest request);
 
+        UnaryResult<GetMachineMetadataResponse> GetMachineMetadataAsync(GetMachineMetadataRequest request);
+
         UnaryResult<GetSchematicResponse> GetSchematicAsync(GetSchematicRequest request);
 
         UnaryResult<Nil> DeleteMachineAsync(DeleteMachineRequest request);
@@ -194,11 +196,11 @@ namespace REstate.Remote.Services
         {
             var genericTypes = GetGenericsFromHeaders();
 
-            var getMachineAsyncMethod = typeof(StateMachineService)
+            var getMachineSchematicAsyncMethod = typeof(StateMachineService)
                 .GetMethod(nameof(GetMachineSchematicAsync), BindingFlags.NonPublic | BindingFlags.Static)
                 .MakeGenericMethod(genericTypes);
 
-            return await (Task<GetMachineSchematicResponse>)getMachineAsyncMethod
+            return await (Task<GetMachineSchematicResponse>)getMachineSchematicAsyncMethod
                 .Invoke(this, new object[]
                 {
                     request.MachineId,
@@ -224,6 +226,41 @@ namespace REstate.Remote.Services
             };
         }
         #endregion GetMachineSchematicAsync
+
+        #region GetMachineMetadataAsync
+        public async UnaryResult<GetMachineMetadataResponse> GetMachineMetadataAsync(GetMachineMetadataRequest request)
+        {
+            var genericTypes = GetGenericsFromHeaders();
+
+            var getMachineMetadataAsyncMethod = typeof(StateMachineService)
+                .GetMethod(nameof(GetMachineMetadataAsync), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(genericTypes);
+
+            return await (Task<GetMachineMetadataResponse>)getMachineMetadataAsyncMethod
+                .Invoke(this, new object[]
+                {
+                    request.MachineId,
+                    Context.CallContext.CancellationToken
+                });
+        }
+
+        private static async Task<GetMachineMetadataResponse> GetMachineMetadataAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var engine = REstateHost.Agent
+                .AsLocal()
+                .GetStateEngine<TState, TInput>();
+
+            var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
+
+            var metadata = await machine.GetMetadataAsync(cancellationToken).ConfigureAwait(false);
+
+            return new GetMachineMetadataResponse
+            {
+                MachineId = machine.MachineId,
+                Metadata = (IDictionary<string, string>)metadata
+            };
+        }
+        #endregion GetMachineMetadataAsync
 
         #region CreateMachineFromStoreAsync
         public async UnaryResult<CreateMachineResponse> CreateMachineFromStoreAsync(CreateMachineFromStoreRequest request)

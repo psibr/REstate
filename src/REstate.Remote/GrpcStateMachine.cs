@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -16,6 +18,10 @@ namespace REstate.Remote
     {
         private readonly IStateMachineService _stateMachineService;
 
+        private ISchematic<TState, TInput> _machineSchematic;
+
+        private IReadOnlyDictionary<string, string> _metadata;
+
         public GrpcStateMachine(IStateMachineService stateMachineService, string machineId)
         {
             _stateMachineService = stateMachineService;
@@ -23,8 +29,13 @@ namespace REstate.Remote
             MachineId = machineId;
         }
 
+        public string MachineId { get; }
+
         public async Task<ISchematic<TState, TInput>> GetSchematicAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (_machineSchematic != null)
+                return _machineSchematic;
+
             var response = await _stateMachineService
                 .WithCancellationToken(cancellationToken)
                 .GetMachineSchematicAsync(new GetMachineSchematicRequest
@@ -32,13 +43,30 @@ namespace REstate.Remote
                     MachineId = MachineId
                 });
 
-            return MessagePackSerializer
+            _machineSchematic = MessagePackSerializer
                 .Deserialize<Schematic<TState, TInput>>(
                     response.SchematicBytes,
                     ContractlessStandardResolver.Instance);
+
+            return _machineSchematic;
         }
 
-        public string MachineId { get; }
+        public async Task<IReadOnlyDictionary<string, string>> GetMetadataAsync(CancellationToken cancellationToken = new CancellationToken())
+        {
+            if (_metadata != null)
+                return _metadata;
+
+            var response = await _stateMachineService
+                .WithCancellationToken(cancellationToken)
+                .GetMachineMetadataAsync(new GetMachineMetadataRequest
+                {
+                    MachineId = MachineId
+                });
+
+            _metadata = new ReadOnlyDictionary<string, string>(response.Metadata ?? new Dictionary<string, string>(0));
+
+            return _metadata;
+        }
 
         public async Task<Status<TState>> SendAsync<TPayload>(TInput input, TPayload payload, CancellationToken cancellationToken = default(CancellationToken))
         {

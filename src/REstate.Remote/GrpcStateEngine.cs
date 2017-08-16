@@ -70,50 +70,42 @@ namespace REstate.Remote
         public Task BulkCreateMachinesAsync(
             ISchematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return BulkCreateMachinesAsync(schematic.Copy(), metadata, cancellationToken);
-        }
+            CancellationToken cancellationToken = default(CancellationToken)) 
+            => BulkCreateMachinesAsync(schematic.Copy(), metadata, cancellationToken);
 
         public async Task BulkCreateMachinesAsync(
             Schematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            await _stateMachineService
+            CancellationToken cancellationToken = default(CancellationToken)) 
+            => await _stateMachineService
                 .WithCancellationToken(cancellationToken)
                 .BulkCreateMachineFromSchematicAsync(new BulkCreateMachineFromSchematicRequest
                 {
                     SchematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance),
                     Metadata = metadata
                 });
-        }
 
         public async Task BulkCreateMachinesAsync(
             string schematicName,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default(CancellationToken))
-        {
-            await _stateMachineService
+            => await _stateMachineService
                 .WithCancellationToken(cancellationToken)
                 .BulkCreateMachineFromStoreAsync(new BulkCreateMachineFromStoreRequest
                 {
                     SchematicName = schematicName,
                     Metadata = metadata
                 });
-        }
 
         public async Task DeleteMachineAsync(
             string machineId,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            await _stateMachineService
+            CancellationToken cancellationToken = default(CancellationToken)) 
+            => await _stateMachineService
                 .WithCancellationToken(cancellationToken)
                 .DeleteMachineAsync(new DeleteMachineRequest
                 {
                     MachineId = machineId
                 });
-        }
 
         public Task<IStateMachine<TState, TInput>> GetMachineAsync(
             string machineId,

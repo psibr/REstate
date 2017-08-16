@@ -9,12 +9,13 @@ namespace REstate
     {
         Task OnMachineCreated<TState, TInput>(
             ISchematic<TState, TInput> schematic,
-            ICollection<Status<TState>> initialStatuses,
+            ICollection<(Status<TState> Status, IReadOnlyDictionary<string, string> Metadata)> initialStatuses,
             CancellationToken cancellation = default(CancellationToken));
 
         Task OnTransition<TState, TInput, TPayload>(
             ISchematic<TState, TInput> schematic,
             Status<TState> status,
+            IReadOnlyDictionary<string, string> metadata,
             TInput input,
             TPayload payload,
             CancellationToken cancellation = default(CancellationToken));

@@ -13,6 +13,9 @@ namespace REstate
 
         string MachineId { get; }
 
+        Task<IReadOnlyDictionary<string, string>> GetMetadataAsync(
+            CancellationToken cancellationToken = default(CancellationToken));
+
         Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 

@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Supervisor", "src\Examples\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Engine.Repositories.Redis", "src\REstate.Engine.Repositories.Redis\REstate.Engine.Repositories.Redis.csproj", "{C72B33ED-2EDE-4705-81A6-8174F2577632}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "REstate.Tests", "test\REstate.Tests\REstate.Tests.csproj", "{324FD16B-1DCF-41E2-BAD5-FE804E18F264}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Tests", "test\REstate.Tests\REstate.Tests.csproj", "{324FD16B-1DCF-41E2-BAD5-FE804E18F264}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{88B4B54C-3DA1-40D2-8DCB-0181DD035955}"
 EndProject
