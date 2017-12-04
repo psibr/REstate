@@ -20,7 +20,7 @@ namespace REstate.Engine.Repositories.InMemory
 
         public Task<Schematic<TState, TInput>> RetrieveSchematicAsync(
             string schematicName, 
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var schematic = Schematics[schematicName];
 
@@ -29,7 +29,7 @@ namespace REstate.Engine.Repositories.InMemory
 
         public Task<Schematic<TState, TInput>> StoreSchematicAsync(
             Schematic<TState, TInput> schematic, 
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             Schematics.Add(schematic.SchematicName, schematic);
 
@@ -41,7 +41,7 @@ namespace REstate.Engine.Repositories.InMemory
         public Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             string schematicName, 
             Metadata metadata, 
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var schematic = Schematics[schematicName];
 
@@ -51,7 +51,7 @@ namespace REstate.Engine.Repositories.InMemory
         public Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             Schematic<TState, TInput> schematic,
             Metadata metadata, 
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var machineId = Guid.NewGuid().ToString();
 
@@ -100,7 +100,7 @@ namespace REstate.Engine.Repositories.InMemory
         public Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(
             string schematicName,
             IEnumerable<Metadata> metadata,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var schematic = Schematics[schematicName];
 
@@ -109,7 +109,7 @@ namespace REstate.Engine.Repositories.InMemory
 
         public Task DeleteMachineAsync(
             string machineId,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             Machines.Remove(machineId);
 
@@ -122,7 +122,7 @@ namespace REstate.Engine.Repositories.InMemory
 
         public Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(
             string machineId,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var (machine, _) = Machines[machineId];
 
@@ -133,7 +133,7 @@ namespace REstate.Engine.Repositories.InMemory
             string machineId,
             TState state,
             Guid? lastCommitTag,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var (machine, _) = Machines[machineId];
 

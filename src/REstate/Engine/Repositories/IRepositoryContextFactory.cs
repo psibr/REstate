@@ -5,6 +5,6 @@ namespace REstate.Engine.Repositories
 {
     public interface IRepositoryContextFactory<TState, TInput>
     {
-        Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(CancellationToken cancellationToken = default(CancellationToken));
+        Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(CancellationToken cancellationToken = default);
     }
 }

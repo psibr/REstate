@@ -3,6 +3,16 @@
 namespace REstate.IoC
 {
     /// <summary>
+    /// A method that, given a reference to the container to resolve dependencies,
+    /// can build an instance of the given type.
+    /// </summary>
+    /// <typeparam name="T">The type of which to build an instance.</typeparam>
+    /// <param name="container">The DI container where dependencies can be resolved.</param>
+    /// <returns>An instance of the requested type.</returns>
+    public delegate T FactoryMethod<out T>(IComponentContainer container) 
+        where T : class ;
+
+    /// <summary>
     /// Registration functionality for IoC.
     /// </summary>
     public interface IRegistrar
@@ -40,7 +50,7 @@ namespace REstate.IoC
         /// <typeparam name="T"></typeparam>
         /// <param name="resolver">The resolver.</param>
         /// <param name="name">The name under which an implmentation was registered.</param>
-        void Register<T>(Func<IComponentContainer, T> resolver, string name = null)
+        void Register<T>(FactoryMethod<T> resolver, string name = null)
             where T : class;
 
         /// <summary>

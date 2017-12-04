@@ -6,17 +6,19 @@ namespace REstate.Schematics.Builder.Implementation
     internal class GuardBuilder 
         : IGuardBuilder
     {
-        public GuardBuilder(string connectorKey)
+        public GuardBuilder(ConnectorKey connectorKey)
         {
             if (connectorKey == null)
                 throw new ArgumentNullException(nameof(connectorKey));
-            if (string.IsNullOrWhiteSpace(connectorKey))
-                throw new ArgumentException("Value cannot be empty or whitespace.", nameof(connectorKey));
+            if (connectorKey.Name == null)
+                throw new ArgumentNullException(nameof(connectorKey), "ConnectorKey.Name cannot be null.");
+            if (string.IsNullOrWhiteSpace(connectorKey.Name))
+                throw new ArgumentException("ConnectorKey.Name cannot be empty or whitespace.", nameof(connectorKey));
 
             ConnectorKey = connectorKey;
         }
 
-        public string ConnectorKey { get; }
+        public ConnectorKey ConnectorKey { get; }
 
         public string Description { get; private set; }
 

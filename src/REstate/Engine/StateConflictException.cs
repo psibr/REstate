@@ -12,11 +12,13 @@ namespace REstate.Engine
         {
         }
 
-        public StateConflictException(string message) : base(message)
+        public StateConflictException(string message) 
+            : base(message)
         {
         }
 
-        public StateConflictException(string message, Exception innerException) : base(message, innerException)
+        public StateConflictException(string message, Exception innerException) 
+            : base(message, innerException)
         {
         }
     }

@@ -17,6 +17,6 @@ namespace REstate.Schematics.Builder
 
         IStateBuilder<TState, TInput> WithReentrance(TInput input, Action<ITransitionBuilder<TState, TInput>> transition = null);
 
-        IStateBuilder<TState, TInput> WithOnEntry(string connectorKey, Action<IEntryActionBuilder<TInput>> onEntry = null);
+        IStateBuilder<TState, TInput> WithOnEntry(ConnectorKey connectorKey, Action<IEntryActionBuilder<TInput>> onEntry = null);
     }
 }

@@ -6,17 +6,19 @@ namespace REstate.Schematics.Builder.Implementation
     internal class EntryActionBuilder<TInput> 
         : IEntryActionBuilder<TInput>
     {
-        public EntryActionBuilder(string connectorKey)
+        public EntryActionBuilder(ConnectorKey connectorKey)
         {
             if (connectorKey == null)
                 throw new ArgumentNullException(nameof(connectorKey));
-            if (string.IsNullOrWhiteSpace(connectorKey))
+            if (connectorKey.Name == null)
+                throw new ArgumentNullException(nameof(connectorKey.Name));
+            if (string.IsNullOrWhiteSpace(connectorKey.Name))
                 throw new ArgumentException("Value cannot be empty or whitespace.", nameof(connectorKey));
 
             ConnectorKey = connectorKey;
         }
 
-        public string ConnectorKey { get; }
+        public ConnectorKey ConnectorKey { get; }
         public string Description { get; private set; }
         public TInput OnFailureInput { get; private set; }
 

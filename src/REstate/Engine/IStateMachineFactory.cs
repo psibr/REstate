@@ -5,6 +5,9 @@ namespace REstate.Engine
 {
     public interface IStateMachineFactory<TState, TInput>
     {
-        IStateMachine<TState, TInput> ConstructFromSchematic(string machineId, ISchematic<TState, TInput> schematic, IReadOnlyDictionary<string, string> metadata);
+        IStateMachine<TState, TInput> ConstructFromSchematic(
+            string machineId, 
+            ISchematic<TState, TInput> schematic,
+            IReadOnlyDictionary<string, string> metadata);
     }
 }

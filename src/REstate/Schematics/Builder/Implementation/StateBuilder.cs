@@ -75,9 +75,11 @@ namespace REstate.Schematics.Builder.Implementation
             return this;
         }
 
-        public IStateBuilder<TState, TInput> WithOnEntry(string connectorKey, Action<IEntryActionBuilder<TInput>> onEntry = null)
+        public IStateBuilder<TState, TInput> WithOnEntry(ConnectorKey connectorKey, Action<IEntryActionBuilder<TInput>> onEntry = null)
         {
-            if (string.IsNullOrWhiteSpace(connectorKey))
+            if (connectorKey == null)
+                throw new ArgumentNullException(nameof(connectorKey));
+            if (string.IsNullOrWhiteSpace(connectorKey.Name))
                 throw new ArgumentException("ConnectorKey must have a valid value", nameof(connectorKey));
 
             var onEntryBuilder = new EntryActionBuilder<TInput>(connectorKey );

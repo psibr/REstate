@@ -6,11 +6,9 @@ using Grpc.Core;
 using System.Threading.Tasks;
 using Grpc.Core.Logging;
 using REstate.Engine;
-using REstate.Engine.Repositories.Redis;
 using REstate.Remote;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
-using StackExchange.Redis;
 
 namespace Scratchpad
 {
@@ -18,15 +16,6 @@ namespace Scratchpad
     {
         private static async Task ClientImpl()
         {
-            var connection = await ConnectionMultiplexer.ConnectAsync(
-                "restate.redis.cache.windows.net:6380," +
-                "password=m7+cQKqV3x2KQaAOned8xGj62/0E2t0DrLk/KEElfH0=," +
-                "ssl=True," +
-                "abortConnect=False");
-
-            REstateHost.Agent.Configuration
-                .RegisterComponent(new RedisRepositoryComponent(connection.GetDatabase()));
-
             REstateHost.Agent.Configuration
                 .RegisterComponent(
                     new GrpcRemoteHostComponent(
@@ -49,22 +38,22 @@ namespace Scratchpad
                 .WithState("Ready", state => state
                     .DescribedAs("EchoMachine has received an echo command, and is ready to echo again.")
                     .WithTransitionFrom("Created", "Echo", transition => transition
-                        .WithGuard("Console", guard => guard
+                        .WithGuard(new ConnectorKey("Console"), guard => guard
                             .DescribedAs("Verfies action OK to take with y/n from console.")
                             .WithSetting("Prompt", "Are you sure you want to echo \"{3}\"? (y/n)")))
-                    .WithOnEntry("Log", onEntry => onEntry
+                    .WithOnEntry(new ConnectorKey("Log"), onEntry => onEntry
                         .DescribedAs("Echoes the payload to the console.")
                         .WithSetting("message", "{3}")
                         .OnFailureSend("EchoFailure"))
                     .WithReentrance("Echo", transition => transition
-                        .WithGuard("Console", guard => guard
+                        .WithGuard(new ConnectorKey("Console"), guard => guard
                             .DescribedAs("Verfies action OK to take with y/n from console.")
                             .WithSetting("Prompt", "Are you sure you want to echo \"{3}\"? (y/n)"))))
 
                 .WithState("EchoFailure", state => state
                     .DescribedAs("An echo command failed to execute.")
                     .WithTransitionFrom("Ready", "EchoFailure")
-                    .WithOnEntry("Log", onEntry => onEntry
+                    .WithOnEntry(new ConnectorKey("Log"), onEntry => onEntry
                         .DescribedAs("Echoes the payload to the console.")
                         .WithSetting("severity", "fatal")))
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using REstate.Engine.Repositories;
 using REstate.Engine.Services;
+using REstate.Engine.Services.ConnectorResolvers;
 using REstate.Schematics;
 
 namespace REstate.Engine
@@ -27,14 +28,24 @@ namespace REstate.Engine
             _listeners = listeners;
         }
 
-        public IStateMachine<TState, TInput> ConstructFromSchematic(string machineId, ISchematic<TState, TInput> schematic, IReadOnlyDictionary<string, string> metadata)
+        public IStateMachine<TState, TInput> ConstructFromSchematic(
+            string machineId,
+            ISchematic<TState, TInput> schematic,
+            IReadOnlyDictionary<string, string> metadata)
         {
             if (schematic == null)
                 throw new ArgumentNullException(nameof(schematic));
 
-            var reStateMachine = new REstateMachine<TState, TInput>(_connectorResolver, _repositoryContextFactory, _cartographer, _listeners, machineId, schematic, metadata);
+            var restateMachine = new REstateMachine<TState, TInput>(
+                _connectorResolver,
+                _repositoryContextFactory,
+                _cartographer,
+                _listeners,
+                machineId,
+                schematic,
+                metadata);
 
-            return reStateMachine;
+            return restateMachine;
         }
     }
 }

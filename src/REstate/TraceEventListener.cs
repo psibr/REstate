@@ -23,7 +23,8 @@ namespace REstate
         }
 
         private static readonly BlockingCollection<Action> LoggerQueue = 
-            new BlockingCollection<Action>(new ConcurrentQueue<Action>());
+            new BlockingCollection<Action>(
+                new ConcurrentQueue<Action>());
 
         private static ILog Logger => LogProvider.For<TraceEventListener>();
 

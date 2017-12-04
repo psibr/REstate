@@ -13,7 +13,7 @@ namespace REstate.Engine.Repositories.Redis
 {
     using Metadata = IDictionary<string, string>;
 
-    public class RedisEngineRepository<TState, TInput>
+    internal class RedisEngineRepository<TState, TInput>
         : ISchematicRepository<TState, TInput>
         , IMachineRepository<TState, TInput>
     {
@@ -29,12 +29,9 @@ namespace REstate.Engine.Repositories.Redis
             _restateDatabase = restateDatabase;
         }
 
-        private static IDictionary<string, (MachineStatus<TState, TInput> MachineStatus, Metadata Metadata)> Machines { get; } =
-            new Dictionary<string, (MachineStatus<TState, TInput>, Metadata)>();
-
         public async Task<Schematic<TState, TInput>> RetrieveSchematicAsync(
             string schematicName,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var value = await _restateDatabase.StringGetAsync($"{SchematicKeyPrefix}/{schematicName}").ConfigureAwait(false);
 
@@ -46,7 +43,7 @@ namespace REstate.Engine.Repositories.Redis
 
         public async Task<Schematic<TState, TInput>> StoreSchematicAsync(
             Schematic<TState, TInput> schematic,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
 
@@ -58,7 +55,7 @@ namespace REstate.Engine.Repositories.Redis
         public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             string schematicName,
             Metadata metadata,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var schematic = await RetrieveSchematicAsync(schematicName, cancellationToken).ConfigureAwait(false);
 
@@ -68,7 +65,7 @@ namespace REstate.Engine.Repositories.Redis
         public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             Schematic<TState, TInput> schematic,
             Metadata metadata,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var machineId = Guid.NewGuid().ToString();
 
@@ -114,7 +111,7 @@ namespace REstate.Engine.Repositories.Redis
         public async Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(
             Schematic<TState, TInput> schematic,
             IEnumerable<Metadata> metadata,
-            CancellationToken cancellationToken = new CancellationToken())
+            CancellationToken cancellationToken = default)
         {
             var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
 
@@ -155,7 +152,7 @@ namespace REstate.Engine.Repositories.Redis
         public async Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(
             string schematicName,
             IEnumerable<Metadata> metadata,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var schematic = await RetrieveSchematicAsync(schematicName, cancellationToken).ConfigureAwait(false);
 
@@ -165,14 +162,14 @@ namespace REstate.Engine.Repositories.Redis
 
         public async Task DeleteMachineAsync(
             string machineId,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             await _restateDatabase.KeyDeleteAsync($"{MachinesKeyPrefix}/{machineId}").ConfigureAwait(false);
         }
 
         public async Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(
             string machineId,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             var machineBytes = await _restateDatabase.StringGetAsync($"{MachinesKeyPrefix}/{machineId}").ConfigureAwait(false);
 
@@ -201,7 +198,7 @@ namespace REstate.Engine.Repositories.Redis
             string machineId,
             TState state,
             Guid? lastCommitTag,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
 
             var machineKey = $"{MachinesKeyPrefix}/{machineId}";

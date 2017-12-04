@@ -4,7 +4,7 @@ namespace REstate.Schematics
 {
     public interface IGuard
     {
-        string ConnectorKey { get; }
+        ConnectorKey ConnectorKey { get; }
 
         string Description { get; }
 

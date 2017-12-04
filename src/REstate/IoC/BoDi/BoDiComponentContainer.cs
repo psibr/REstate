@@ -30,7 +30,8 @@ namespace REstate.IoC.BoDi
             _container.RegisterTypeAs(implementationType, registrationType, name);
         }
 
-        public void Register<T>(Func<IComponentContainer, T> resolver, string name = null) where T : class
+        public void Register<T>(FactoryMethod<T> resolver, string name = null) 
+            where T : class
         {
             _container.RegisterFactoryAs(() => resolver(this), name);
         }

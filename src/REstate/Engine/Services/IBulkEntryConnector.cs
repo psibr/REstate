@@ -13,8 +13,8 @@ namespace REstate.Engine.Services
             Status<TState> status,
             InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken = default(CancellationToken));
+            CancellationToken cancellationToken = default);
 
-        Task ExecuteBulkEntryAsync(CancellationToken cancellationToken = default(CancellationToken));
+        Task ExecuteBulkEntryAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -8,7 +8,7 @@ namespace REstate.Schematics
         : IEntryAction<TInput>
     {
         [Required]
-        public string ConnectorKey { get; set; }
+        public ConnectorKey ConnectorKey { get; set; }
 
         [Required]
         public IDictionary<string, string> Configuration { get; set; }
@@ -21,6 +21,7 @@ namespace REstate.Schematics
             FailureTransition.Input;
 
         IReadOnlyDictionary<string, string> IEntryAction<TInput>.Settings =>
-            new ReadOnlyDictionary<string, string>(Configuration ?? new Dictionary<string, string>(0));
+            new ReadOnlyDictionary<string, string>(Configuration 
+                ?? new Dictionary<string, string>(0));
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Grpc.Core;
 using REstate;
 using REstate.Remote;
@@ -10,6 +12,8 @@ namespace Client
     {
         static void Main(string[] args)
         {
+            Thread.Sleep(2000);
+
             REstateHost.Agent.Configuration
                 .RegisterComponent(new GrpcRemoteHostComponent(
                     new GrpcHostOptions
@@ -18,8 +22,6 @@ namespace Client
                         UseAsDefaultEngine = true
                     }));
 
-            Console.ReadLine();
-
             var stateEngine = REstateHost.Agent
                 .GetStateEngine<string, string>();
 
@@ -27,24 +29,34 @@ namespace Client
                 .CreateSchematic<string, string>("EchoMachine")
 
                 .WithState("Ready", state => state
-                    .AsInitialState()
-                    .WithOnEntry("Console", onEntry => onEntry
+                    .WithOnEntry(new ConnectorKey("Log"), onEntry => onEntry
                         .DescribedAs("Echoes the payload to the console.")
-                        .WithSetting("Format", "{2}")
+                        .WithSetting("message", "{3}")
                         .OnFailureSend("EchoFailure"))
-                    .WithReentrance("Echo", transition => transition
-                        .WithGuard("Console", guard => guard
-                            .DescribedAs("Verfies action OK to take with y/n from console.")
-                            .WithSetting("Prompt", "Are you sure you want to echo \"{3}\"? (y/n)"))))
+                    .WithReentrance("Echo"))
+
+                .WithState("CreatedAndReady", state => state
+                    .AsInitialState()
+                    .AsSubstateOf("Ready")
+                    .WithTransitionTo("Ready", "Echo"))
 
                 .WithState("EchoFailure", state => state
                     .AsSubstateOf("Ready")
                     .DescribedAs("An echo command failed to execute.")
                     .WithTransitionFrom("Ready", "EchoFailure"));
 
-            var machine = stateEngine.CreateMachineAsync(schematic, null, CancellationToken.None).Result;
+            var machines = Enumerable.Range(0, 4).Select(i =>
+                stateEngine.CreateMachineAsync(schematic, null, CancellationToken.None).GetAwaiter().GetResult());
 
-            var status = machine.SendAsync("Echo", "Hello from client!", CancellationToken.None).Result;
+            Parallel.ForEach(machines, machine =>
+                {
+                    for (int i = 0; i < 999; i++)
+                    {
+                        machine.SendAsync("Echo", "Hello from client!", CancellationToken.None).GetAwaiter().GetResult();
+                    }
+                    
+                });
+
 
             Console.ReadLine();
         }

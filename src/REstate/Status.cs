@@ -3,9 +3,19 @@ using System.Collections.Generic;
 
 namespace REstate
 {
+    /// <summary>
+    /// An immutable structure that represents some interaction of state in a <see cref="T:REstate.IStateMachine`2" />
+    /// </summary>
     public struct Status<T>
         : IEquatable<Status<T>>
     {
+        /// <summary>
+        /// Constructs an immutable status record
+        /// </summary>
+        /// <param name="machineId">The unique identifier of the machine to which this status relates</param>
+        /// <param name="state">The state to be represented by the status</param>
+        /// <param name="updatedTime">The date and time the state interaction occured; the value will be converted to UTC</param>
+        /// <param name="commitTag">A unique identifier for this state interaction</param>
         public Status(string machineId, T state, DateTimeOffset updatedTime, Guid commitTag)
         {
             MachineId = machineId;
@@ -14,7 +24,9 @@ namespace REstate
             CommitTag = commitTag;
         }
 
-
+        /// <summary>
+        /// The state to be represented
+        /// </summary>
         public T State { get; }
 
         /// <summary>
@@ -24,10 +36,21 @@ namespace REstate
         /// </summary>
         public Guid CommitTag { get; }
 
+        /// <summary>
+        /// A unique identifier for the machine to which the status is related
+        /// </summary>
         public string MachineId { get; }
 
+        /// <summary>
+        /// The date and time this status change occured
+        /// </summary>
+        /// <returns>A UTC offset date and time</returns>
         public DateTimeOffset UpdatedTime { get; }
 
+        /// <summary>
+        /// Presents the state the status represents in a textual form
+        /// </summary>
+        /// <returns>The state as a <see cref="string" /></returns>
         public override string ToString()
         {
             return State.ToString();
@@ -106,14 +129,8 @@ namespace REstate
             return IsSameCommit(this, other);
         }
 
-        public static bool operator ==(Status<T> a, Status<T> b)
-        {
-            return a.Equals(b);
-        }
+        public static bool operator ==(Status<T> a, Status<T> b) => a.Equals(b);
 
-        public static bool operator !=(Status<T> a, Status<T> b)
-        {
-            return !(a == b);
-        }
+        public static bool operator !=(Status<T> a, Status<T> b) => !(a == b);
     }
 }

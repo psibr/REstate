@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using REstate.Schematics;
@@ -9,7 +10,7 @@ namespace REstate.Engine.Services
     public class ConsoleConnector<TState, TInput>
         : IConnector<TState, TInput>
     {
-        string IConnector.ConnectorKey => ConnectorKey;
+        ConnectorKey IConnector.Key => Key;
 
         public Task OnEntryAsync<TPayload>(
             ISchematic<TState, TInput> schematic,
@@ -17,7 +18,7 @@ namespace REstate.Engine.Services
             Status<TState> status, 
             InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             string format = null;
             connectorSettings?.TryGetValue("Format", out format);
@@ -44,7 +45,7 @@ namespace REstate.Engine.Services
             Status<TState> status,
             InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             string prompt = null;
             connectorSettings?.TryGetValue("Prompt", out prompt);
@@ -70,6 +71,6 @@ namespace REstate.Engine.Services
         public IBulkEntryConnector<TState, TInput> GetBulkEntryConnector() => 
             new ConsoleBulkEntryConnector<TState, TInput>();
 
-        public static string ConnectorKey => "Console";
+        public static ConnectorKey Key => new ConnectorKey("Console");
     }
 }

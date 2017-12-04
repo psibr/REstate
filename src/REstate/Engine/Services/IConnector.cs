@@ -15,7 +15,7 @@ namespace REstate.Engine.Services
             Status<TState> status,
             InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken = default(CancellationToken));
+            CancellationToken cancellationToken = default);
 
         Task<bool> GuardAsync<TPayload>(
             ISchematic<TState, TInput> schematic,
@@ -23,13 +23,13 @@ namespace REstate.Engine.Services
             Status<TState> status,
             InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken = default(CancellationToken));
+            CancellationToken cancellationToken = default);
 
         IBulkEntryConnector<TState, TInput> GetBulkEntryConnector();
     }
 
     public interface IConnector
     {
-        string ConnectorKey { get; }
+        ConnectorKey Key { get; }
     }
 }

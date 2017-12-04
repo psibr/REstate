@@ -12,11 +12,13 @@ namespace REstate.Engine
         {
         }
 
-        public SchematicDoesNotExistException(string message) : base(message)
+        public SchematicDoesNotExistException(string message) 
+            : base(message)
         {
         }
 
-        public SchematicDoesNotExistException(string message, Exception innerException) : base(message, innerException)
+        public SchematicDoesNotExistException(string message, Exception innerException) 
+            : base(message, innerException)
         {
         }
     }

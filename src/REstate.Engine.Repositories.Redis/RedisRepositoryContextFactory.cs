@@ -5,7 +5,7 @@ using StackExchange.Redis;
 
 namespace REstate.Engine.Repositories.Redis
 {
-    public class RedisRepositoryContextFactory<TState, TInput>
+    internal class RedisRepositoryContextFactory<TState, TInput>
         : IRepositoryContextFactory<TState, TInput>
     {
         private readonly IDatabase _restateDatabase;
@@ -16,7 +16,7 @@ namespace REstate.Engine.Repositories.Redis
         }
 
         public Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             return Task.FromResult<IEngineRepositoryContext<TState, TInput>>(
                 new RedisEngineRepositoryContext<TState, TInput>(_restateDatabase));

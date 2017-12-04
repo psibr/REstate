@@ -10,7 +10,7 @@ namespace REstate
         Task OnMachineCreated<TState, TInput>(
             ISchematic<TState, TInput> schematic,
             ICollection<(Status<TState> Status, IReadOnlyDictionary<string, string> Metadata)> initialStatuses,
-            CancellationToken cancellation = default(CancellationToken));
+            CancellationToken cancellation = default);
 
         Task OnTransition<TState, TInput, TPayload>(
             ISchematic<TState, TInput> schematic,
@@ -18,10 +18,10 @@ namespace REstate
             IReadOnlyDictionary<string, string> metadata,
             TInput input,
             TPayload payload,
-            CancellationToken cancellation = default(CancellationToken));
+            CancellationToken cancellation = default);
 
         Task OnMachineDeleted(
             IEnumerable<string> machineIds,
-            CancellationToken cancellation = default(CancellationToken));
+            CancellationToken cancellation = default);
     }
 }

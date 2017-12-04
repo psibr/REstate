@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using REstate.Engine.Repositories;
 using REstate.Engine.Services;
+using REstate.Engine.Services.ConnectorResolvers;
 using REstate.Schematics;
 
 namespace REstate.Engine
@@ -46,31 +47,31 @@ namespace REstate.Engine
         public string MachineId { get; }
 
         public Task<IReadOnlyDictionary<string, string>> GetMetadataAsync(
-            CancellationToken cancellationToken = default(CancellationToken)) 
+            CancellationToken cancellationToken = default) 
             => Task.FromResult(_metadata);
 
         public Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
-            CancellationToken cancellationToken = default(CancellationToken)) 
-            => SendAsync(input, payload, default(Guid), cancellationToken);
+            CancellationToken cancellationToken = default) 
+            => SendAsync(input, payload, default, cancellationToken);
 
         public Task<Status<TState>> SendAsync(
             TInput input,
-            CancellationToken cancellationToken = default(CancellationToken)) 
-            => SendAsync<object>(input, null, default(Guid), cancellationToken);
+            CancellationToken cancellationToken = default) 
+            => SendAsync<object>(input, null, default, cancellationToken);
 
         public Task<Status<TState>> SendAsync(
             TInput input,
             Guid lastCommitTag,
-            CancellationToken cancellationToken = default(CancellationToken)) 
+            CancellationToken cancellationToken = default) 
             => SendAsync<object>(input, null, lastCommitTag, cancellationToken);
 
         public async Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
             Guid lastCommitTag,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             using (var dataContext = await  _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -103,7 +104,7 @@ namespace REstate.Engine
                 currentStatus = await dataContext.Machines.SetMachineStateAsync(
                     machineId: MachineId,
                     state: transition.ResultantState,
-                    lastCommitTag: lastCommitTag == default(Guid) ? currentStatus.CommitTag : lastCommitTag, 
+                    lastCommitTag: lastCommitTag == default ? currentStatus.CommitTag : lastCommitTag, 
                     cancellationToken: cancellationToken).ConfigureAwait(false);
 
                 schematicState = Schematic.States[currentStatus.State];
@@ -158,7 +159,7 @@ namespace REstate.Engine
 #pragma warning restore 4014
         }
 
-        public async Task<bool> IsInStateAsync(Status<TState> status, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<bool> IsInStateAsync(Status<TState> status, CancellationToken cancellationToken = default)
         {
             var currentState = await GetCurrentStateAsync(cancellationToken);
 
@@ -182,7 +183,7 @@ namespace REstate.Engine
             return false;
         }
 
-        protected async Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default(CancellationToken))
+        protected async Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default)
         {
             Status<TState> currentStatus;
 

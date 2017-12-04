@@ -2,7 +2,7 @@
 
 namespace REstate.Engine.Repositories.Redis
 {
-    public class RedisEngineRepositoryContext<TState, TInput>
+    internal class RedisEngineRepositoryContext<TState, TInput>
         : IEngineRepositoryContext<TState, TInput>
     {
 

@@ -15,7 +15,7 @@ namespace REstate.Schematics.Builder.Implementation
         public TState ResultantState { get; }
         public IGuard Guard { get; private set; }
 
-        public ITransitionBuilder<TState, TInput> WithGuard(string connectorKey, Action<IGuardBuilder> guard = null)
+        public ITransitionBuilder<TState, TInput> WithGuard(ConnectorKey connectorKey, Action<IGuardBuilder> guard = null)
         {
             var guardBuilder = new GuardBuilder(connectorKey);
 

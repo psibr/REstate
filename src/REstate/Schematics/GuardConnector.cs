@@ -8,7 +8,7 @@ namespace REstate.Schematics
         : IGuard
     {
         [Required]
-        public string ConnectorKey { get; set; }
+        public ConnectorKey ConnectorKey { get; set; }
 
         [Required]
         public IDictionary<string, string> Configuration { get; set; }
@@ -16,6 +16,7 @@ namespace REstate.Schematics
         public string Description { get; set; }
 
         IReadOnlyDictionary<string, string> IGuard.Settings =>
-            new ReadOnlyDictionary<string, string>(Configuration ?? new Dictionary<string, string>(0));
+            new ReadOnlyDictionary<string, string>(Configuration 
+                ?? new Dictionary<string, string>(0));
     }
 }

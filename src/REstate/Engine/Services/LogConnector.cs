@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using REstate.Logging;
@@ -12,7 +13,7 @@ namespace REstate.Engine.Services
     {
         private static ILog Logger => LogProvider.For<LogConnector<TState, TInput>>();
 
-        string IConnector.ConnectorKey => ConnectorKey;
+        ConnectorKey IConnector.Key => Key;
 
         public Task OnEntryAsync<TPayload>(
             ISchematic<TState, TInput> schematic,
@@ -20,7 +21,7 @@ namespace REstate.Engine.Services
             Status<TState> status,
             InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             string format = null;
             connectorSettings?.TryGetValue("message", out format);
@@ -55,12 +56,12 @@ namespace REstate.Engine.Services
             Status<TState> status,
             InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken = default(CancellationToken)) =>
+            CancellationToken cancellationToken = default) =>
                 throw new NotSupportedException();
 
         public IBulkEntryConnector<TState, TInput> GetBulkEntryConnector() =>
             throw new NotSupportedException();
 
-        public static string ConnectorKey => "Log";
+        public static ConnectorKey Key => new ConnectorKey("Log");
     }
 }

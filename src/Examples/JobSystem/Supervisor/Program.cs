@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -11,7 +12,6 @@ using REstate.Engine.Services;
 using REstate.Remote;
 using REstate.Schematics;
 using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
 using REstate.Engine.Repositories.Redis;
 using StackExchange.Redis;
 
@@ -42,10 +42,9 @@ namespace Supervisor
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .WriteTo.Console(theme: AnsiConsoleTheme.Literate)
                 .CreateLogger();
 
-            REstateHost.Agent.Configuration.RegisterConnector("Enqueue", typeof(EnqueueConnector<,>));
+            REstateHost.Agent.Configuration.RegisterConnector(new ConnectorKey("Enqueue"), typeof(EnqueueConnector<,>));
 
             var connection = ConnectionMultiplexer.ConnectAsync(
                 "restate.redis.cache.windows.net:6380," +
@@ -79,7 +78,7 @@ namespace Supervisor
                 .WithState(JobStatus.Enqueued, state => state
                     .AsInitialState()
                     .DescribedAs("Job has been created or marked for retry, but has not been successfully put on the queue yet.")
-                    .WithOnEntry("Enqueue", entry => entry
+                    .WithOnEntry(new ConnectorKey("Enqueue"), entry => entry
                         .DescribedAs("Enqueues the job on a queue.")
                         .OnFailureSend(JobActions.Suspend)))
 
@@ -90,18 +89,13 @@ namespace Supervisor
                 .WithState(JobStatus.Suspended, state => state
                     .DescribedAs("Worker or action requested a suspend and retry iteration.")
                     .WithTransitionFrom(JobStatus.Enqueued, JobActions.Suspend)
-                    .WithTransitionFrom(JobStatus.Active, JobActions.Suspend)
-                    .WithTransitionTo(JobStatus.Enqueued, JobActions.Retry)
-                    .WithOnEntry("Retry", entry => entry
-                        .DescribedAs("Retries the job a specified number of times before failing.")
-                        .WithSetting("retryIterations", "3")
-                        .OnFailureSend(JobActions.Fail)))
+                    .WithTransitionFrom(JobStatus.Active, JobActions.Suspend))
 
                 .WithState(JobStatus.Failed, state => state
                     .DescribedAs("Job encountered an error determined to be non-recoverable.")
                     .WithTransitionFrom(JobStatus.Active, JobActions.Fail)
                     .WithTransitionFrom(JobStatus.Suspended, JobActions.Fail)
-                    .WithOnEntry("Log", entry => entry
+                    .WithOnEntry(new ConnectorKey("Log"), entry => entry
                         .DescribedAs("Log the failure as an error.")
                         .WithSetting("severity", "error")
                         .WithSetting("message", "Job failed to complete.")))
@@ -211,12 +205,13 @@ namespace Supervisor
             .ToArray();
     }
 
-    public class EnqueueConnector<TState, TInput> : IConnector<TState, TInput>
+    public class EnqueueConnector<TState, TInput> 
+        : IConnector<TState, TInput>
     {
         public static readonly BlockingCollection<Status<TState>> Queue =
             new BlockingCollection<Status<TState>>(new ConcurrentQueue<Status<TState>>());
 
-        public string ConnectorKey { get; } = "Enqueue";
+        public ConnectorKey Key { get; } = new ConnectorKey("Enqueue");
 
         public Task OnEntryAsync<TPayload>(
             ISchematic<TState, TInput> schematic,

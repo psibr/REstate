@@ -24,7 +24,7 @@ namespace REstate.Engine
                 var source = state.Value;
 
                 lines.AddRange(state.Transitions.Values
-                    .Select(transition => 
+                    .Select(transition =>
                         GetTransitionRepresentation(
                             source.ToString(),
                             transition.Input.ToString(),
@@ -33,7 +33,8 @@ namespace REstate.Engine
 
                 if (state.OnEntry != null)
                 {
-                    onEntryActionLines.Add($" {state.Value} -> \"{state.OnEntry.Description ?? state.OnEntry.ConnectorKey}\" [label=\"On Entry\" style=dotted];");
+                    onEntryActionLines.Add($" {state.Value} -> \"{state.OnEntry.Description ?? state.OnEntry.ConnectorKey.Name}\"" +
+                                            " [label=\"On Entry\" style=dotted];");
                 }
             }
 
@@ -44,15 +45,13 @@ namespace REstate.Engine
                 lines.AddRange(onEntryActionLines);
             }
 
-            return "digraph {" + "\r\n" +
-                     string.Join("\r\n", lines) + "\r\n" +
-                   "}";
+            return $"digraph {{\r\n{ string.Join("\r\n\t", lines) }\r\n}}";
         }
 
         private static string GetTransitionRepresentation(string sourceState, string input, string destination, string guardDescription)
         {
-            return string.IsNullOrWhiteSpace(guardDescription) 
-                ? $" \"{sourceState}\" -> \"{destination}\" [label=\"{input}\"];" 
+            return string.IsNullOrWhiteSpace(guardDescription)
+                ? $" \"{sourceState}\" -> \"{destination}\" [label=\"{input}\"];"
                 : $" \"{sourceState}\" -> \"{destination}\" [label=\"{input} ({guardDescription})\"];";
         }
     }

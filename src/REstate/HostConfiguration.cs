@@ -2,6 +2,7 @@
 using REstate.Engine;
 using REstate.Engine.Repositories.InMemory;
 using REstate.Engine.Services;
+using REstate.Engine.Services.ConnectorResolvers;
 using REstate.IoC;
 using REstate.Logging;
 
@@ -9,15 +10,14 @@ namespace REstate
 {
     public interface IHostConfiguration
     {
-        void RegisterConnector(string connectorKey, Type connectorType);
+        void RegisterConnector(ConnectorKey key, Type connectorType);
 
         void RegisterComponent(IComponent component);
 
         /// <summary>
-        /// Register's defaults and the REstateHost engine in a given container.
+        /// Register's defaults and the REstateHost engine.
         /// </summary>
-        /// <param name="container">An adapter to an IoC/DI container.</param>
-        void Register(IComponentContainer container);
+        void RegisterDefaults();
     }
 
     internal class HostConfiguration
@@ -25,44 +25,41 @@ namespace REstate
     {
         private static ILog Logger => LogProvider.For<HostConfiguration>();
 
-        internal IComponentContainer Container;
+        internal IComponentContainer Container { get; }
 
         public HostConfiguration(IComponentContainer container)
         {
-            Register(container);
+            Container = container;
         }
 
-        public void RegisterConnector(string connectorKey, Type connectorType) =>
-            Container.Register(typeof(IConnector<,>), connectorType, connectorKey);
+        public void RegisterConnector(ConnectorKey key, Type connectorType) =>
+            Container.Register(typeof(IConnector<,>), connectorType, key.Name); // TODO: Include version in registration name
 
         public void RegisterComponent(IComponent component) =>
             Container.RegisterComponent(component);
 
         /// <summary>
-        /// Register's defaults and the REstateHost engine in a given container.
+        /// Registers defaults and the REstateHost engine.
         /// </summary>
-        /// <param name="container">An adapter to an IoC/DI container.</param>
-        public void Register(IComponentContainer container)
+        public void RegisterDefaults()
         {
-            Logger.DebugFormat("Registering components into container of runtime type: {containerType}.", container.GetType());
+            Logger.DebugFormat("Registering default components into container of runtime type: {containerType}.", Container.GetType());
 
-            container.Register(typeof(IConnectorResolver<,>), typeof(DefaultConnectorResolver<,>));
+            Container.Register(typeof(IConnectorResolver<,>), typeof(DefaultConnectorResolver<,>));
 
-            container.Register(typeof(IStateMachineFactory<,>), typeof(REstateMachineFactory<,>));
+            Container.Register(typeof(IStateMachineFactory<,>), typeof(REstateMachineFactory<,>));
 
-            container.Register(typeof(IStateEngine<,>), typeof(StateEngine<,>));
-            container.Register(typeof(ILocalStateEngine<,>), typeof(StateEngine<,>));
+            Container.Register(typeof(IStateEngine<,>), typeof(StateEngine<,>));
+            Container.Register(typeof(ILocalStateEngine<,>), typeof(StateEngine<,>));
 
-            container.Register(typeof(ICartographer<,>), typeof(DotGraphCartographer<,>));
+            Container.Register(typeof(ICartographer<,>), typeof(DotGraphCartographer<,>));
 
-            container.RegisterComponent(new InMemoryRepositoryComponent());
+            Container.RegisterComponent(new InMemoryRepositoryComponent());
 
-            Container = container;
+            RegisterConnector(ConsoleConnector<object, object>.Key, typeof(ConsoleConnector<,>));
+            RegisterConnector(LogConnector<object, object>.Key, typeof(LogConnector<,>));
 
-            RegisterConnector("Console", typeof(ConsoleConnector<,>));
-            RegisterConnector(LogConnector<object, object>.ConnectorKey, typeof(LogConnector<,>));
-
-            container.Register<IEventListener>(new TraceEventListener(), nameof(TraceEventListener));
+            Container.Register<IEventListener>(new TraceEventListener(), nameof(TraceEventListener));
         }
     }
 }

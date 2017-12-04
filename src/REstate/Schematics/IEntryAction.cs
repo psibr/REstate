@@ -4,7 +4,7 @@ namespace REstate.Schematics
 {
     public interface IEntryAction<TInput>
     {
-        string ConnectorKey { get; }
+        ConnectorKey ConnectorKey { get; }
 
         string Description { get; }
 

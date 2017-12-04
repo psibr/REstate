@@ -12,11 +12,13 @@ namespace REstate.Engine
         {
         }
 
-        public MachineDoesNotExistException(string message) : base(message)
+        public MachineDoesNotExistException(string message) 
+            : base(message)
         {
         }
 
-        public MachineDoesNotExistException(string message, Exception innerException) : base(message, innerException)
+        public MachineDoesNotExistException(string message, Exception innerException) 
+            : base(message, innerException)
         {
         }
     }
