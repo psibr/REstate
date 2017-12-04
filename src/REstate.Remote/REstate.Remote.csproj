@@ -2,6 +2,20 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <Version>2.0.0</Version>
+    <PackageProjectUrl>https://github.com/psibr/REstate.Engine</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/psibr/REstate.Engine</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>REstate</PackageTags>
+    <Authors>Ovan Crone</Authors>
+    <Company>Psibernetic Solutions</Company>
+    <Product>REstate</Product>
+    <Description>Provides gRPC/HTTP2 interconnect support for REstate's engine in either client or server configuration.</Description>
+    <Copyright>Ovan Crone 2016</Copyright>
+    <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
