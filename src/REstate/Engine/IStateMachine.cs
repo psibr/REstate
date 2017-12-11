@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using REstate.Schematics;
 
-namespace REstate
+namespace REstate.Engine
 {
     public interface IStateMachine<TState, TInput>
     {

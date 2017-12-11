@@ -10,9 +10,9 @@ namespace REstate.Schematics.Builder.Implementation
         {
             if (connectorKey == null)
                 throw new ArgumentNullException(nameof(connectorKey));
-            if (connectorKey.Name == null)
-                throw new ArgumentNullException(nameof(connectorKey.Name));
-            if (string.IsNullOrWhiteSpace(connectorKey.Name))
+            if (connectorKey.Identifier == null)
+                throw new ArgumentNullException(nameof(connectorKey.Identifier));
+            if (string.IsNullOrWhiteSpace(connectorKey.Identifier))
                 throw new ArgumentException("Value cannot be empty or whitespace.", nameof(connectorKey));
 
             ConnectorKey = connectorKey;
@@ -20,11 +20,11 @@ namespace REstate.Schematics.Builder.Implementation
 
         public ConnectorKey ConnectorKey { get; }
         public string Description { get; private set; }
-        public TInput OnFailureInput { get; private set; }
+        public IExceptionInput<TInput> OnExceptionInput { get; private set; }
 
         public IReadOnlyDictionary<string, string> Settings => _settings;
 
-        private readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public IEntryActionBuilder<TInput> DescribedAs(string description)
         {
@@ -60,7 +60,7 @@ namespace REstate.Schematics.Builder.Implementation
 
         public IEntryActionBuilder<TInput> OnFailureSend(TInput input)
         {
-            OnFailureInput = input;
+            OnExceptionInput = new ExceptionInput<TInput>(input);
 
             return this;
         }

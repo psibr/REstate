@@ -1,4 +1,4 @@
-namespace REstate.Engine.Services
+namespace REstate.Engine.Connectors
 {
     public class InputParameters<TInput, TPayload>
     {

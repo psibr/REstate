@@ -1,4 +1,6 @@
-﻿namespace REstate
+﻿using REstate.Engine;
+
+namespace REstate
 {
     /// <summary>
     /// An interface that provides the ability to scope an agent to strictly local execution
@@ -10,14 +12,6 @@
         /// </summary>
         /// <returns>A local execution state engine</returns>
         ILocalStateEngine<TState, TInput> GetStateEngine<TState, TInput>();
-    }
-
-    /// <summary>
-    /// A <see cref="IStateEngine&lt;TState, TInput&gt;" /> that executes state changes locally
-    /// </summary>
-    public interface ILocalStateEngine<TState, TInput>
-        : IStateEngine<TState, TInput>
-    {
     }
 
     internal class LocalHost

@@ -3,7 +3,7 @@ using System;
 namespace REstate.Engine
 {
     /// <summary>
-    /// Indicates a request for a schematic was made with an unknown name.
+    /// Indicates a request for a schematic was made with an unknown identifier.
     /// </summary>
     public class SchematicDoesNotExistException
         : Exception

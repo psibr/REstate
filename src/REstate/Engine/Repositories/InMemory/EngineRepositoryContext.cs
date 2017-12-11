@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace REstate.Engine.Repositories.InMemory
+﻿namespace REstate.Engine.Repositories.InMemory
 {
     public class EngineRepositoryContext<TState, TInput>
         : IEngineRepositoryContext<TState, TInput>

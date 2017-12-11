@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2008
+VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate", "src\REstate\REstate.csproj", "{8B02FF53-A9F3-4004-8CDC-32831070957D}"
 EndProject
@@ -29,7 +29,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{88B4B54C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Src", "Src", "{90E8D167-048D-467B-81D5-1007247226A3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Engine.Connectors.AzureServiceBus", "src\REstate.Engine.Connectors.AzureServiceBus\REstate.Engine.Connectors.AzureServiceBus.csproj", "{44DAA43E-E26F-4E71-AF23-C9793D94CD2C}"
+EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -67,6 +72,10 @@ Global
 		{324FD16B-1DCF-41E2-BAD5-FE804E18F264}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{324FD16B-1DCF-41E2-BAD5-FE804E18F264}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{324FD16B-1DCF-41E2-BAD5-FE804E18F264}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44DAA43E-E26F-4E71-AF23-C9793D94CD2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44DAA43E-E26F-4E71-AF23-C9793D94CD2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44DAA43E-E26F-4E71-AF23-C9793D94CD2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44DAA43E-E26F-4E71-AF23-C9793D94CD2C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -81,9 +90,25 @@ Global
 		{9991D081-2D18-410E-832F-05D7735758BF} = {235D6821-398C-4083-9AFE-97FA0C19D31A}
 		{C72B33ED-2EDE-4705-81A6-8174F2577632} = {90E8D167-048D-467B-81D5-1007247226A3}
 		{324FD16B-1DCF-41E2-BAD5-FE804E18F264} = {88B4B54C-3DA1-40D2-8DCB-0181DD035955}
+		{44DAA43E-E26F-4E71-AF23-C9793D94CD2C} = {90E8D167-048D-467B-81D5-1007247226A3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0C35B35D-40C1-4521-BF0A-C5A6D7BFF4CD}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true

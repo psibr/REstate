@@ -31,7 +31,7 @@ namespace REstate.Remote
 
         public string MachineId { get; }
 
-        public async Task<ISchematic<TState, TInput>> GetSchematicAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<ISchematic<TState, TInput>> GetSchematicAsync(CancellationToken cancellationToken = default)
         {
             if (_machineSchematic != null)
                 return _machineSchematic;
@@ -68,7 +68,7 @@ namespace REstate.Remote
             return _metadata;
         }
 
-        public async Task<Status<TState>> SendAsync<TPayload>(TInput input, TPayload payload, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Status<TState>> SendAsync<TPayload>(TInput input, TPayload payload, CancellationToken cancellationToken = default)
         {
             SendResponse response;
 
@@ -100,7 +100,7 @@ namespace REstate.Remote
                 response.CommitTag);
         }
 
-        public async Task<Status<TState>> SendAsync<TPayload>(TInput input, TPayload payload, Guid lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Status<TState>> SendAsync<TPayload>(TInput input, TPayload payload, Guid lastCommitTag, CancellationToken cancellationToken = default)
         {
             SendResponse response;
 
@@ -133,7 +133,7 @@ namespace REstate.Remote
                 response.CommitTag);
         }
 
-        public async Task<Status<TState>> SendAsync(TInput input, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Status<TState>> SendAsync(TInput input, CancellationToken cancellationToken = default)
         {
             SendResponse response;
 
@@ -164,7 +164,7 @@ namespace REstate.Remote
                 response.CommitTag);
         }
 
-        public async Task<Status<TState>> SendAsync(TInput input, Guid lastCommitTag, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Status<TState>> SendAsync(TInput input, Guid lastCommitTag, CancellationToken cancellationToken = default)
         {
             SendResponse response;
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -7,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MagicOnion;
+using MagicOnion.Client;
 using MagicOnion.Server;
 using MessagePack;
 using MessagePack.Resolvers;
@@ -18,6 +20,15 @@ using REstate.Schematics;
 
 namespace REstate.Remote.Services
 {
+    using MethodKey = ValueTuple<string, Type, Type, Type>;
+    using SendAsyncDelegate = Func<string, object, Guid?, CancellationToken, Task<SendResponse>>;
+    using SendWithPayloadAsyncDelegate = Func<string, object, object, Guid?, CancellationToken, Task<SendResponse>>;
+
+    public interface IStateMachineServiceClient
+    {
+        IStateMachineService Create();
+    }
+
     public interface IStateMachineService
         : IService<IStateMachineService>
     {
@@ -44,12 +55,30 @@ namespace REstate.Remote.Services
         UnaryResult<Nil> BulkCreateMachineFromSchematicAsync(BulkCreateMachineFromSchematicRequest request);
     }
 
+    public class StateMachineServiceClient
+        : IStateMachineServiceClient
+    {
+        private readonly GrpcHostOptions _gRpcHostOptions;
+
+        public StateMachineServiceClient(GrpcHostOptions gRpcHostOptions)
+        {
+            _gRpcHostOptions = gRpcHostOptions;
+        }
+
+        public IStateMachineService Create() => 
+            MagicOnionClient.Create<IStateMachineService>(_gRpcHostOptions.Channel);
+    }
+
     public class StateMachineService
         : ServiceBase<IStateMachineService>
         , IStateMachineService
     {
         private const string StateTypeHeaderKey = "Status-Type";
         private const string InputTypeHeaderKey = "Input-Type";
+        private const Type NoPayloadType = null;
+
+        private static readonly ConcurrentDictionary<MethodKey, Delegate> DelegateCache =
+            new ConcurrentDictionary<MethodKey, Delegate>();
 
         #region SendAsync
         public async UnaryResult<SendResponse> SendAsync(SendRequest request)
@@ -61,21 +90,48 @@ namespace REstate.Remote.Services
                 request.InputBytes,
                 ContractlessStandardResolver.Instance);
 
-            var sendAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(SendAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(stateType, inputType);
+            var sendAsync = (SendAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(SendAsync), stateType, inputType, NoPayloadType),
+                    valueFactory: tuple =>
+                    {
+                        var machineIdParameter = Expression.Parameter(typeof(string), "machineId");
+                        var inputParameter = Expression.Parameter(typeof(object), "input");
+                        var commitTagParameter = Expression.Parameter(typeof(Guid?), "commitTag");
+                        var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
-            return await (Task<SendResponse>)sendAsyncMethod.Invoke(this,
-                new[]
-                {
-                    request.MachineId,
-                    input,
-                    request.CommitTag,
-                    Context.CallContext.CancellationToken
-                });
+                        return Expression.Lambda<SendAsyncDelegate>(
+                                Expression.Call(
+                                    type: typeof(StateMachineService),
+                                    methodName: nameof(SendAsync),
+                                    typeArguments: new[] { stateType, inputType },
+                                    arguments: new Expression[]
+                                    {
+                                        machineIdParameter,
+                                        Expression.Convert(inputParameter, inputType),
+                                        commitTagParameter,
+                                        cancellationTokenParameter
+                                    }),
+                                false,
+                                machineIdParameter,
+                                inputParameter,
+                                commitTagParameter,
+                                cancellationTokenParameter)
+                            .Compile();
+                    });
+
+            return await sendAsync(
+                request.MachineId,
+                input,
+                request.CommitTag,
+                Context.CallContext.CancellationToken);
         }
 
-        private static async Task<SendResponse> SendAsync<TState, TInput>(string machineId, TInput input, Guid? commitTag, CancellationToken cancellationToken = default(CancellationToken))
+        private static async Task<SendResponse> SendAsync<TState, TInput>(
+            string machineId,
+            TInput input,
+            Guid? commitTag,
+            CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent.AsLocal()
                 .GetStateEngine<TState, TInput>();
@@ -116,18 +172,49 @@ namespace REstate.Remote.Services
 
             var payload = MessagePackSerializer.Typeless.Deserialize(request.PayloadBytes);
 
-            var sendAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(SendWithPayloadAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(stateType, inputType, payload.GetType());
+            var payloadType = payload.GetType();
+            var sendWithPayloadAsync = (SendWithPayloadAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(SendWithPayloadAsync), stateType, inputType, payloadType),
+                    valueFactory: tuple =>
+                    {
+                        var machineIdParameter = Expression.Parameter(typeof(string), "machineId");
+                        var inputParameter = Expression.Parameter(typeof(object), "input");
+                        var payloadParameter = Expression.Parameter(typeof(object), "payload");
+                        var commitTagParameter = Expression.Parameter(typeof(Guid?), "commitTag");
+                        var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
-            return await (Task<SendResponse>)sendAsyncMethod.Invoke(this,
-                new[]
-                {
-                    request.MachineId, input, payload, request.CommitTag, Context.CallContext.CancellationToken
-                });
+                        return Expression.Lambda<SendWithPayloadAsyncDelegate>(
+                                Expression.Call(
+                                    type: typeof(StateMachineService),
+                                    methodName: nameof(SendWithPayloadAsync),
+                                    typeArguments: new[] { stateType, inputType, payloadType },
+                                    arguments: new Expression[]
+                                    {
+                                            machineIdParameter,
+                                            Expression.Convert(inputParameter, inputType),
+                                            Expression.Convert(payloadParameter, payloadType),
+                                            commitTagParameter,
+                                            cancellationTokenParameter
+                                    }),
+                                false,
+                                machineIdParameter,
+                                inputParameter,
+                                payloadParameter,
+                                commitTagParameter,
+                                cancellationTokenParameter)
+                            .Compile();
+                    });
+
+            return await sendWithPayloadAsync(
+                    request.MachineId,
+                    input,
+                    payload,
+                    request.CommitTag,
+                    Context.CallContext.CancellationToken);
         }
 
-        private static async Task<SendResponse> SendWithPayloadAsync<TState, TInput, TPayload>(string machineId, TInput input, TPayload payload, Guid? commitTag, CancellationToken cancellationToken = default(CancellationToken))
+        private static async Task<SendResponse> SendWithPayloadAsync<TState, TInput, TPayload>(string machineId, TInput input, TPayload payload, Guid? commitTag, CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent.AsLocal()
                 .GetStateEngine<TState, TInput>();
@@ -151,7 +238,8 @@ namespace REstate.Remote.Services
             {
                 MachineId = machineId,
                 CommitTag = newStatus.CommitTag,
-                StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance)
+                StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
+                UpdatedTime = newStatus.UpdatedTime
             };
         }
         #endregion SendWithPayloadAsync
@@ -178,7 +266,7 @@ namespace REstate.Remote.Services
                 });
         }
 
-        private static async Task<StoreSchematicResponse> StoreSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default(CancellationToken))
+        private static async Task<StoreSchematicResponse> StoreSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent.AsLocal()
                 .GetStateEngine<TState, TInput>();
@@ -209,7 +297,7 @@ namespace REstate.Remote.Services
                 });
         }
 
-        private static async Task<GetMachineSchematicResponse> GetMachineSchematicAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default(CancellationToken))
+        private static async Task<GetMachineSchematicResponse> GetMachineSchematicAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
                 .AsLocal()
@@ -245,7 +333,7 @@ namespace REstate.Remote.Services
                 });
         }
 
-        private static async Task<GetMachineMetadataResponse> GetMachineMetadataAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default(CancellationToken))
+        private static async Task<GetMachineMetadataResponse> GetMachineMetadataAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
                 .AsLocal()
@@ -282,7 +370,7 @@ namespace REstate.Remote.Services
         }
 
         private static async Task<CreateMachineResponse> CreateMachineFromStoreAsync<TState, TInput>(string schematicName,
-            IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+            IDictionary<string, string> metadata, CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
                 .AsLocal()
@@ -307,11 +395,11 @@ namespace REstate.Remote.Services
                 request.SchematicBytes,
                 ContractlessStandardResolver.Instance);
 
-            var createMachineFromStoreAsyncMethod = typeof(StateMachineService)
+            var createMachineFromSchematicAsyncMethod = typeof(StateMachineService)
                 .GetMethod(nameof(CreateMachineFromSchematicAsync), BindingFlags.NonPublic | BindingFlags.Static)
                 .MakeGenericMethod(genericTypes);
 
-            return await (Task<CreateMachineResponse>)createMachineFromStoreAsyncMethod
+            return await (Task<CreateMachineResponse>)createMachineFromSchematicAsyncMethod
                 .Invoke(this, new[]
                 {
                     schematic,
@@ -320,8 +408,10 @@ namespace REstate.Remote.Services
                 });
         }
 
-        private static async Task<CreateMachineResponse> CreateMachineFromSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic,
-            IDictionary<string, string> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        private static async Task<CreateMachineResponse> CreateMachineFromSchematicAsync<TState, TInput>(
+            Schematic<TState, TInput> schematic,
+            IDictionary<string, string> metadata, 
+            CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
                 .AsLocal()
@@ -356,8 +446,10 @@ namespace REstate.Remote.Services
             return Nil.Default;
         }
 
-        private static async Task BulkCreateMachineFromStoreAsync<TState, TInput>(string schematicName,
-            IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default(CancellationToken))
+        private static async Task BulkCreateMachineFromStoreAsync<TState, TInput>(
+            string schematicName,
+            IEnumerable<IDictionary<string, string>> metadata, 
+            CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
                 .AsLocal()
@@ -382,7 +474,7 @@ namespace REstate.Remote.Services
                 .MakeGenericMethod(genericTypes);
 
             await (Task)bulkCreateMachineFromSchematicAsyncMethod
-                .Invoke(this, new []
+                .Invoke(this, new[]
                 {
                     schematic,
                     request.Metadata,
@@ -393,7 +485,7 @@ namespace REstate.Remote.Services
         }
 
         private static async Task BulkCreateMachineFromSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic,
-            IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default(CancellationToken))
+            IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
                 .AsLocal()

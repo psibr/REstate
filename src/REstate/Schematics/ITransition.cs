@@ -1,3 +1,4 @@
+// ReSharper disable TypeParameterCanBeVariant
 namespace REstate.Schematics
 {
     public interface ITransition<TState, TInput>

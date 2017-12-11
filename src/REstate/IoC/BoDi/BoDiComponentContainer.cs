@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using REstate.Logging;
 
 namespace REstate.IoC.BoDi
 {
@@ -7,6 +8,8 @@ namespace REstate.IoC.BoDi
         : IComponentContainer
     {
         private readonly ObjectContainer _container;
+
+        public static ILog Logger = LogProvider.For<ObjectContainer>();
 
         public BoDiComponentContainer(ObjectContainer container)
         {
@@ -41,9 +44,19 @@ namespace REstate.IoC.BoDi
             component.Register(this);
         }
 
-        public T Resolve<T>(string name = null) 
-            where T : class =>
-            _container.Resolve<T>(name);
+        public T Resolve<T>(string name = null)
+            where T : class
+        {
+            try
+            {
+                return _container.Resolve<T>(name);
+            }
+            catch (Exception ex)
+            {
+                Logger.FatalException("Encountered a IoC resolution exception.", ex);
+                throw;
+            }
+        }
 
         public T[] ResolveAll<T>() where T : class
         {

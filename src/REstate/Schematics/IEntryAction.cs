@@ -7,8 +7,8 @@ namespace REstate.Schematics
         ConnectorKey ConnectorKey { get; }
 
         string Description { get; }
-
-        TInput OnFailureInput { get; }
+        
+        IExceptionInput<TInput> OnExceptionInput { get; }
 
         IReadOnlyDictionary<string, string> Settings { get; }
     }

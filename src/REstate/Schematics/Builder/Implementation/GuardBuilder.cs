@@ -8,12 +8,10 @@ namespace REstate.Schematics.Builder.Implementation
     {
         public GuardBuilder(ConnectorKey connectorKey)
         {
-            if (connectorKey == null)
-                throw new ArgumentNullException(nameof(connectorKey));
-            if (connectorKey.Name == null)
-                throw new ArgumentNullException(nameof(connectorKey), "ConnectorKey.Name cannot be null.");
-            if (string.IsNullOrWhiteSpace(connectorKey.Name))
-                throw new ArgumentException("ConnectorKey.Name cannot be empty or whitespace.", nameof(connectorKey));
+            if (connectorKey.Identifier == null)
+                throw new ArgumentNullException(nameof(connectorKey), "ConnectorKey.Identifier cannot be null.");
+            if (string.IsNullOrWhiteSpace(connectorKey.Identifier))
+                throw new ArgumentException("ConnectorKey.Identifier cannot be empty or whitespace.", nameof(connectorKey));
 
             ConnectorKey = connectorKey;
         }
@@ -24,7 +22,7 @@ namespace REstate.Schematics.Builder.Implementation
 
         public IReadOnlyDictionary<string, string> Settings => _settings;
 
-        private readonly Dictionary<string, string> _settings = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public IGuardBuilder DescribedAs(string description)
         {

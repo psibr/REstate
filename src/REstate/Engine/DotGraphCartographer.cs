@@ -33,7 +33,7 @@ namespace REstate.Engine
 
                 if (state.OnEntry != null)
                 {
-                    onEntryActionLines.Add($" {state.Value} -> \"{state.OnEntry.Description ?? state.OnEntry.ConnectorKey.Name}\"" +
+                    onEntryActionLines.Add($" {state.Value} -> \"{state.OnEntry.Description ?? state.OnEntry.ConnectorKey.Identifier}\"" +
                                             " [label=\"On Entry\" style=dotted];");
                 }
             }

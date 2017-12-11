@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using REstate.Engine.Connectors;
+using REstate.Engine.Connectors.Resolution;
+using REstate.Engine.EventListeners;
 using REstate.Engine.Repositories;
-using REstate.Engine.Services;
-using REstate.Engine.Services.ConnectorResolvers;
 using REstate.Schematics;
 
 namespace REstate.Engine
@@ -80,14 +81,14 @@ namespace REstate.Engine
 
                 var schematicState = Schematic.States[currentStatus.State];
 
-                if(!schematicState.Transitions.TryGetValue(input, out ITransition<TState, TInput> transition))
+                if(!schematicState.Transitions.TryGetValue(input, out var transition))
                 {
                     throw new InvalidOperationException($"No transition defined for status: '{currentStatus.State}' using input: '{input}'");
                 }
 
                 if (transition.Guard != null)
                 {
-                    var guardConnector =  _connectorResolver.ResolveConnector(transition.Guard.ConnectorKey);
+                    var guardConnector =  _connectorResolver.ResolveGuardianConnector(transition.Guard.ConnectorKey);
 
                     if (!await guardConnector.GuardAsync(
                         schematic: Schematic, 
@@ -117,7 +118,7 @@ namespace REstate.Engine
 
                 try
                 {
-                    var entryConnector = _connectorResolver.ResolveConnector(schematicState.OnEntry.ConnectorKey);
+                    var entryConnector = _connectorResolver.ResolveEntryConnector(schematicState.OnEntry.ConnectorKey);
                         
                     await entryConnector.OnEntryAsync(
                         schematic: Schematic,
@@ -129,11 +130,11 @@ namespace REstate.Engine
                 }
                 catch
                 {
-                    if (schematicState.OnEntry.OnFailureInput == null)
+                    if (schematicState.OnEntry.OnExceptionInput == null)
                         throw;
 
                     currentStatus = await SendAsync(
-                        input: schematicState.OnEntry.OnFailureInput,
+                        input: schematicState.OnEntry.OnExceptionInput.Input,
                         payload: payload,
                         lastCommitTag: currentStatus.CommitTag,
                         cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -148,13 +149,12 @@ namespace REstate.Engine
 #pragma warning disable 4014
             Task.Run(async () => await Task.WhenAll(
                     _listeners.Select(listener =>
-                        listener.OnTransition(
+                        listener.OnTransitionAsync(
                             schematic: Schematic,
                             status: status,
                             metadata: _metadata,
                             input: input,
-                            payload: payload,
-                            cancellation: CancellationToken.None))),
+                            payload: payload))),
                 CancellationToken.None);
 #pragma warning restore 4014
         }

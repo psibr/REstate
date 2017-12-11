@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace REstate
+namespace REstate.Engine
 {
     /// <summary>
     /// An immutable structure that represents some interaction of state in a <see cref="T:REstate.IStateMachine`2" />
@@ -60,7 +60,7 @@ namespace REstate
         /// Indicates whether the current object is equal to another object of the same type.
         /// </summary>
         /// <returns>
-        /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
+        /// true if the current object is equal to the <paramref identifier="other"/> parameter; otherwise, false.
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(Status<T> other)

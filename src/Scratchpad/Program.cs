@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Grpc.Core.Logging;
 using REstate.Engine;
 using REstate.Remote;
+using REstate.Schematics;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 

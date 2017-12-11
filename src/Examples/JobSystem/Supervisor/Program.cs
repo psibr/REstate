@@ -2,13 +2,13 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Core.Logging;
 using REstate;
-using REstate.Engine.Services;
+using REstate.Engine;
+using REstate.Engine.Connectors;
 using REstate.Remote;
 using REstate.Schematics;
 using Serilog;
@@ -44,7 +44,7 @@ namespace Supervisor
                 .MinimumLevel.Verbose()
                 .CreateLogger();
 
-            REstateHost.Agent.Configuration.RegisterConnector(new ConnectorKey("Enqueue"), typeof(EnqueueConnector<,>));
+            REstateHost.Agent.Configuration.RegisterConnector(typeof(EnqueueEntryConnector<,>), "Enqueue");
 
             var connection = ConnectionMultiplexer.ConnectAsync(
                 "restate.redis.cache.windows.net:6380," +
@@ -108,7 +108,7 @@ namespace Supervisor
 
             var cancellationSource = new CancellationTokenSource();
 
-            var jobHandler = EnqueueConnector<JobStatus, JobActions>.Queue;
+            var jobHandler = EnqueueEntryConnector<JobStatus, JobActions>.Queue;
 
             var jobEngine = REstateHost.Agent.GetStateEngine<JobStatus, JobActions>();
 
@@ -154,7 +154,10 @@ namespace Supervisor
 
         }
 
-        private static void ProcessJob(CancellationTokenSource cancellationSource, BlockingCollection<Status<JobStatus>> jobHandler, IStateEngine<JobStatus, JobActions> jobEngine)
+        private static void ProcessJob(
+            CancellationTokenSource cancellationSource, 
+            BlockingCollection<Status<JobStatus>> jobHandler, 
+            IStateEngine<JobStatus, JobActions> jobEngine)
         {
             Log.Logger.Debug("Awaiting job message...");
 
@@ -205,13 +208,11 @@ namespace Supervisor
             .ToArray();
     }
 
-    public class EnqueueConnector<TState, TInput> 
-        : IConnector<TState, TInput>
+    public class EnqueueEntryConnector<TState, TInput> 
+        : IEntryConnector<TState, TInput>
     {
         public static readonly BlockingCollection<Status<TState>> Queue =
             new BlockingCollection<Status<TState>>(new ConcurrentQueue<Status<TState>>());
-
-        public ConnectorKey Key { get; } = new ConnectorKey("Enqueue");
 
         public Task OnEntryAsync<TPayload>(
             ISchematic<TState, TInput> schematic,
@@ -224,17 +225,6 @@ namespace Supervisor
             Queue.Add(status, cancellationToken);
 
             return Task.CompletedTask;
-        }
-
-        public Task<bool> GuardAsync<TPayload>(ISchematic<TState, TInput> schematic, IStateMachine<TState, TInput> machine, Status<TState> status, InputParameters<TInput, TPayload> inputParameters,
-            IReadOnlyDictionary<string, string> connectorSettings, CancellationToken cancellationToken = new CancellationToken())
-        {
-            throw new NotSupportedException();
-        }
-
-        public IBulkEntryConnector<TState, TInput> GetBulkEntryConnector()
-        {
-            throw new NotSupportedException();
         }
     }
 }

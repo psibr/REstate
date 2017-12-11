@@ -3,11 +3,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using REstate.Schematics;
 
-namespace REstate.Engine.Services
+namespace REstate.Engine.Connectors
 {
-    public interface IBulkEntryConnector<TState, TInput>
+    public interface IBulkEntryConnector
+        : IConnector
     {
-        Task OnEntryAsync<TPayload>(
+        
+    }
+
+    public interface IBulkEntryConnector<TState, TInput>
+        : IBulkEntryConnector
+    {
+        IBulkEntryConnectorBatch<TState, TInput> CreateBatch();
+    }
+
+    public interface IBulkEntryConnectorBatch<TState, TInput>
+    {
+        Task OnBulkEntryAsync<TPayload>(
             ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status,

@@ -10,7 +10,7 @@
         /// Resolves the specified type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="name">The name.</param>
+        /// <param name="name">The identifier.</param>
         /// <returns>T.</returns>
         T Resolve<T>(string name = null)
             where T : class;

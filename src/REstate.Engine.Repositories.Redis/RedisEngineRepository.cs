@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -211,6 +210,7 @@ namespace REstate.Engine.Repositories.Redis
             {
                 status.State = state;
                 status.CommitTag = Guid.NewGuid();
+                status.UpdatedTime = DateTimeOffset.UtcNow;
             }
             else
             {

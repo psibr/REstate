@@ -41,6 +41,7 @@
 #pragma warning disable 1591
 
 using System.Diagnostics.CodeAnalysis;
+// ReSharper disable All
 
 [assembly: SuppressMessage("Microsoft.Design", "CA1020:AvoidNamespacesWithFewTypes", Scope = "namespace", Target = "REstate.Logging")]
 [assembly: SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed", Scope = "member", Target = "REstate.Logging.Logger.#Invoke(REstate.Logging.LogLevel,System.Func`1<System.String>,System.Exception,System.Object[])")]
@@ -362,7 +363,7 @@ namespace REstate.Logging
             }
         }
 
-        private static void LogFormat(this ILog logger, LogLevel logLevel, string message, params object[] args)
+        internal static void LogFormat(this ILog logger, LogLevel logLevel, string message, params object[] args)
         {
             logger.Log(logLevel, message.AsFunc(), null, args);
         }
@@ -393,7 +394,7 @@ namespace REstate.Logging
         /// <summary>
         /// Gets the specified named logger.
         /// </summary>
-        /// <param name="name">Name of the logger.</param>
+        /// <param name="name">Identifier of the logger.</param>
         /// <returns>The logger reference.</returns>
         Logger GetLogger(string name);
 
@@ -485,7 +486,7 @@ namespace REstate.Logging
         /// <summary>
         /// Gets a logger for the specified type.
         /// </summary>
-        /// <typeparam name="T">The type whose name will be used for the logger.</typeparam>
+        /// <typeparam name="T">The type whose identifier will be used for the logger.</typeparam>
         /// <returns>An instance of <see cref="ILog"/></returns>
 #if LIBLOG_PUBLIC
         public
@@ -518,7 +519,7 @@ namespace REstate.Logging
         /// <summary>
         /// Gets a logger for the specified type.
         /// </summary>
-        /// <param name="type">The type whose name will be used for the logger.</param>
+        /// <param name="type">The type whose identifier will be used for the logger.</param>
         /// <returns>An instance of <see cref="ILog"/></returns>
 #if LIBLOG_PUBLIC
         public
@@ -531,9 +532,9 @@ namespace REstate.Logging
         }
 
         /// <summary>
-        /// Gets a logger with the specified name.
+        /// Gets a logger with the specified identifier.
         /// </summary>
-        /// <param name="name">The name.</param>
+        /// <param name="name">The identifier.</param>
         /// <returns>An instance of <see cref="ILog"/></returns>
 #if LIBLOG_PUBLIC
         public
@@ -860,7 +861,7 @@ namespace REstate.Logging.LogProviders
         {
             Type logManagerType = GetLogManagerType();
             MethodInfo method = logManagerType.GetMethodPortable("GetLogger", typeof(string));
-            ParameterExpression nameParam = Expression.Parameter(typeof(string), "name");
+            ParameterExpression nameParam = Expression.Parameter(typeof(string), "identifier");
             MethodCallExpression methodCall = Expression.Call(null, method, nameParam);
             return Expression.Lambda<Func<string, object>>(methodCall, nameParam).Compile();
         }
@@ -1110,7 +1111,7 @@ namespace REstate.Logging.LogProviders
         {
             Type logManagerType = GetLogManagerType();
             MethodInfo method = logManagerType.GetMethodPortable("GetLogger", typeof(string));
-            ParameterExpression nameParam = Expression.Parameter(typeof(string), "name");
+            ParameterExpression nameParam = Expression.Parameter(typeof(string), "identifier");
             MethodCallExpression methodCall = Expression.Call(null, method, nameParam);
             return Expression.Lambda<Func<string, object>>(methodCall, nameParam).Compile();
         }
@@ -1493,7 +1494,7 @@ namespace REstate.Logging.LogProviders
                 typeof(string),
                 typeof(object),
                 typeof(bool));
-            ParameterExpression nameParam = Expression.Parameter(typeof(string), "name");
+            ParameterExpression nameParam = Expression.Parameter(typeof(string), "identifier");
             ParameterExpression valueParam = Expression.Parameter(typeof(object), "value");
             ParameterExpression destructureObjectParam = Expression.Parameter(typeof(bool), "destructureObjects");
             MethodCallExpression pushPropertyMethodCall = Expression
@@ -1533,7 +1534,7 @@ namespace REstate.Logging.LogProviders
                 valueParam,
                 destructureObjectsParam)
                 .Compile();
-            return name => func("Name", name, false);
+            return name => func("Identifier", name, false);
         }
 
         internal class SerilogLogger
@@ -1963,7 +1964,7 @@ namespace REstate.Logging.LogProviders
 #if LIBLOG_PORTABLE
             return type.GetRuntimeMethods().SingleOrDefault(m => m.Name == name);
 #else
-            return type.GetMethod(name);
+            return type.GetMethod(identifier);
 #endif
         }
 
@@ -1972,7 +1973,7 @@ namespace REstate.Logging.LogProviders
 #if LIBLOG_PORTABLE
             return type.GetRuntimeMethod(name, types);
 #else
-            return type.GetMethod(name, types);
+            return type.GetMethod(identifier, types);
 #endif
         }
 
@@ -1981,7 +1982,7 @@ namespace REstate.Logging.LogProviders
 #if LIBLOG_PORTABLE
             return type.GetRuntimeProperty(name);
 #else
-            return type.GetProperty(name);
+            return type.GetProperty(identifier);
 #endif
         }
 

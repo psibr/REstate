@@ -143,6 +143,7 @@ namespace REstate.Engine.Repositories.InMemory
                 {
                     machine.State = state;
                     machine.CommitTag = Guid.NewGuid();
+                    machine.UpdatedTime = DateTimeOffset.UtcNow;
                 }
                 else
                 {

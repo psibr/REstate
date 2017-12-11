@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using REstate.Engine;
 using REstate.IoC;
 using REstate.IoC.BoDi;
@@ -15,15 +16,11 @@ namespace REstate
 
         private static readonly Lazy<IAgent> AgentLazy = new Lazy<IAgent>(() =>
         {
-            try
-            {
-                if (HostConfiguration == null)
-                    UseContainer(new BoDiComponentContainer(new ObjectContainer()));
-            }
-            catch (InvalidOperationException)
-            {
-                // This is fine. What this means is a container was registered in-between null-check and lock acquisition.
-            }
+
+            if (HostConfiguration == null)
+                lock (ConfigurationSyncRoot)
+                    if (HostConfiguration == null)
+                        UseContainer(new BoDiComponentContainer(new ObjectContainer()));
 
             return new Agent(HostConfiguration);
         });
@@ -36,7 +33,7 @@ namespace REstate
         {
             lock (ConfigurationSyncRoot)
             {
-                if(HostConfiguration != null)
+                if (HostConfiguration != null)
                     throw new InvalidOperationException("Configuration has already been initialized; cannot replace container at this point.");
 
                 Logger.Debug("REstateHost configuration initializing...");
@@ -50,7 +47,6 @@ namespace REstate
                 Logger.Debug("REstateHost configuration initialized");
             }
         }
-
 
         public static string WriteStateMap<TState, TInput>(this Schematic<TState, TInput> schematic) =>
             HostConfiguration.Container

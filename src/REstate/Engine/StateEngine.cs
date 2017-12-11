@@ -5,8 +5,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using REstate.Engine.Services;
-using REstate.Engine.Services.ConnectorResolvers;
+using REstate.Engine.Connectors;
+using REstate.Engine.Connectors.Resolution;
+using REstate.Engine.EventListeners;
 using REstate.Schematics;
 
 namespace REstate.Engine
@@ -44,7 +45,8 @@ namespace REstate.Engine
             CancellationToken cancellationToken = default)
         {
             Schematic<TState, TInput> schematic;
-            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
+            using (var repositories = await _repositoryContextFactory
+                .OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 schematic = await repositories.Schematics
                     .RetrieveSchematicAsync(schematicName, cancellationToken)
@@ -59,7 +61,8 @@ namespace REstate.Engine
             CancellationToken cancellationToken = default)
         {
             Schematic<TState, TInput> newSchematic;
-            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
+            using (var repositories = await _repositoryContextFactory
+                .OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 newSchematic = await repositories.Schematics
                     .StoreSchematicAsync(schematic, cancellationToken)
@@ -72,7 +75,7 @@ namespace REstate.Engine
         public Task<ISchematic<TState, TInput>> StoreSchematicAsync(
             ISchematic<TState, TInput> schematic,
             CancellationToken cancellationToken = default)
-            => StoreSchematicAsync(schematic.Copy(), cancellationToken);
+            => StoreSchematicAsync(schematic.Clone(), cancellationToken);
 
         public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(
             Schematic<TState, TInput> schematic,
@@ -82,8 +85,7 @@ namespace REstate.Engine
             MachineStatus<TState, TInput> newMachineStatus;
 
             using (var repositories = await _repositoryContextFactory
-                .OpenContextAsync(cancellationToken)
-                .ConfigureAwait(false))
+                .OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 newMachineStatus = await repositories.Machines
                     .CreateMachineAsync(
@@ -97,8 +99,8 @@ namespace REstate.Engine
                 .ConstructFromSchematic(
                     newMachineStatus.MachineId,
                     schematic,
-                    new ReadOnlyDictionary<string, string>(newMachineStatus.Metadata 
-                        ?? new Dictionary<string, string>(0)));
+                    new ReadOnlyDictionary<string, string>(
+                        newMachineStatus.Metadata ?? new Dictionary<string, string>(0)));
 
             NotifyOnMachineCreated(schematic, newMachineStatus);
 
@@ -117,7 +119,7 @@ namespace REstate.Engine
 
             if (initialAction == null) return;
 
-            var connector = _connectorResolver.ResolveConnector(initialAction.ConnectorKey);
+            var connector = _connectorResolver.ResolveEntryConnector(initialAction.ConnectorKey);
 
             await connector.OnEntryAsync<object>(
                 schematic,
@@ -132,7 +134,7 @@ namespace REstate.Engine
             ISchematic<TState, TInput> schematic,
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default)
-            => CreateMachineAsync(schematic.Copy(), metadata, cancellationToken);
+            => CreateMachineAsync(schematic.Clone(), metadata, cancellationToken);
 
         public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(
             string schematicName,
@@ -162,8 +164,8 @@ namespace REstate.Engine
                 .ConstructFromSchematic(
                     newMachineStatus.MachineId,
                     schematic,
-                    new ReadOnlyDictionary<string, string>(newMachineStatus.Metadata 
-                        ?? new Dictionary<string, string>(0)));
+                    new ReadOnlyDictionary<string, string>(
+                        newMachineStatus.Metadata ?? new Dictionary<string, string>(0)));
 
             NotifyOnMachineCreated(schematic, newMachineStatus);
 
@@ -179,17 +181,16 @@ namespace REstate.Engine
 #pragma warning disable 4014
             Task.Run(async () => await Task.WhenAll(
                 _listeners.Select(listener =>
-                    listener.OnMachineCreated(
+                    listener.OnMachineCreatedAsync(
                         schematic,
                         new []
                         {
-                            ValueTuple.Create<Status<TState>, IReadOnlyDictionary<string, string>>(
-                                machineStatus,
-                                new ReadOnlyDictionary<string, string>(machineStatus.Metadata 
-                                    ?? new Dictionary<string, string>(0))
-                            )
-                        },
-                        CancellationToken.None))),
+                            new MachineCreationEventData<TState>(
+                                initialStatus: machineStatus,
+                                metadata: new ReadOnlyDictionary<string, string>(
+                                    machineStatus.Metadata ?? new Dictionary<string, string>(0))
+                            ), 
+                        }))),
                 CancellationToken.None);
 #pragma warning restore 4014
         }
@@ -199,7 +200,7 @@ namespace REstate.Engine
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default)
         {
-            return BulkCreateMachinesAsync(schematic.Copy(), metadata, cancellationToken);
+            return BulkCreateMachinesAsync(schematic.Clone(), metadata, cancellationToken);
         }
 
         public async Task BulkCreateMachinesAsync(
@@ -209,18 +210,24 @@ namespace REstate.Engine
         {
             ICollection<MachineStatus<TState, TInput>> machineStatuses;
 
-            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken))
+            using (var repositories = await _repositoryContextFactory
+                .OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
-                machineStatuses = await repositories.Machines.BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
+                machineStatuses = await repositories.Machines
+                    .BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
             }
 
-            List<(IStateMachine<TState, TInput> Machine, MachineStatus<TState, TInput> MachineStatus)> machines =
-                machineStatuses.Select(status => (_stateMachineFactory
-                    .ConstructFromSchematic(
-                        status.MachineId,
-                        schematic,
-                        new ReadOnlyDictionary<string, string>(status.Metadata 
-                            ?? new Dictionary<string, string>(0))), status)).ToList();
+            var machines = 
+                machineStatuses
+                    .Select(status => ValueTuple.Create(
+                        item1: _stateMachineFactory
+                            .ConstructFromSchematic(
+                                status.MachineId,
+                                schematic,
+                                new ReadOnlyDictionary<string, string>(
+                                    status.Metadata ?? new Dictionary<string, string>(0))),
+                        item2: status))
+                    .ToList();
 
             NotifyBulkOnMachineCreated(schematic, machineStatuses);
 
@@ -234,15 +241,14 @@ namespace REstate.Engine
 #pragma warning disable 4014
             Task.Run(async () => await Task.WhenAll(
                     _listeners.Select(listener =>
-                        listener.OnMachineCreated(
+                        listener.OnMachineCreatedAsync(
                             schematic,
-                            machineStatuses.Select(status => 
-                                ValueTuple.Create<Status<TState>, IReadOnlyDictionary<string, string>>(
-                                    status,
-                                    new ReadOnlyDictionary<string, string>(status.Metadata 
-                                        ?? new Dictionary<string, string>(0))
-                            )).ToList(),
-                            CancellationToken.None))),
+                            machineStatuses.Select(status =>
+                                new MachineCreationEventData<TState>(
+                                    initialStatus: status,
+                                    metadata: new ReadOnlyDictionary<string, string>(
+                                        status.Metadata ?? new Dictionary<string, string>(0))
+                            )).ToList()))),
                 CancellationToken.None);
 #pragma warning restore 4014
         }
@@ -256,21 +262,25 @@ namespace REstate.Engine
 
             ICollection<MachineStatus<TState, TInput>> machineStatuses;
 
-            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken))
+            using (var repositories = await _repositoryContextFactory
+                .OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 schematic = await repositories.Schematics
                     .RetrieveSchematicAsync(schematicName, cancellationToken);
 
-                machineStatuses = await repositories.Machines.BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
+                machineStatuses = await repositories.Machines
+                    .BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
             }
 
             var machines = machineStatuses
-                .Select(status => (_stateMachineFactory
-                    .ConstructFromSchematic(
-                        status.MachineId,
-                        schematic,
-                        new ReadOnlyDictionary<string, string>(status.Metadata 
-                            ?? new Dictionary<string, string>(0))), status))
+                .Select(status => ValueTuple.Create(
+                    item1: _stateMachineFactory
+                        .ConstructFromSchematic(
+                            machineId: status.MachineId,
+                            schematic: schematic,
+                            metadata: new ReadOnlyDictionary<string, string>(
+                                status.Metadata ?? new Dictionary<string, string>(0))),
+                    item2: status))
                 .ToList();
 
             NotifyBulkOnMachineCreated(schematic, machineStatuses);
@@ -288,22 +298,23 @@ namespace REstate.Engine
 
             if (initialAction == null) return;
 
-            var connector = _connectorResolver.ResolveConnector(initialAction.ConnectorKey);
-
-            IBulkEntryConnector<TState, TInput> bulkConnector = null;
-
+            IBulkEntryConnectorBatch<TState, TInput> bulkEntryConnectorBatch = null;
             OnInitialEntryFunc onInitialEntry;
 
             try
             {
-                bulkConnector = connector.GetBulkEntryConnector();
+                bulkEntryConnectorBatch = _connectorResolver
+                    .ResolveBulkEntryConnector(initialAction.ConnectorKey)
+                    .CreateBatch();
 
-                onInitialEntry = bulkConnector.OnEntryAsync;
+                onInitialEntry = bulkEntryConnectorBatch.OnBulkEntryAsync;
             }
-            catch (NotSupportedException)
+            catch (ConnectorResolutionException)
             {
                 // Bulk not supported, falling back to individual.
-                onInitialEntry = connector.OnEntryAsync;
+                var entryConnector = _connectorResolver.ResolveEntryConnector(initialAction.ConnectorKey);
+
+                onInitialEntry = entryConnector.OnEntryAsync;
             }
 
             foreach (var machine in machines)
@@ -317,8 +328,8 @@ namespace REstate.Engine
                     cancellationToken);
             }
 
-            if (bulkConnector != null)
-                await bulkConnector.ExecuteBulkEntryAsync(cancellationToken);
+            if (bulkEntryConnectorBatch != null)
+                await bulkEntryConnectorBatch.ExecuteBulkEntryAsync(cancellationToken);
         }
 
         public async Task<IStateMachine<TState, TInput>> GetMachineAsync(
@@ -337,7 +348,8 @@ namespace REstate.Engine
                     .ConfigureAwait(false);
 
                 schematic = machineStatus.Schematic;
-                metadata = new ReadOnlyDictionary<string, string>(machineStatus.Metadata ?? new Dictionary<string, string>(0));
+                metadata = new ReadOnlyDictionary<string, string>(
+                    machineStatus.Metadata ?? new Dictionary<string, string>(0));
             }
 
             var machine = _stateMachineFactory
@@ -353,7 +365,8 @@ namespace REstate.Engine
             string machineId,
             CancellationToken cancellationToken = default)
         {
-            using (var repositories = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
+            using (var repositories = await _repositoryContextFactory
+                .OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 await repositories.Machines
                     .DeleteMachineAsync(machineId, cancellationToken)
@@ -368,9 +381,8 @@ namespace REstate.Engine
 #pragma warning disable 4014
             Task.Run(async () => await Task.WhenAll(
                 _listeners.Select(listener =>
-                    listener.OnMachineDeleted(
-                        new[] { machineId },
-                        CancellationToken.None))),
+                    listener.OnMachineDeletedAsync(
+                        machineIds: new[] { machineId }))),
                 CancellationToken.None);
 #pragma warning restore 4014
         }

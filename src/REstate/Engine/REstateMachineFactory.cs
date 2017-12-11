@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using REstate.Engine.Connectors.Resolution;
+using REstate.Engine.EventListeners;
 using REstate.Engine.Repositories;
-using REstate.Engine.Services;
-using REstate.Engine.Services.ConnectorResolvers;
 using REstate.Schematics;
 
 namespace REstate.Engine

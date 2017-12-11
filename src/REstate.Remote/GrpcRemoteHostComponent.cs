@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using Grpc.Core;
 using MagicOnion.Client;
+using REstate.Engine;
 using REstate.Remote.Services;
 using REstate.IoC;
 
@@ -28,8 +28,11 @@ namespace REstate.Remote
         /// <param name="registrar">The registration system to register with, typically a DI container.</param>
         public void Register(IRegistrar registrar)
         {
-            registrar.Register(container => 
-                MagicOnionClient.Create<IStateMachineService>(_options.Channel));
+            registrar.Register(_options);
+
+            registrar.Register(typeof(IStateMachineServiceClient), typeof(StateMachineServiceClient));
+
+            registrar.Register(container => container.Resolve<IStateMachineServiceClient>().Create());
 
             registrar.Register(typeof(IRemoteStateEngine<,>), typeof(GrpcStateEngine<,>));
 

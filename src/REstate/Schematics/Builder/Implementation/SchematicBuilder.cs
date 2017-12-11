@@ -29,12 +29,15 @@ namespace REstate.Schematics.Builder.Implementation
             _hasInitialState = true;
         }
 
-        private readonly Dictionary<TState, IStateBuilder<TState, TInput>> _stateConfigurations = new Dictionary<TState, IStateBuilder<TState, TInput>>();
+        private readonly Dictionary<TState, IStateBuilder<TState, TInput>> _stateConfigurations 
+            = new Dictionary<TState, IStateBuilder<TState, TInput>>();
 
         public IReadOnlyDictionary<TState, IState<TState, TInput>> States => 
             _stateConfigurations.ToDictionary(kvp => kvp.Key, kvp => (IState<TState, TInput>)kvp.Value);
 
-        public ISchematicBuilder<TState, TInput> WithState(TState state, Action<IStateBuilder<TState, TInput>> stateBuilderAction = null)
+        public ISchematicBuilder<TState, TInput> WithState(
+            TState state, 
+            Action<IStateBuilder<TState, TInput>> stateBuilderAction = null)
         {
             var stateConfiguration = new StateBuilder<TState, TInput>(this, state);
 
@@ -45,7 +48,9 @@ namespace REstate.Schematics.Builder.Implementation
             return this;
         }
 
-        public ISchematicBuilder<TState, TInput> WithStates(ICollection<TState> states, Action<IStateBuilder<TState, TInput>> stateBuilderAction = null)
+        public ISchematicBuilder<TState, TInput> WithStates(
+            ICollection<TState> states, 
+            Action<IStateBuilder<TState, TInput>> stateBuilderAction = null)
         {
             foreach (var state in states)
             {
@@ -76,7 +81,11 @@ namespace REstate.Schematics.Builder.Implementation
             return this;
         }
 
-        public ISchematicBuilder<TState, TInput> WithTransition(TState sourceState, TInput input, TState resultantState, Action<ITransitionBuilder<TState, TInput>> transition = null)
+        public ISchematicBuilder<TState, TInput> WithTransition(
+            TState sourceState, 
+            TInput input, 
+            TState resultantState, 
+            Action<ITransitionBuilder<TState, TInput>> transition = null)
         {
             if (!_stateConfigurations.ContainsKey(resultantState))
                 throw new ArgumentException("Resultant stateBuilderAction was not defined.", nameof(resultantState));
@@ -111,12 +120,12 @@ namespace REstate.Schematics.Builder.Implementation
 
             var schematic = this as ISchematic<TState, TInput>;
 
-            return new Schematic<TState, TInput>
-            {
-                SchematicName = schematic.SchematicName,
-                InitialState = schematic.InitialState,
-                States = schematic.States.Values.Select(SchematicExtensions.Copy).ToArray()
-            };
+            return new Schematic<TState, TInput>(
+                schematic.SchematicName, 
+                schematic.InitialState, 
+                schematic.States.Values
+                    .Select(SchematicCloner.Clone)
+                    .ToArray());
             
         }
     }
