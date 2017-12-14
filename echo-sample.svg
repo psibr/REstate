@@ -1,39 +1,39 @@
-<svg width="525pt" height="134pt" viewBox="0.00 0.00 524.67 134.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph1" class="graph" transform="scale(1 1) rotate(0) translate(4 130)">
+<svg width="198pt" height="224pt" viewBox="0.00 0.00 198.00 224.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph1" class="graph" transform="scale(1 1) rotate(0) translate(4 220)">
 <title>_anonymous_0</title>
-<polygon fill="white" stroke="white" points="-4,5 -4,-130 521.669,-130 521.669,5 -4,5"></polygon>
+<polygon fill="white" stroke="white" points="-4,5 -4,-220 195,-220 195,5 -4,5"></polygon>
+<!-- Created -->
+<g id="node1" class="node"><title>Created</title>
+<ellipse fill="none" stroke="black" cx="95" cy="-198" rx="41.0958" ry="18"></ellipse>
+<text text-anchor="middle" x="95" y="-193.8" font-family="Times,serif" font-size="14.00">Created</text>
+</g>
 <!-- Ready -->
-<g id="node1" class="node"><title>Ready</title>
-<ellipse fill="none" stroke="black" cx="148" cy="-108" rx="35.5598" ry="18"></ellipse>
-<text text-anchor="middle" x="148" y="-103.8" font-family="Times,serif" font-size="14.00">Ready</text>
+<g id="node3" class="node"><title>Ready</title>
+<ellipse fill="none" stroke="black" cx="95" cy="-108" rx="35.5598" ry="18"></ellipse>
+<text text-anchor="middle" x="95" y="-103.8" font-family="Times,serif" font-size="14.00">Ready</text>
+</g>
+<!-- Created&#45;&gt;Ready -->
+<g id="edge2" class="edge"><title>Created-&gt;Ready</title>
+<path fill="none" stroke="black" d="M95,-179.614C95,-167.24 95,-150.369 95,-136.22"></path>
+<polygon fill="black" stroke="black" points="98.5001,-136.05 95,-126.05 91.5001,-136.05 98.5001,-136.05"></polygon>
+<text text-anchor="middle" x="103.945" y="-148.8" font-family="Times,serif" font-size="14.00">log</text>
 </g>
 <!-- Ready&#45;&gt;Ready -->
-<g id="edge2" class="edge"><title>Ready-&gt;Ready</title>
-<path fill="none" stroke="black" d="M179.558,-116.232C191.319,-116.502 201,-113.758 201,-108 201,-104.042 196.424,-101.508 189.743,-100.398"></path>
-<polygon fill="black" stroke="black" points="189.755,-96.8922 179.558,-99.7681 189.323,-103.879 189.755,-96.8922"></polygon>
-<text text-anchor="middle" x="358.835" y="-103.8" font-family="Times,serif" font-size="14.00">Echo (Verfies action OK to take with y/n from console.)</text>
+<g id="edge4" class="edge"><title>Ready-&gt;Ready</title>
+<path fill="none" stroke="black" d="M126.558,-116.232C138.319,-116.502 148,-113.758 148,-108 148,-104.042 143.424,-101.508 136.743,-100.398"></path>
+<polygon fill="black" stroke="black" points="136.755,-96.8922 126.558,-99.7681 136.323,-103.879 136.755,-96.8922"></polygon>
+<text text-anchor="middle" x="156.945" y="-103.8" font-family="Times,serif" font-size="14.00">log</text>
 </g>
-<!-- EchoFailure -->
-<g id="node4" class="node"><title>EchoFailure</title>
-<ellipse fill="none" stroke="black" cx="58" cy="-18" rx="58.3484" ry="18"></ellipse>
-<text text-anchor="middle" x="58" y="-13.8" font-family="Times,serif" font-size="14.00">EchoFailure</text>
+<!-- Logs the payload as a message. -->
+<g id="node6" class="node"><title>Logs the payload as a message.</title>
+<polygon fill="none" stroke="black" points="190.291,-36 -0.290533,-36 -0.290533,0 190.291,0 190.291,-36"></polygon>
+<text text-anchor="middle" x="95" y="-13.8" font-family="Times,serif" font-size="14.00">Logs the payload as a message.</text>
 </g>
-<!-- Ready&#45;&gt;EchoFailure -->
-<g id="edge4" class="edge"><title>Ready-&gt;EchoFailure</title>
-<path fill="none" stroke="black" d="M132.323,-91.6716C118.474,-78.1297 98.0602,-58.17 82.1294,-42.5932"></path>
-<polygon fill="black" stroke="black" points="84.3144,-39.8346 74.7174,-35.3459 79.4206,-44.8396 84.3144,-39.8346"></polygon>
-<text text-anchor="middle" x="146.21" y="-58.8" font-family="Times,serif" font-size="14.00">EchoFailure</text>
-</g>
-<!-- Echoes the payload to the console. -->
-<g id="node6" class="node"><title>Echoes the payload to the console.</title>
-<polygon fill="none" stroke="black" points="343.21,-36 134.79,-36 134.79,0 343.21,0 343.21,-36"></polygon>
-<text text-anchor="middle" x="239" y="-13.8" font-family="Times,serif" font-size="14.00">Echoes the payload to the console.</text>
-</g>
-<!-- Ready&#45;&gt;Echoes the payload to the console. -->
-<g id="edge6" class="edge"><title>Ready-&gt;Echoes the payload to the console.</title>
-<path fill="none" stroke="black" stroke-dasharray="1,5" d="M163.851,-91.6716C177.592,-78.3836 197.723,-58.9162 213.692,-43.474"></path>
-<polygon fill="black" stroke="black" points="216.395,-45.7289 221.15,-36.2613 211.529,-40.6969 216.395,-45.7289"></polygon>
-<text text-anchor="middle" x="226.855" y="-58.8" font-family="Times,serif" font-size="14.00">On Entry</text>
+<!-- Ready&#45;&gt;Logs the payload as a message. -->
+<g id="edge6" class="edge"><title>Ready-&gt;Logs the payload as a message.</title>
+<path fill="none" stroke="black" stroke-dasharray="1,5" d="M95,-89.614C95,-77.2403 95,-60.3686 95,-46.2198"></path>
+<polygon fill="black" stroke="black" points="98.5001,-46.0504 95,-36.0504 91.5001,-46.0504 98.5001,-46.0504"></polygon>
+<text text-anchor="middle" x="120.855" y="-58.8" font-family="Times,serif" font-size="14.00">On Entry</text>
 </g>
 </g>
 </svg>
