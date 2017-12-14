@@ -1,81 +1,56 @@
-# REstate.Engine
+# REstate
+
+REstate is a library that allows you to define portable state-flows (state-machine based workflows).
+
+A `Schematic` may be defined on one machine, but then used on others. 
+
+`REstateMachine`s can call arbitrary code through the connector system, provided the connector exists on the system where it is running.
 
 Given the following REstate schematic, represented in DOT Graph:
 
-![Alt EchoMachine Schematic in DOT Graph](https://cdn.rawgit.com/psibr/REstate.Engine/92d7bbe2/echo-sample.svg)
+![Alt EchoMachine Schematic in DOT Graph](https://github.com/psibr/REstate.Engine/blob/master/echo-sample.svg)
 
-Here is the code to build the flow and echo "Hello!":
+Here is the code to build the schematic:
 
 ```csharp
-using System;
-using System.Threading;
-using REstate;
+var schematic = REstateHost.Agent
+    .CreateSchematic<string, string>("LoggerMachine")
 
-namespace Scratchpad
-{ 
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            var schematic = REstateHost
-                .CreateSchematic<string, string>("EchoMachine")
+    .WithState("Created", state => state
+        .AsInitialState())
 
-                .WithState("Ready", state => state
-                    .AsInitialState()
-                    .WithOnEntry("Console", onEntry => onEntry
-                        .DescribedAs("Echoes the payload to the console.")
-                        .WithSetting("Format", "{2}")
-                        .OnFailureSend("EchoFailure"))
-                    .WithReentrance("Echo", transition => transition
-                        .WithGuard("Console", guard => guard
-                            .DescribedAs("Verfies action OK to take with y/n from console.")
-                            .WithSetting("Prompt", "Are you sure you want to echo \"{3}\"? (y/n)"))))
+    .WithState("Ready", state => state
+        .WithTransitionFrom("Created", "log")
+        .WithReentrance("log")
+        .WithOnEntry("log info", onEntry => onEntry
+            .DescribedAs("Logs the payload as a message.")
+            .WithSetting(
+                key: "messageFormat", 
+                value: "{schematicName}({machineId}) entered {state} on {input}. Message: {payload}")))
 
-                .WithState("EchoFailure", state => state
-                    .AsSubStateOf("Ready")
-                    .DescribedAs("An echo command failed to execute.")
-                    .WithTransitionFrom("Ready", "EchoFailure"))
-
-                .ToSchematic();
-
-            var echoMachine = REstateHost.GetStateEngine<string, string>().CreateMachineAsync(schematic, null, CancellationToken.None).Result;
-
-            var graph = echoMachine.ToString();
-
-            var status = echoMachine.SendAsync("Echo", "Hello!", CancellationToken.None).Result;
-
-            Console.ReadLine();
-
-        }
-    }
-}
+    .Build();
 ```
 
-It can also be created in YML or JSON, or any format:
+Schematics can be serialized into or from YML (YamlDotNet):
 
 ```yml
-SchematicName: EchoMachine
-InitialState: Ready
+SchematicName: LoggerMachine
+InitialState: Created
 States:
+- Value: Created
+  Transitions:
+  - Input: log
+    ResultantState: Ready
 - Value: Ready
   Transitions:
-  - Input: Echo
+  - Input: log
     ResultantState: Ready
-    Guard:
-      ConnectorKey: Console
-      Configuration:
-        Prompt: Are you sure you want to echo "{3}"? (y/n)
-  - Input: EchoFailure
-    ResultantState: EchoFailure
   OnEntry:
-    ConnectorKey: Console
+    ConnectorKey:
+      Identifier: log info
     Configuration:
-      Format: '{2}'
-    Description: Echoes the payload to the console.
-    FailureTransition:
-      Input: EchoFailure
-- Value: EchoFailure
-  ParentState: Ready
-  Description: An echo command failed to execute.
-  Transitions: []
+      messageFormat: '{schematicName}({machineId}) entered {state} on {input}. Message: {payload}'
+    Description: Logs the payload as a message.
+
 ```
+As well as JSON or any other format really.
