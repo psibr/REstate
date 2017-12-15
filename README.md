@@ -1,16 +1,14 @@
 # REstate
 
-REstate is a library that allows you to define portable state-flows (state-machine based workflows).
+REstate is a portable state-flow system. It allows you to define a set of possible states that a program can exist in and what input will cause the transition between any two states. When it transitions into a given state, you can define an action that will execute arbitrary code. This can be used to build complex, but deterministic and predefined systems, such as workflow systems or distributed systems.
 
-A `Schematic` may be defined on one server or workstation, but then used on others. 
+A `Schematic` may be defined on one server or workstation, but then used on others. `REstateMachine`s can call arbitrary code through the connector system, provided the connector exists on the system where it is running.
 
-`REstateMachine`s can call arbitrary code through the connector system, provided the connector exists on the system where it is running.
-
-Given the following REstate schematic, represented in DOT Graph:
+### Given the following REstate schematic, represented in DOT Graph:
 
 ![EchoMachine Schematic in DOT Graph](https://github.com/psibr/REstate.Engine/blob/master/LoggerMachine-Diagram.svg)
 
-Here is the code to build the schematic:
+### Here is the code to build the schematic:
 
 ```csharp
 var schematic = REstateHost.Agent
@@ -31,7 +29,9 @@ var schematic = REstateHost.Agent
     .Build();
 ```
 
-Schematics can be serialized into or from YML (YamlDotNet):
+### Schematics are serializer friendly.
+
+The same schematic in YML (YamlDotNet):
 
 ```yml
 SchematicName: LoggerMachine
