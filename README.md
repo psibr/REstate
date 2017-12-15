@@ -8,7 +8,7 @@ A `Schematic` may be defined on one server or workstation, but then used on othe
 
 Given the following REstate schematic, represented in DOT Graph:
 
-![Alt EchoMachine Schematic in DOT Graph](https://github.com/psibr/REstate.Engine/blob/master/echo-sample.svg)
+![EchoMachine Schematic in DOT Graph](https://github.com/psibr/REstate.Engine/blob/master/LoggerMachine-Diagram.svg)
 
 Here is the code to build the schematic:
 
