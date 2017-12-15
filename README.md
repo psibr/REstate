@@ -2,7 +2,7 @@
 
 REstate is a library that allows you to define portable state-flows (state-machine based workflows).
 
-A `Schematic` may be defined on one machine, but then used on others. 
+A `Schematic` may be defined on one server or workstation, but then used on others. 
 
 `REstateMachine`s can call arbitrary code through the connector system, provided the connector exists on the system where it is running.
 
