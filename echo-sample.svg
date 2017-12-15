@@ -1,39 +1,46 @@
-<svg width="198pt" height="224pt" viewBox="0.00 0.00 198.00 224.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph1" class="graph" transform="scale(1 1) rotate(0) translate(4 220)">
-<title>_anonymous_0</title>
-<polygon fill="white" stroke="white" points="-4,5 -4,-220 195,-220 195,5 -4,5"></polygon>
-<!-- Created -->
-<g id="node1" class="node"><title>Created</title>
-<ellipse fill="none" stroke="black" cx="95" cy="-198" rx="41.0958" ry="18"></ellipse>
-<text text-anchor="middle" x="95" y="-193.8" font-family="Times,serif" font-size="14.00">Created</text>
-</g>
-<!-- Ready -->
-<g id="node3" class="node"><title>Ready</title>
-<ellipse fill="none" stroke="black" cx="95" cy="-108" rx="35.5598" ry="18"></ellipse>
-<text text-anchor="middle" x="95" y="-103.8" font-family="Times,serif" font-size="14.00">Ready</text>
-</g>
-<!-- Created&#45;&gt;Ready -->
-<g id="edge2" class="edge"><title>Created-&gt;Ready</title>
-<path fill="none" stroke="black" d="M95,-179.614C95,-167.24 95,-150.369 95,-136.22"></path>
-<polygon fill="black" stroke="black" points="98.5001,-136.05 95,-126.05 91.5001,-136.05 98.5001,-136.05"></polygon>
-<text text-anchor="middle" x="103.945" y="-148.8" font-family="Times,serif" font-size="14.00">log</text>
-</g>
-<!-- Ready&#45;&gt;Ready -->
-<g id="edge4" class="edge"><title>Ready-&gt;Ready</title>
-<path fill="none" stroke="black" d="M126.558,-116.232C138.319,-116.502 148,-113.758 148,-108 148,-104.042 143.424,-101.508 136.743,-100.398"></path>
-<polygon fill="black" stroke="black" points="136.755,-96.8922 126.558,-99.7681 136.323,-103.879 136.755,-96.8922"></polygon>
-<text text-anchor="middle" x="156.945" y="-103.8" font-family="Times,serif" font-size="14.00">log</text>
-</g>
-<!-- Logs the payload as a message. -->
-<g id="node6" class="node"><title>Logs the payload as a message.</title>
-<polygon fill="none" stroke="black" points="190.291,-36 -0.290533,-36 -0.290533,0 190.291,0 190.291,-36"></polygon>
-<text text-anchor="middle" x="95" y="-13.8" font-family="Times,serif" font-size="14.00">Logs the payload as a message.</text>
-</g>
-<!-- Ready&#45;&gt;Logs the payload as a message. -->
-<g id="edge6" class="edge"><title>Ready-&gt;Logs the payload as a message.</title>
-<path fill="none" stroke="black" stroke-dasharray="1,5" d="M95,-89.614C95,-77.2403 95,-60.3686 95,-46.2198"></path>
-<polygon fill="black" stroke="black" points="98.5001,-46.0504 95,-36.0504 91.5001,-46.0504 98.5001,-46.0504"></polygon>
-<text text-anchor="middle" x="120.855" y="-58.8" font-family="Times,serif" font-size="14.00">On Entry</text>
-</g>
-</g>
+<svg width="198" height="224" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <title>LoggerMachine</title>
+ <g transform="scale(1) translate(4, 220)" class="graph" id="graph1">
+  <title>_anonymous_0</title>
+  <!-- Created -->
+  <g class="node" id="node1">
+   <title>Created</title>
+   <ellipse id="svg_2" ry="18" rx="41.0958" cy="-198" cx="95" stroke="black" fill="none"/>
+   <text id="svg_3" font-size="14" font-family="Times,serif" y="-193.8" x="95" text-anchor="middle">Created</text>
+  </g>
+  <!-- Ready -->
+  <g class="node" id="node3">
+   <title>Ready</title>
+   <ellipse id="svg_4" ry="18" rx="35.5598" cy="-108" cx="95" stroke="black" fill="none"/>
+   <text id="svg_5" font-size="14" font-family="Times,serif" y="-103.8" x="95" text-anchor="middle">Ready</text>
+  </g>
+  <!-- Created&#45;&gt;Ready -->
+  <g class="edge" id="edge2">
+   <title>Created-&gt;Ready</title>
+   <path id="svg_6" d="m95,-179.613998c0,12.373993 0,29.244995 0,43.393997" stroke="black" fill="none"/>
+   <polygon id="svg_7" points="98.8165054321289,-136.9992218017578 95.31640625,-126.99922180175781 91.8165054321289,-136.9992218017578 98.8165054321289,-136.9992218017578 " stroke="black" fill="black"/>
+   <text fill="black" id="svg_8" font-size="14" font-family="Times,serif" y="-148.8" x="111.222344" text-anchor="middle">log</text>
+  </g>
+  <!-- Ready&#45;&gt;Ready -->
+  <g class="edge" id="edge4">
+   <title>Ready-&gt;Ready</title>
+   <path id="svg_9" d="m126.557999,-116.232002c11.761002,-0.269997 21.442001,2.473999 21.442001,8.232002c0,3.958 -4.576004,6.491997 -11.257004,7.601997" stroke="black" fill="none"/>
+   <polygon id="svg_10" points="138.6534423828125,-96.89219665527344 128.45643615722656,-99.76809692382812 138.221435546875,-103.87899780273438 138.6534423828125,-96.89219665527344 " stroke="black" fill="black"/>
+   <text fill="black" id="svg_11" font-size="14" font-family="Times,serif" y="-102.850781" x="164.222344" text-anchor="middle">log</text>
+  </g>
+  <!-- Logs the payload as a message. -->
+  <g class="node" id="node6">
+   <title>Logs the payload as a message.</title>
+   <polygon id="svg_12" points="190.291,-36 -0.290533,-36 -0.290533,0 190.291,0 190.291,-36" stroke="black" fill="none"/>
+   <text id="svg_13" font-size="14" font-family="Times,serif" y="-13.8" x="95" text-anchor="middle">Logs the payload as a message.</text>
+  </g>
+  <!-- Ready&#45;&gt;Logs the payload as a message. -->
+  <g class="edge" id="edge6">
+   <title>Ready-&gt;Logs the payload as a message.</title>
+   <path id="svg_14" d="m95,-89.613998c0,12.373695 0,29.245399 0,43.394199" stroke-dasharray="1,5" stroke="black" fill="none"/>
+   <polygon id="svg_15" points="98.8165054321289,-47.31602478027344 95.31640625,-37.31602478027344 91.8165054321289,-47.31602478027344 98.8165054321289,-47.31602478027344 " stroke="black" fill="black"/>
+   <text fill="black" id="svg_16" font-size="14" font-family="Times,serif" y="-58.8" x="127.183125" text-anchor="middle">On Entry</text>
+  </g>
+ </g>
+
 </svg>
