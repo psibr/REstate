@@ -36,7 +36,7 @@ Before creating bug reports, please check [this list](#before-submitting-a-bug-r
 
 #### Before Submitting A Bug Report
 
-* **Perform a [cursory search](https://github.com/search?q=+is%3Aissue+user%3Aatom)** to see if the problem has already been reported. If it has **and the issue is still open**, add a comment to the existing issue instead of opening a new one.
+* **Perform a [cursory search](https://github.com/search?q=+is:issue%20repo:psibr/restate)** to see if the problem has already been reported. If it has **and the issue is still open**, add a comment to the existing issue instead of opening a new one.
 
 #### How Do I Submit A (Good) Bug Report?
 
@@ -83,7 +83,6 @@ Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com
 * Fill in [the required template](PULL_REQUEST_TEMPLATE.md)
 * Do not include issue numbers in the PR title
 * Include screenshots and animated GIFs in your pull request whenever possible.
-* Document new code based on the [Documentation Styleguide](#documentation-styleguide)
 * End all files with a newline
 * Avoid platform-dependent code
 
