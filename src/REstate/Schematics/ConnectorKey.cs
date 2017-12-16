@@ -11,7 +11,14 @@ namespace REstate.Schematics
             Identifier = identifier;
         }
 
+        public ConnectorKey()
+        {
+            
+        }
+
         public string Identifier { get; }
+
+        public override string ToString() => Identifier;
 
         public override bool Equals(object obj)
         {

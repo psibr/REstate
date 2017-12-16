@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using REstate.Engine;
 using REstate.IoC;
 using REstate.IoC.BoDi;

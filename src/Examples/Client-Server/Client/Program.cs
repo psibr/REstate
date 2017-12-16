@@ -51,6 +51,7 @@ namespace Client
                         .DescribedAs("Logs the failure.")
                         .WithSetting("messageFormat", "Logging failed, message was: {payload}"))
                     .WithTransitionFrom("Ready", "logFailure"))
+
                 .Build();
 
             // Metadata can be attached to each machine (an instance of a schematic). 
@@ -74,6 +75,7 @@ namespace Client
                 throw;
             }
 
+            Console.WriteLine("Press enter to close...");
             Console.ReadLine();
         }
     }

@@ -16,6 +16,7 @@
   <ItemGroup>
     <PackageReference Include="Serilog" Version="2.5.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
+    <PackageReference Include="YamlDotNet" Version="4.2.3-pre0454" />
   </ItemGroup>
 
   <ItemGroup>
