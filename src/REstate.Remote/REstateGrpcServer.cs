@@ -73,7 +73,7 @@ namespace REstate.Remote
         public void Dispose()
         {
             if(!ShutdownTask.IsCompleted)
-                ShutdownAsync().Wait();
+                ShutdownAsync().GetAwaiter().GetResult();
 
             Server = null;
 
@@ -83,7 +83,7 @@ namespace REstate.Remote
         /// <summary>Allows an object to try to free resources and perform other cleanup operations before it is reclaimed by garbage collection.</summary>
         ~REstateGrpcServer()
         {
-            KillAsync().Wait();
+            KillAsync().GetAwaiter().GetResult();
         }
     }
 }

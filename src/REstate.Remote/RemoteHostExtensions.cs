@@ -5,10 +5,10 @@ namespace REstate
 {
     public static class RemoteHostExtensions
     {
-        public static IRemoteHost AsRemote(this IAgent agent) =>
-            new RemoteHost(agent);
+        public static IRemoteAgent AsRemote(this IAgent agent) =>
+            new RemoteAgent(agent);
 
-        public static REstateGrpcServer CreateGrpcServer(this IRemoteHost remoteHost, params ServerPort[] bindings) => 
+        public static REstateGrpcServer CreateGrpcServer(this IRemoteAgent remoteAgent, params ServerPort[] bindings) => 
             new REstateGrpcServer(bindings);
     }
 }

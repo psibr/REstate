@@ -5,7 +5,7 @@ namespace REstate
     /// <summary>
     /// An interface that provides the ability to scope an agent to strictly local execution
     /// </summary>
-    public interface ILocalHost
+    public interface ILocalAgent
     {
         /// <summary>
         /// Retrieves a StateEngine that executes state changes locally
@@ -14,12 +14,12 @@ namespace REstate
         ILocalStateEngine<TState, TInput> GetStateEngine<TState, TInput>();
     }
 
-    internal class LocalHost
-        : ILocalHost
+    internal class LocalAgent
+        : ILocalAgent
     {
         private readonly IAgent _agent;
 
-        public LocalHost(IAgent agent)
+        public LocalAgent(IAgent agent)
         {
             _agent = agent;
         }

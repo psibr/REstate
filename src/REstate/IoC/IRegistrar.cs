@@ -59,5 +59,4 @@ namespace REstate.IoC
         /// <param name="component">The component to register.</param>
         void RegisterComponent(IComponent component);
     }
-
 }

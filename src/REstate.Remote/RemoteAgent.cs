@@ -1,16 +1,16 @@
 ﻿namespace REstate.Remote
 {
-    public interface IRemoteHost
+    public interface IRemoteAgent
     {
         IRemoteStateEngine<TState, TInput> GetStateEngine<TState, TInput>();
     }
 
-    public class RemoteHost 
-        : IRemoteHost
+    public class RemoteAgent
+        : IRemoteAgent
     {
         private readonly IAgent _agent;
 
-        public RemoteHost(IAgent agent)
+        public RemoteAgent(IAgent agent)
         {
             _agent = agent;
         }

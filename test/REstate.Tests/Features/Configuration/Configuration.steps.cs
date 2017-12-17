@@ -4,18 +4,17 @@ using Xunit.Abstractions;
 
 namespace REstate.Tests.Features.Configuration
 {
-    public partial class Configuration_feature
+    public partial class Configuration
     {
-        private void Given_the_default_container_is_used()
+        private void Given_a_new_host()
         {
-            
+            REstateHost.ResetAgent();
         }
 
-        private void Given_a_custom_container_is_used()
+        private void Given_a_new_container_is_configured()
         {
             REstateHost.UseContainer(
-                container: new BoDiComponentContainer(
-                    container: new ObjectContainer()));
+                container: new BoDiComponentContainer(new ObjectContainer()));
         }
 
         private void When_configuration_is_accessed()
@@ -34,7 +33,7 @@ namespace REstate.Tests.Features.Configuration
         }
 
         #region Constructor
-        public Configuration_feature(ITestOutputHelper output) 
+        public Configuration(ITestOutputHelper output) 
             : base(output)
         {
         }

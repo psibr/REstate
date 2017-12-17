@@ -9,29 +9,6 @@ using REstate.Schematics;
 
 namespace REstate.Engine.Connectors.Logger
 {
-    public enum LogLevel
-    {
-        Trace,
-        Debug,
-        Info,
-        Warn,
-        Error,
-        Fatal
-    }
-
-    public class LoggerEntryConnectorConfiguration
-        : IConnectorConfiguration
-    {
-        public LoggerEntryConnectorConfiguration(string identifier)
-        {
-            Identifier = identifier;
-        }
-
-        public string Identifier { get; }
-
-        public LogLevel LogLevel { get; set; } = LogLevel.Info;
-    }
-
     public class LoggerEntryConnector<TState, TInput>
         : IEntryConnector<TState, TInput>
     {

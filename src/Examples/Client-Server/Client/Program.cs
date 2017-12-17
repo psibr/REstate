@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Grpc.Core;
 using REstate;
+using REstate.Engine.Connectors.Console;
 using REstate.Remote;
 using Serilog;
 

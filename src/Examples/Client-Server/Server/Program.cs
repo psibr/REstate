@@ -6,7 +6,6 @@ using Grpc.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using REstate;
-using REstate.Engine.Connectors.AzureServiceBus;
 using REstate.Engine.Repositories.Redis;
 using Serilog;
 using Server.Configuration.REstate;
@@ -44,8 +43,6 @@ namespace Server
             var serverConfiguration = configuration
                 .GetSection("REstate:Server")
                 .Get<ServerConfiguration>();
-
-            REstateHost.Agent.Configuration.RegisterConnector(typeof(ServiceBusQueueConnector<,>), "AzureServiceBusQueue");
 
             //var redisMultiplexer = await StackExchange.Redis.ConnectionMultiplexer
             //    .ConnectAsync(serverConfiguration.RepositoryConnectionString);
