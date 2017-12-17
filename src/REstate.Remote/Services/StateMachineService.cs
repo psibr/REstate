@@ -20,9 +20,21 @@ using REstate.Schematics;
 
 namespace REstate.Remote.Services
 {
+    // method name, state type, input type, payload type
     using MethodKey = ValueTuple<string, Type, Type, Type>;
+
+    // non generic delegates for generic method calls
     using SendAsyncDelegate = Func<string, object, Guid?, CancellationToken, Task<SendResponse>>;
     using SendWithPayloadAsyncDelegate = Func<string, object, object, Guid?, CancellationToken, Task<SendResponse>>;
+    using StoreSchematicAsyncDelegate = Func<object, CancellationToken, Task<StoreSchematicResponse>>;
+    using GetMachineSchematicAsyncDelegate = Func<string, CancellationToken, Task<GetMachineSchematicResponse>>;
+    using GetMachineMetadataAsyncDelegate = Func<string, CancellationToken, Task<GetMachineMetadataResponse>>;
+    using CreateMachineFromStoreAsyncDelegate = Func<string, IDictionary<string, string>, CancellationToken, Task<CreateMachineResponse>>;
+    using CreateMachineFromSchematicAsyncDelegate = Func<object, IDictionary<string, string>, CancellationToken, Task<CreateMachineResponse>>;
+    using BulkCreateMachineFromStoreAsyncDelegate = Func<string, IEnumerable<IDictionary<string, string>>, CancellationToken, Task>;
+    using BulkCreateMachineFromSchematicAsyncDelegate = Func<object, IEnumerable<IDictionary<string, string>>, CancellationToken, Task>;
+    using GetSchematicAsyncDelegate = Func<string, CancellationToken, Task<GetSchematicResponse>>;
+    using DeleteMachineAsyncDelegate = Func<string, CancellationToken, Task>;
 
     public interface IStateMachineServiceClient
     {
@@ -65,7 +77,7 @@ namespace REstate.Remote.Services
             _gRpcHostOptions = gRpcHostOptions;
         }
 
-        public IStateMachineService Create() => 
+        public IStateMachineService Create() =>
             MagicOnionClient.Create<IStateMachineService>(_gRpcHostOptions.Channel);
     }
 
@@ -249,21 +261,43 @@ namespace REstate.Remote.Services
         {
             var genericTypes = GetGenericsFromHeaders();
 
+            (var stateType, var inputType) = GetGenericTupleFromHeaderArray(genericTypes);
+
+            var schematicType = typeof(Schematic<,>).MakeGenericType(genericTypes);
+
             var schematic = MessagePackSerializer.NonGeneric.Deserialize(
-                typeof(Schematic<,>).MakeGenericType(genericTypes),
+                schematicType,
                 request.SchematicBytes,
                 ContractlessStandardResolver.Instance);
 
-            var storeSchematicAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(StoreSchematicAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(genericTypes);
+            var storeSchematicAsync = (StoreSchematicAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(StoreSchematicAsync), stateType, inputType, NoPayloadType),
+                    valueFactory: tuple =>
+                    {
+                        var schematicParameter = Expression.Parameter(typeof(object), "schematic");
+                        var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
-            return await (Task<StoreSchematicResponse>)storeSchematicAsyncMethod
-                .Invoke(this, new[]
-                {
-                    schematic,
-                    Context.CallContext.CancellationToken
-                });
+                        return Expression.Lambda<StoreSchematicAsyncDelegate>(
+                                body: Expression.Call(
+                                    type: typeof(StateMachineService),
+                                    methodName: nameof(StoreSchematicAsync),
+                                    typeArguments: genericTypes,
+                                    arguments: new Expression[]
+                                    {
+                                        Expression.Convert(schematicParameter, schematicType),
+                                        cancellationTokenParameter
+                                    }),
+                                tailCall: false,
+                                parameters: new ParameterExpression[]
+                                {
+                                    schematicParameter,
+                                    cancellationTokenParameter
+                                })
+                                .Compile();
+                    });
+
+            return await storeSchematicAsync(schematic, Context.CallContext.CancellationToken);
         }
 
         private static async Task<StoreSchematicResponse> StoreSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default)
@@ -285,16 +319,36 @@ namespace REstate.Remote.Services
         {
             var genericTypes = GetGenericsFromHeaders();
 
-            var getMachineSchematicAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(GetMachineSchematicAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(genericTypes);
+            (var stateType, var inputType) = GetGenericTupleFromHeaderArray(genericTypes);
 
-            return await (Task<GetMachineSchematicResponse>)getMachineSchematicAsyncMethod
-                .Invoke(this, new object[]
-                {
-                    request.MachineId,
-                    Context.CallContext.CancellationToken
-                });
+            var getMachineSchematicAsync = (GetMachineSchematicAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(GetMachineSchematicAsync), stateType, inputType, NoPayloadType),
+                    valueFactory: tuple =>
+                    {
+                        var machineIdParameter = Expression.Parameter(typeof(string), "machineId");
+                        var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
+
+                        return Expression.Lambda<GetMachineSchematicAsyncDelegate>(
+                                body: Expression.Call(
+                                    type: typeof(StateMachineService),
+                                    methodName: nameof(GetMachineSchematicAsync),
+                                    typeArguments: genericTypes,
+                                    arguments: new Expression[]
+                                    {
+                                        machineIdParameter,
+                                        cancellationTokenParameter
+                                    }),
+                                tailCall: false,
+                                parameters: new ParameterExpression[]
+                                {
+                                    machineIdParameter,
+                                    cancellationTokenParameter
+                                })
+                                .Compile();
+                    });
+
+            return await getMachineSchematicAsync(request.MachineId, Context.CallContext.CancellationToken);
         }
 
         private static async Task<GetMachineSchematicResponse> GetMachineSchematicAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default)
@@ -321,16 +375,35 @@ namespace REstate.Remote.Services
         {
             var genericTypes = GetGenericsFromHeaders();
 
-            var getMachineMetadataAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(GetMachineMetadataAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(genericTypes);
+            (var stateType, var inputType) = GetGenericTupleFromHeaderArray(genericTypes);
 
-            return await (Task<GetMachineMetadataResponse>)getMachineMetadataAsyncMethod
-                .Invoke(this, new object[]
-                {
-                    request.MachineId,
-                    Context.CallContext.CancellationToken
-                });
+            var getMachineMetadataAsync = (GetMachineMetadataAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(GetMachineMetadataAsync), stateType, inputType, NoPayloadType),
+                    valueFactory: tuple =>
+                    {
+                        var machineIdParameter = Expression.Parameter(typeof(string), "machineId");
+                        var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
+
+                        return Expression.Lambda<GetMachineMetadataAsyncDelegate>(
+                            body: Expression.Call(
+                                type: typeof(StateMachineService),
+                                methodName: nameof(GetMachineMetadataAsync),
+                                typeArguments: genericTypes,
+                                arguments: new Expression[]
+                                {
+                                    machineIdParameter,
+                                    cancellationTokenParameter
+                                }),
+                            parameters: new ParameterExpression[]
+                            {
+                                machineIdParameter,
+                                cancellationTokenParameter
+                            })
+                            .Compile();
+                    });
+
+            return await getMachineMetadataAsync(request.MachineId, Context.CallContext.CancellationToken);
         }
 
         private static async Task<GetMachineMetadataResponse> GetMachineMetadataAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default)
@@ -356,17 +429,41 @@ namespace REstate.Remote.Services
         {
             var genericTypes = GetGenericsFromHeaders();
 
-            var createMachineFromStoreAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(CreateMachineFromStoreAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(genericTypes);
+            (var stateType, var inputType) = GetGenericTupleFromHeaderArray(genericTypes);
 
-            return await (Task<CreateMachineResponse>)createMachineFromStoreAsyncMethod
-                .Invoke(this, new object[]
-                {
-                    request.SchematicName,
-                    request.Metadata,
-                    Context.CallContext.CancellationToken
-                });
+            var createMachineFromStoreAsync = (CreateMachineFromStoreAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(CreateMachineFromStoreAsync), stateType, inputType, NoPayloadType),
+                    valueFactory: tuple =>
+                    {
+                        var schematicNameParameter = Expression.Parameter(typeof(string), "schematicName");
+                        var metadataParameter = Expression.Parameter(typeof(IDictionary<string, string>), "metadata");
+                        var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
+
+                        return Expression.Lambda<CreateMachineFromStoreAsyncDelegate>(
+                            body: Expression.Call(
+                                type: typeof(StateMachineService),
+                                methodName: nameof(CreateMachineFromStoreAsync),
+                                typeArguments: genericTypes,
+                                arguments: new Expression[]
+                                {
+                                    schematicNameParameter,
+                                    metadataParameter,
+                                    cancellationTokenParameter
+                                }),
+                            parameters: new ParameterExpression[]
+                            {
+                                schematicNameParameter,
+                                metadataParameter,
+                                cancellationTokenParameter
+                            })
+                            .Compile();
+                    });
+
+            return await createMachineFromStoreAsync(
+                request.SchematicName, 
+                request.Metadata, 
+                Context.CallContext.CancellationToken);
         }
 
         private static async Task<CreateMachineResponse> CreateMachineFromStoreAsync<TState, TInput>(string schematicName,
@@ -390,27 +487,53 @@ namespace REstate.Remote.Services
         {
             var genericTypes = GetGenericsFromHeaders();
 
+            (var stateType, var inputType) = GetGenericTupleFromHeaderArray(genericTypes);
+
+            var schematicType = typeof(Schematic<,>).MakeGenericType(genericTypes);
+
             var schematic = MessagePackSerializer.NonGeneric.Deserialize(
-                typeof(Schematic<,>).MakeGenericType(genericTypes),
+                schematicType,
                 request.SchematicBytes,
                 ContractlessStandardResolver.Instance);
 
-            var createMachineFromSchematicAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(CreateMachineFromSchematicAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(genericTypes);
+            var createMachineFromSchematicAsync = (CreateMachineFromSchematicAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(CreateMachineFromSchematicAsync), stateType, inputType, NoPayloadType),
+                    valueFactory: tuple =>
+                    {
+                        var schematicParameter = Expression.Parameter(typeof(object), "schematic");
+                        var metadataParameter = Expression.Parameter(typeof(IDictionary<string, string>), "metadata");
+                        var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
-            return await (Task<CreateMachineResponse>)createMachineFromSchematicAsyncMethod
-                .Invoke(this, new[]
-                {
-                    schematic,
-                    request.Metadata,
-                    Context.CallContext.CancellationToken
-                });
+                        return Expression.Lambda<CreateMachineFromSchematicAsyncDelegate>(
+                            body: Expression.Call(
+                                type: typeof(StateMachineService),
+                                methodName: nameof(CreateMachineFromSchematicAsync),
+                                typeArguments: genericTypes,
+                                arguments: new Expression[]
+                                {
+                                    Expression.Convert(schematicParameter, schematicType),
+                                    metadataParameter,
+                                    cancellationTokenParameter
+                                }),
+                            parameters: new ParameterExpression[]
+                            {
+                                schematicParameter,
+                                metadataParameter,
+                                cancellationTokenParameter
+                            })
+                            .Compile();
+                    });
+
+            return await createMachineFromSchematicAsync(
+                schematic, 
+                request.Metadata, 
+                Context.CallContext.CancellationToken);
         }
 
         private static async Task<CreateMachineResponse> CreateMachineFromSchematicAsync<TState, TInput>(
             Schematic<TState, TInput> schematic,
-            IDictionary<string, string> metadata, 
+            IDictionary<string, string> metadata,
             CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
@@ -431,24 +554,39 @@ namespace REstate.Remote.Services
         {
             var genericTypes = GetGenericsFromHeaders();
 
-            var bulkCreateMachineFromStoreAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(BulkCreateMachineFromStoreAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(genericTypes);
+            (var stateType, var inputType) = GetGenericTupleFromHeaderArray(genericTypes);
 
-            await (Task)bulkCreateMachineFromStoreAsyncMethod
-                .Invoke(this, new object[]
-                {
-                    request.SchematicName,
-                    request.Metadata,
-                    Context.CallContext.CancellationToken
-                });
+            var bulkCreateMachineFromStoreAsync = (BulkCreateMachineFromStoreAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(BulkCreateMachineFromStoreAsync), stateType, inputType, NoPayloadType),
+                    valueFactory: tuple =>
+                        {
+                            var schematicNameParameter = Expression.Parameter(typeof(string), "schematicName");
+                            var metadataParameter = Expression.Parameter(typeof(IEnumerable<IDictionary<string, string>>), "metadata");
+                            var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
+
+                            return Expression.Lambda<BulkCreateMachineFromStoreAsyncDelegate>(
+                                body: Expression.Call(
+                                    type: typeof(StateMachineService),
+                                    methodName: nameof(BulkCreateMachineFromStoreAsync),
+                                    typeArguments: genericTypes,
+                                    arguments: new Expression[]
+                                    {
+                                        schematicNameParameter,
+                                        metadataParameter,
+                                        cancellationTokenParameter
+                                    }))
+                                    .Compile();
+                        });
+
+            await bulkCreateMachineFromStoreAsync(request.SchematicName, request.Metadata, Context.CallContext.CancellationToken);
 
             return Nil.Default;
         }
 
         private static async Task BulkCreateMachineFromStoreAsync<TState, TInput>(
             string schematicName,
-            IEnumerable<IDictionary<string, string>> metadata, 
+            IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
@@ -464,28 +602,52 @@ namespace REstate.Remote.Services
         {
             var genericTypes = GetGenericsFromHeaders();
 
+            (var stateType, var inputType) = GetGenericTupleFromHeaderArray(genericTypes);
+
+            var schematicType = typeof(Schematic<,>).MakeGenericType(genericTypes);
+
             var schematic = MessagePackSerializer.NonGeneric.Deserialize(
-                typeof(Schematic<,>).MakeGenericType(genericTypes),
+                schematicType,
                 request.SchematicBytes,
                 ContractlessStandardResolver.Instance);
 
-            var bulkCreateMachineFromSchematicAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(BulkCreateMachineFromSchematicAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(genericTypes);
+            var bulkCreateMachineFromSchematicAsync = (BulkCreateMachineFromSchematicAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(BulkCreateMachineFromSchematicAsync), stateType, inputType, NoPayloadType),
+                    valueFactory: tuple =>
+                    {
+                        var schematicParameter = Expression.Parameter(typeof(object), "schematic");
+                        var metadataParameter = Expression.Parameter(typeof(IEnumerable<IDictionary<string, string>>), "metadata");
+                        var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
-            await (Task)bulkCreateMachineFromSchematicAsyncMethod
-                .Invoke(this, new[]
-                {
-                    schematic,
-                    request.Metadata,
-                    Context.CallContext.CancellationToken
-                });
+                        return Expression.Lambda<BulkCreateMachineFromSchematicAsyncDelegate>(
+                            body: Expression.Call(
+                                type: typeof(StateMachineService),
+                                methodName: nameof(BulkCreateMachineFromSchematicAsync),
+                                typeArguments: genericTypes,
+                                arguments: new Expression[]
+                                {
+                                    Expression.Convert(schematicParameter, schematicType),
+                                    metadataParameter,
+                                    cancellationTokenParameter
+                                }),
+                            parameters: new ParameterExpression[] {
+                                schematicParameter,
+                                metadataParameter,
+                                cancellationTokenParameter
+                            })
+                            .Compile();
+                    });
+
+            await bulkCreateMachineFromSchematicAsync(schematic, request.Metadata, Context.CallContext.CancellationToken);
 
             return Nil.Default;
         }
 
-        private static async Task BulkCreateMachineFromSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic,
-            IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default)
+        private static async Task BulkCreateMachineFromSchematicAsync<TState, TInput>(
+            Schematic<TState, TInput> schematic,
+            IEnumerable<IDictionary<string, string>> metadata, 
+            CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
                 .AsLocal()
@@ -500,16 +662,35 @@ namespace REstate.Remote.Services
         {
             var genericTypes = GetGenericsFromHeaders();
 
-            var getSchematicAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(GetSchematicAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(genericTypes);
+            (var stateType, var inputType) = GetGenericTupleFromHeaderArray(genericTypes);
 
-            return await (Task<GetSchematicResponse>)getSchematicAsyncMethod
-                .Invoke(this, new object[]
-                {
-                    request.SchematicName,
-                    Context.CallContext.CancellationToken
-                });
+            var getSchematicAsync = (GetSchematicAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(GetSchematicAsync), stateType, inputType, NoPayloadType),
+                    valueFactory: tuple =>
+                    {
+                        var schematicNameParameter = Expression.Parameter(typeof(string), "schematicName");
+                        var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
+
+                        return Expression.Lambda<GetSchematicAsyncDelegate>(
+                            body: Expression.Call(
+                                type: typeof(StateMachineService),
+                                methodName: nameof(GetSchematicAsync),
+                                typeArguments: genericTypes,
+                                arguments: new Expression[]
+                                {
+                                    schematicNameParameter,
+                                    cancellationTokenParameter
+                                }),
+                            parameters: new ParameterExpression[]
+                            {
+                                schematicNameParameter,
+                                cancellationTokenParameter
+                            })
+                            .Compile();
+                    });
+
+            return await getSchematicAsync(request.SchematicName, Context.CallContext.CancellationToken);
         }
 
         private static async Task<GetSchematicResponse> GetSchematicAsync<TState, TInput>(string schematicName, CancellationToken cancellationToken)
@@ -532,15 +713,35 @@ namespace REstate.Remote.Services
         {
             var genericTypes = GetGenericsFromHeaders();
 
-            var deleteMachineAsyncMethod = typeof(StateMachineService)
-                .GetMethod(nameof(DeleteMachineAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                .MakeGenericMethod(genericTypes);
+            (var stateType, var inputType) = GetGenericTupleFromHeaderArray(genericTypes);
 
-            await (Task)deleteMachineAsyncMethod.Invoke(this, new object[]
-            {
-                request.MachineId,
-                Context.CallContext.CancellationToken
-            });
+            var deleteMachineAsync = (DeleteMachineAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(DeleteMachineAsync), stateType, inputType, NoPayloadType),
+                    valueFactory: tuple =>
+                    {
+                        var machineIdParameter = Expression.Parameter(typeof(string), "machineId");
+                        var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
+
+                        return Expression.Lambda<DeleteMachineAsyncDelegate>(
+                            body: Expression.Call(
+                                type: typeof(StateMachineService),
+                                methodName: nameof(DeleteMachineAsync),
+                                typeArguments: genericTypes,
+                                arguments: new Expression[]
+                                {
+                                    machineIdParameter,
+                                    cancellationTokenParameter
+                                }),
+                            parameters: new ParameterExpression[]
+                            {
+                                machineIdParameter,
+                                cancellationTokenParameter
+                            })
+                            .Compile();
+                    });
+
+            await deleteMachineAsync(request.MachineId, Context.CallContext.CancellationToken);
 
             return Nil.Default;
         }
@@ -570,6 +771,11 @@ namespace REstate.Remote.Services
             var array = GetGenericsFromHeaders();
 
             return (array[0], array[1]);
+        }
+
+        private (Type stateType, Type inputType) GetGenericTupleFromHeaderArray(Type[] types)
+        {
+            return (types[0], types[1]);
         }
     }
 }
