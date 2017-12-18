@@ -20,7 +20,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Grpc" Version="1.8.0" />
     <PackageReference Include="MagicOnion" Version="0.5.2.0" />
+    <PackageReference Include="MessagePack" Version="1.7.2" />
   </ItemGroup>
 
   <ItemGroup>
