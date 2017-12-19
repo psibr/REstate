@@ -11,14 +11,10 @@ The following is a set of guidelines for contributing to REstate and its package
 [How Can I Contribute?](#how-can-i-contribute)
   * [Reporting Bugs](#reporting-bugs)
   * [Suggesting Enhancements](#suggesting-enhancements)
-  * [Your First Code Contribution](#your-first-code-contribution)
   * [Pull Requests](#pull-requests)
 
 [Styleguides](#styleguides)
   * [Git Commit Messages](#git-commit-messages)
-
-[Additional Notes](#additional-notes)
-  * [Issue and Pull Request Labels](#issue-and-pull-request-labels)
 
 ## Code of Conduct
 
