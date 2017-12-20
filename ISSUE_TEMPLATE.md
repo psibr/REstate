@@ -4,10 +4,9 @@
 
 * [ ] Checked that your issue isn't already filed.
 
-### Description
+### Description <!--Description of the issue/enhancement-->
 
-[Description of the issue]
-
+<!-- If this is a bug, uncomment the following.
 ### Steps to Reproduce
 
 1. [First Step]
@@ -19,9 +18,10 @@
 **Actual behavior:** [What actually happens]
 
 **Reproduces how often:** [What percentage of the time does it reproduce?]
+-->
 
-### Versions
+### REstate Package Versions
 
 ### Additional Information
 
-Any additional information, configuration or data that might be necessary to reproduce the issue.
+<!--Any additional information, configuration or data that might be necessary to reproduce the issue.-->
