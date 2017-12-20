@@ -139,7 +139,7 @@ namespace REstate.Remote.Services
                 GetCallCancellationToken());
         }
 
-        public virtual async Task<SendResponse> SendAsync<TState, TInput>(
+        internal virtual async Task<SendResponse> SendAsync<TState, TInput>(
             string machineId,
             TInput input,
             Guid? commitTag,
@@ -226,7 +226,7 @@ namespace REstate.Remote.Services
                     GetCallCancellationToken());
         }
 
-        public virtual async Task<SendResponse> SendWithPayloadAsync<TState, TInput, TPayload>(string machineId, TInput input, TPayload payload, Guid? commitTag, CancellationToken cancellationToken = default)
+        internal virtual async Task<SendResponse> SendWithPayloadAsync<TState, TInput, TPayload>(string machineId, TInput input, TPayload payload, Guid? commitTag, CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent.AsLocal()
                 .GetStateEngine<TState, TInput>();
@@ -300,7 +300,7 @@ namespace REstate.Remote.Services
             return await storeSchematicAsync(schematic, GetCallCancellationToken());
         }
 
-        public virtual async Task<StoreSchematicResponse> StoreSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default)
+        internal virtual async Task<StoreSchematicResponse> StoreSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent.AsLocal()
                 .GetStateEngine<TState, TInput>();
@@ -351,7 +351,7 @@ namespace REstate.Remote.Services
             return await getMachineSchematicAsync(request.MachineId, GetCallCancellationToken());
         }
 
-        public virtual async Task<GetMachineSchematicResponse> GetMachineSchematicAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default)
+        internal virtual async Task<GetMachineSchematicResponse> GetMachineSchematicAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
                 .AsLocal()
@@ -406,7 +406,7 @@ namespace REstate.Remote.Services
             return await getMachineMetadataAsync(request.MachineId, GetCallCancellationToken());
         }
 
-        public virtual async Task<GetMachineMetadataResponse> GetMachineMetadataAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default)
+        internal virtual async Task<GetMachineMetadataResponse> GetMachineMetadataAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
                 .AsLocal()
@@ -466,7 +466,7 @@ namespace REstate.Remote.Services
                 GetCallCancellationToken());
         }
 
-        public virtual async Task<CreateMachineResponse> CreateMachineFromStoreAsync<TState, TInput>(string schematicName,
+        internal virtual async Task<CreateMachineResponse> CreateMachineFromStoreAsync<TState, TInput>(string schematicName,
             IDictionary<string, string> metadata, CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
@@ -531,7 +531,7 @@ namespace REstate.Remote.Services
                 GetCallCancellationToken());
         }
 
-        public virtual async Task<CreateMachineResponse> CreateMachineFromSchematicAsync<TState, TInput>(
+        internal virtual async Task<CreateMachineResponse> CreateMachineFromSchematicAsync<TState, TInput>(
             Schematic<TState, TInput> schematic,
             IDictionary<string, string> metadata,
             CancellationToken cancellationToken = default)
@@ -590,7 +590,7 @@ namespace REstate.Remote.Services
             return Nil.Default;
         }
 
-        public virtual async Task BulkCreateMachineFromStoreAsync<TState, TInput>(
+        internal virtual async Task BulkCreateMachineFromStoreAsync<TState, TInput>(
             string schematicName,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default)
@@ -650,7 +650,7 @@ namespace REstate.Remote.Services
             return Nil.Default;
         }
 
-        public virtual async Task BulkCreateMachineFromSchematicAsync<TState, TInput>(
+        internal virtual async Task BulkCreateMachineFromSchematicAsync<TState, TInput>(
             Schematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata, 
             CancellationToken cancellationToken = default)
@@ -699,7 +699,7 @@ namespace REstate.Remote.Services
             return await getSchematicAsync(request.SchematicName, GetCallCancellationToken());
         }
 
-        public virtual async Task<GetSchematicResponse> GetSchematicAsync<TState, TInput>(string schematicName, CancellationToken cancellationToken)
+        internal virtual async Task<GetSchematicResponse> GetSchematicAsync<TState, TInput>(string schematicName, CancellationToken cancellationToken)
         {
             var stateEngine = REstateHost.Agent
                 .AsLocal()
@@ -752,7 +752,7 @@ namespace REstate.Remote.Services
             return Nil.Default;
         }
 
-        public virtual async Task DeleteMachineAsync<TState, TInput>(string machineId, CancellationToken cancellationToken)
+        internal virtual async Task DeleteMachineAsync<TState, TInput>(string machineId, CancellationToken cancellationToken)
         {
             var stateEngine = REstateHost.Agent
                 .AsLocal()
@@ -762,7 +762,7 @@ namespace REstate.Remote.Services
         }
         #endregion DeleteMachineAsync
 
-        public virtual Type[] GetGenericsFromHeaders()
+        internal virtual Type[] GetGenericsFromHeaders()
         {
             return Context.CallContext.RequestHeaders
                 .Where(header => new[] { StateTypeHeaderKey, InputTypeHeaderKey }
@@ -784,7 +784,7 @@ namespace REstate.Remote.Services
             return (types[0], types[1]);
         }
 
-        public virtual CancellationToken GetCallCancellationToken()
+        internal virtual CancellationToken GetCallCancellationToken()
         {
             return Context.CallContext.CancellationToken;
         }
