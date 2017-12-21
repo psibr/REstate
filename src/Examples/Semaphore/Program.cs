@@ -3,8 +3,6 @@ using System.Threading.Tasks;
 using REstate;
 using REstate.Engine;
 using Serilog;
-using Serilog.Core;
-using Serilog.Events;
 
 namespace Semaphore
 {
@@ -12,31 +10,13 @@ namespace Semaphore
     {
         private static async Task Main(string[] args)
         {
-            Log.Logger = 
+            Log.Logger =
                 new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.Console()
                 .CreateLogger();
 
-            var semaphoreSchematic = REstateHost.Agent
-                .CreateSchematic<int, int>("3SlotSemaphore")
-                .WithState(0, state => state
-                    .AsInitialState()
-                    .DescribedAs("No slots filled.")
-                    .WithReentrance(-1))
-                .WithState(1, state => state
-                    .DescribedAs("One slot filled.")
-                    .WithTransitionFrom(0, 1)
-                    .WithTransitionTo(0, -1))
-                .WithState(2, state => state
-                    .DescribedAs("Two slots filled.")
-                    .WithTransitionFrom(1, 1)
-                    .WithTransitionTo(1, -1))
-                .WithState(3, state => state
-                    .DescribedAs("Three slots filled.")
-                    .WithTransitionFrom(2, 1)
-                    .WithTransitionTo(2, -1))
-                .Build();
+            var semaphoreSchematic = CreateSemaphoreSchematic();
 
             var semaphore = await REstateHost.Agent
                 .GetStateEngine<int, int>()
@@ -83,5 +63,44 @@ namespace Semaphore
                 }
             }
         }
+
+        /// <summary>
+        /// Creates a Schematic that represents a semaphore with 3 slots
+        /// </summary>
+        /// <remarks>
+        /// The following is the Schematic in DOT Graph
+        /// <![CDATA[ 
+        /// digraph {
+        ///     rankdir="LR"
+        ///     "0" -> "1" [label= "  1  "];
+        ///     "1" -> "0" [label="  -1  "];
+        ///     "1" -> "2" [label= "  1  "];
+        ///     "2" -> "1" [label="  -1  "];
+        ///     "2" -> "3" [label= "  1  "];
+        ///     "3" -> "2" [label="  -1  "];
+        /// } 
+        /// ]]>
+        /// <image url="$(SolutionDir)\src\Examples\Semaphore\diagram_white.png" />
+        /// </remarks>
+        private static REstate.Schematics.Schematic<int, int> CreateSemaphoreSchematic() =>
+            REstateHost.Agent
+                .CreateSchematic<int, int>("3SlotSemaphore")
+                .WithState(0, state => state
+                    .AsInitialState()
+                    .DescribedAs("No slots filled.")
+                    .WithReentrance(-1))
+                .WithState(1, state => state
+                    .DescribedAs("One slot filled.")
+                    .WithTransitionFrom(0, 1)
+                    .WithTransitionTo(0, -1))
+                .WithState(2, state => state
+                    .DescribedAs("Two slots filled.")
+                    .WithTransitionFrom(1, 1)
+                    .WithTransitionTo(1, -1))
+                .WithState(3, state => state
+                    .DescribedAs("Three slots filled.")
+                    .WithTransitionFrom(2, 1)
+                    .WithTransitionTo(2, -1))
+                .Build();
     }
 }
