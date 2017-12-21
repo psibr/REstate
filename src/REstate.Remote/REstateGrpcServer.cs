@@ -69,7 +69,10 @@ namespace REstate.Remote
             return Server.KillAsync();
         }
 
-        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+        /// <summary>
+        /// Performs application-defined tasks associated with 
+        /// freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
         public void Dispose()
         {
             if(!ShutdownTask.IsCompleted)
@@ -80,7 +83,10 @@ namespace REstate.Remote
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>Allows an object to try to free resources and perform other cleanup operations before it is reclaimed by garbage collection.</summary>
+        /// <summary>
+        /// Allows an object to try to free resources and perform other 
+        /// cleanup operations before it is reclaimed by garbage collection.
+        /// </summary>
         ~REstateGrpcServer()
         {
             KillAsync().GetAwaiter().GetResult();
