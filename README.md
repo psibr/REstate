@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/8ql1gahqjxcl8nlx/branch/master?svg=true)](https://ci.appveyor.com/project/psibr/restate-wuhpb/branch/master)
+
 # REstate
 
 REstate is a portable state-flow system. It allows you to define a set of possible states that a program can exist in and what input will cause the transition between any two states. When it transitions into a given state, you can define an action that will execute arbitrary code. This can be used to build complex, but deterministic and predefined systems, such as workflow systems or distributed systems.
