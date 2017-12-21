@@ -9,13 +9,14 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using MagicOnion.Server;
 using Xunit;
 
 namespace REstate.Remote.Tests.Units
 {
     public class StateMachineServiceTests
     {
-        private Mock<StateMachineService> _stateMachineServiceMock;
+        private readonly Mock<StateMachineService> _stateMachineServiceMock;
 
         public StateMachineServiceTests()
         {
@@ -28,6 +29,20 @@ namespace REstate.Remote.Tests.Units
             _stateMachineServiceMock
                 .Setup(_ => _.GetCallCancellationToken())
                 .Returns(CancellationToken.None);
+        }
+
+        [Fact]
+        public void CanBuildServerServiceDefinition()
+        {
+            var service = MagicOnionEngine.BuildServerServiceDefinition(
+                targetTypes: new[]
+                {
+                    typeof(StateMachineService)
+                },
+                option: new MagicOnionOptions(
+                    isReturnExceptionStackTraceInErrorDetail: true));
+
+            Assert.NotNull(service);
         }
 
         [Fact]
