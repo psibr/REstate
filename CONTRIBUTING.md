@@ -92,6 +92,7 @@ Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com
 * Reference issues and pull requests liberally after the first line
 * When only changing documentation, include `[ci skip]` in the commit description
 * Consider starting the commit message with an applicable emoji:
+    * :wrench: `:wrench:` when changing builds/tooling.
     * :art: `:art:` when improving the format/structure of the code
     * :racehorse: `:racehorse:` when improving performance
     * :non-potable_water: `:non-potable_water:` when plugging memory leaks
