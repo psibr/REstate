@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using REstate.Engine;
 
 namespace REstate.Schematics
 {
@@ -31,5 +32,10 @@ namespace REstate.Schematics
                 c => (IState<TState, TInput>)c);
 
         public State<TState, TInput>[] States { get; set; }
+
+        /// <summary>Returns a string that represents the current object.</summary>
+        /// <returns>A string that represents the current object.</returns>
+        public override string ToString() => 
+            DotGraphCartographer<TState, TInput>.Instance.WriteMap(States);
     }
 }
