@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using REstate.Engine;
 using REstate.IoC;
 using REstate.IoC.BoDi;
@@ -10,29 +11,48 @@ namespace REstate
     /// <summary>
     /// The entry-point to REstate.
     /// </summary>
-    public static class REstateHost
+    public class REstateHost
+        : IHasAgentLazy
     {
-        private static readonly object ConfigurationSyncRoot = new object();
+        public REstateHost(IComponentContainer container)
+            : this()
+        {
+            var configuration = new HostConfiguration(container);
 
-        private static ILog Logger => LogProvider.GetLogger(typeof(REstateHost));
+            configuration.RegisterDefaults();
 
-        private static IAgent CreateAgent()
+            HostConfiguration = configuration;
+        }
+
+        public REstateHost()
+        {
+            ((IHasAgentLazy) this).AgentLazy = new Lazy<IAgent>(CreateAgent);
+        }
+
+        private static readonly Lazy<REstateHost> LazyREstateHost = new Lazy<REstateHost>(() => new REstateHost());
+
+        private static REstateHost SharedInstance => LazyREstateHost.Value;
+
+        internal readonly object ConfigurationSyncRoot = new object();
+
+        private IAgent CreateAgent()
         {
             if (HostConfiguration == null)
                 lock (ConfigurationSyncRoot)
                     if (HostConfiguration == null)
                         UseContainer(
-                            new BoDiComponentContainer(
+                            host: this,
+                            container: new BoDiComponentContainer(
                                 new ObjectContainer()));
 
             return new Agent(HostConfiguration);
         }
 
-        private static Lazy<IAgent> _agentLazy = new Lazy<IAgent>(CreateAgent);
+        Lazy<IAgent> IHasAgentLazy.AgentLazy { get; set; }
 
-        public static IAgent Agent => _agentLazy.Value;
+        public static IAgent Agent => SharedInstance.Agent();
 
-        private static HostConfiguration HostConfiguration { get; set; }
+        private HostConfiguration HostConfiguration { get; set; }
 
         /// <summary>
         /// Instructs REstate to use a custom container for all components. 
@@ -41,38 +61,43 @@ namespace REstate
         /// <param name="container">The container to use.</param>
         public static void UseContainer(IComponentContainer container)
         {
-            lock (ConfigurationSyncRoot)
+            UseContainer(SharedInstance, container);
+        }
+
+        /// <summary>
+        /// Instructs REstate to use a custom container for all components. 
+        /// Defaults will be registered into the specified container.
+        /// </summary>
+        /// <param name="host">The host to modify</param>
+        /// <param name="container">The container to use.</param>
+        private static void UseContainer(REstateHost host, IComponentContainer container)
+        {
+            lock (host.ConfigurationSyncRoot)
             {
-                if (HostConfiguration != null)
+                if (host.HostConfiguration != null)
                     throw new InvalidOperationException(
                         "Configuration has already been initialized; " +
                         "cannot replace container at this point.");
-
-                Logger.Debug("REstateHost configuration initializing...");
 
                 var configuration = new HostConfiguration(container);
 
                 configuration.RegisterDefaults();
 
-                HostConfiguration = configuration;
-
-                Logger.Debug("REstateHost configuration initialized");
+                host.HostConfiguration = configuration;
             }
         }
+    }
 
-        /// <summary>
-        /// Clears configuration and the Agent singleton.
-        /// </summary>
-        internal static void ResetAgent()
+    internal interface IHasAgentLazy
+    {
+        Lazy<IAgent> AgentLazy { get; set; }
+    }
+
+    public static class REstateHostExtensions
+    {
+        public static IAgent Agent(this REstateHost host)
         {
-            HostConfiguration = null;
-            _agentLazy = new Lazy<IAgent>(CreateAgent);
+            return ((IHasAgentLazy)host).AgentLazy.Value;
         }
-
-        public static string WriteStateMap<TState, TInput>(this Schematic<TState, TInput> schematic) =>
-            HostConfiguration.Container
-                .Resolve<ICartographer<TState, TInput>>()
-                .WriteMap(schematic.States);
-
     }
 }
