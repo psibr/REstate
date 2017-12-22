@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using REstate.Schematics;
@@ -10,6 +11,10 @@ namespace REstate.Engine
     public class DotGraphCartographer<TState, TInput>
         : ICartographer<TState, TInput>
     {
+
+        private static readonly Lazy<DotGraphCartographer<TState, TInput>> InstanceLazy = new Lazy<DotGraphCartographer<TState,TInput>>();
+        public static DotGraphCartographer<TState, TInput> Instance => InstanceLazy.Value;
+
         /// <summary>
         /// Produces a DOT GraphViz graph.
         /// </summary>

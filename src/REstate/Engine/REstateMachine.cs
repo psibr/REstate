@@ -16,7 +16,6 @@ namespace REstate.Engine
     {
         private readonly IConnectorResolver<TState, TInput> _connectorResolver;
         private readonly IRepositoryContextFactory<TState, TInput> _repositoryContextFactory;
-        private readonly ICartographer<TState, TInput> _cartographer;
         private readonly IReadOnlyDictionary<string, string> _metadata;
         private readonly IReadOnlyCollection<IEventListener> _listeners;
 
@@ -31,7 +30,6 @@ namespace REstate.Engine
         {
             _connectorResolver = connectorResolver;
             _repositoryContextFactory = repositoryContextFactory;
-            _cartographer = cartographer;
             _metadata = metadata;
             _listeners = listeners.ToList();
 
@@ -198,6 +196,6 @@ namespace REstate.Engine
         }
 
         public override string ToString() =>
-            _cartographer.WriteMap(Schematic.States.Values);
+            $"{Schematic.SchematicName}/{MachineId}";
     }
 }
