@@ -14,10 +14,10 @@ namespace REstate
             new LocalAgent(agent);
 
         public static IStateEngine<TState, TInput> GetStateEngine<TState, TInput>(this IAgent agent) =>
-            ((HostConfiguration)REstateHost.Agent.Configuration).Container.Resolve<IStateEngine<TState, TInput>>();
+            ((HostConfiguration)agent.Configuration).Container.Resolve<IStateEngine<TState, TInput>>();
 
         public static TStateEngine GetStateEngine<TState, TInput, TStateEngine>(this IAgent agent)
             where TStateEngine : class, IStateEngine<TState, TInput> =>
-            ((HostConfiguration)REstateHost.Agent.Configuration).Container.Resolve<TStateEngine>();
+            ((HostConfiguration)agent.Configuration).Container.Resolve<TStateEngine>();
     }
 }
