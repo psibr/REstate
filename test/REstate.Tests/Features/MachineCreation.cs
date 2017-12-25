@@ -19,7 +19,7 @@ I want to create machines from schematics")]
     {
 
         [Scenario]
-        public void A_simple_machine_can_be_created()
+        public void A_machine_can_be_created_from_a_Schematic()
         {
             Runner.WithContext<REstateContext<string, string>>().RunScenario(
                 _ => _.Given_a_new_host(),
@@ -28,17 +28,18 @@ I want to create machines from schematics")]
                 _ => _.Then_the_Machine_is_created_successfully(_.CurrentMachine));
         }
 
-        // Given a default host
-        // And Given a schematic
-        // When I create a Machine
-        // Then the Machine is not null
-        // Then the Machine has an Id
+        [Scenario]
+        public void A_machine_can_be_created_from_a_Schematic_with_a_predefined_MachineId()
+        {
+            var machineId = "12345";
 
-        // Given a default host
-        // And Given a schematic
-        // When I create a Machine with an Id
-        // Then the Machine is not null
-        // Then the Machine has the same Id
+            Runner.WithContext<REstateContext<string, string>>().RunScenario(
+                _ => _.Given_a_new_host(),
+                _ => _.Given_a_simple_schematic_with_an_initial_state_INITIALSTATE("Initial"),
+                _ => _.When_a_Machine_is_created_from_a_Schematic_with_a_predefined_MachineId(_.CurrentSchematic, machineId),
+                _ => _.Then_the_Machine_is_created_successfully(_.CurrentMachine),
+                _=> _.Then_the_MachineId_is_MACHINEID(_.CurrentMachine, machineId));
+        }
 
         #region Constructor
         public MachineCreation(ITestOutputHelper output)
