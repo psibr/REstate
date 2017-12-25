@@ -53,20 +53,22 @@ namespace REstate.Engine.Repositories.Redis
 
         public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             string schematicName,
+            string machineId,
             Metadata metadata,
             CancellationToken cancellationToken = default)
         {
             var schematic = await RetrieveSchematicAsync(schematicName, cancellationToken).ConfigureAwait(false);
 
-            return await CreateMachineAsync(schematic, metadata, cancellationToken).ConfigureAwait(false);
+            return await CreateMachineAsync(schematic, machineId, metadata, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             Schematic<TState, TInput> schematic,
+            string machineId,
             Metadata metadata,
             CancellationToken cancellationToken = default)
         {
-            var machineId = Guid.NewGuid().ToString();
+            var id = machineId ?? Guid.NewGuid().ToString();
 
             var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
 
@@ -84,7 +86,7 @@ namespace REstate.Engine.Repositories.Redis
 
             var record = new RedisMachineStatus<TState, TInput>
             {
-                MachineId = machineId,
+                MachineId = id,
                 SchematicHash = hash,
                 State = schematic.InitialState,
                 CommitTag = commitTag,

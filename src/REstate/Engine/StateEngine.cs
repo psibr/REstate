@@ -77,8 +77,15 @@ namespace REstate.Engine
             CancellationToken cancellationToken = default)
             => StoreSchematicAsync(schematic.Clone(), cancellationToken);
 
+        public Task<IStateMachine<TState, TInput>> CreateMachineAsync(
+            Schematic<TState, TInput> schematic,
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default) 
+            => CreateMachineAsync(schematic, null, metadata, cancellationToken);
+
         public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(
             Schematic<TState, TInput> schematic,
+            string machineId,
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default)
         {
@@ -90,6 +97,7 @@ namespace REstate.Engine
                 newMachineStatus = await repositories.Machines
                     .CreateMachineAsync(
                         schematic,
+                        machineId,
                         metadata,
                         cancellationToken)
                     .ConfigureAwait(false);
@@ -134,10 +142,24 @@ namespace REstate.Engine
             ISchematic<TState, TInput> schematic,
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default)
+            => CreateMachineAsync(schematic, null, metadata, cancellationToken);
+
+        public Task<IStateMachine<TState, TInput>> CreateMachineAsync(
+            ISchematic<TState, TInput> schematic,
+            string machineId,
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default)
             => CreateMachineAsync(schematic.Clone(), metadata, cancellationToken);
+
+        public Task<IStateMachine<TState, TInput>> CreateMachineAsync(
+            string schematicName,
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default)
+            => CreateMachineAsync(schematicName, null, metadata, cancellationToken);
 
         public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(
             string schematicName,
+            string machineId,
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default)
         {
@@ -155,6 +177,7 @@ namespace REstate.Engine
                 newMachineStatus = await repositories.Machines
                     .CreateMachineAsync(
                         schematicName,
+                        machineId,
                         metadata,
                         cancellationToken)
                     .ConfigureAwait(false);
