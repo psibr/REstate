@@ -89,7 +89,7 @@ namespace REstate.Remote.Services
         private const string InputTypeHeaderKey = "Input-Type";
         private const Type NoPayloadType = null;
 
-        private static readonly ConcurrentDictionary<MethodKey, Delegate> DelegateCache =
+        private readonly ConcurrentDictionary<MethodKey, Delegate> DelegateCache =
             new ConcurrentDictionary<MethodKey, Delegate>();
 
         #region SendAsync
