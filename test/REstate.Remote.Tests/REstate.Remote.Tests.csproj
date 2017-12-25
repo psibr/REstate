@@ -15,12 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\src\REstate.Remote\REstate.Remote.csproj" />
     <ProjectReference Include="..\..\src\REstate\REstate.csproj" />
+    <ProjectReference Include="..\REstate.Tests\REstate.Tests.csproj" />
   </ItemGroup>
 
 </Project>
