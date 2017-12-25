@@ -237,7 +237,7 @@ namespace REstate.Remote.Tests.Units
             _stateMachineServiceMock
                 .Setup(_ => _.CreateMachineFromStoreAsync<string, string>(
                     It.Is<string>(it => it == schematicName),
-                    It.Is<string>(it => it == machineId),
+                    machineId,
                     It.Is<IDictionary<string, string>>(it => it[key] == metadata[key]),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CreateMachineResponse
@@ -278,7 +278,7 @@ namespace REstate.Remote.Tests.Units
             _stateMachineServiceMock
                 .Setup(_ => _.CreateMachineFromSchematicAsync(
                     It.Is<Schematic<string, string>>(it => it.SchematicName == schematic.SchematicName),
-                    It.Is<string>(it => it == machineId),
+                    machineId,
                     It.Is<IDictionary<string, string>>(it => it[key] == metadata[key]),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CreateMachineResponse
@@ -346,7 +346,7 @@ namespace REstate.Remote.Tests.Units
             {
                 SchematicName = "schematic name",
                 InitialState = "initial state",
-                States = new State<string, string>[] { new State<string, string> { Value = "initial state" } }
+                States = new[] { new State<string, string> { Value = "initial state" } }
             };
             var schematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
             var metadataEnumerable = new List<Dictionary<string, string>>();

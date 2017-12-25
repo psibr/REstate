@@ -29,23 +29,18 @@ namespace REstate
             ((IHasAgentLazy) this).AgentLazy = new Lazy<IAgent>(CreateAgent);
         }
 
-        private static readonly Lazy<REstateHost> LazyREstateHost = new Lazy<REstateHost>(() => new REstateHost());
-
-        private static REstateHost SharedInstance => LazyREstateHost.Value;
+        private static REstateHost SharedInstance => new REstateHost();
 
         internal readonly object ConfigurationSyncRoot = new object();
 
         private IAgent CreateAgent()
         {
-            if (HostConfiguration == null)
-                lock (ConfigurationSyncRoot)
-                    if (HostConfiguration == null)
-                        UseContainer(
-                            host: this,
-                            container: new BoDiComponentContainer(
-                                new ObjectContainer()));
+            lock (ConfigurationSyncRoot)
+            {
+                TryUseContainer(this, new BoDiComponentContainer(new ObjectContainer()));
 
-            return new Agent(HostConfiguration);
+                return new Agent(HostConfiguration);
+            }
         }
 
         Lazy<IAgent> IHasAgentLazy.AgentLazy { get; set; }
@@ -61,7 +56,10 @@ namespace REstate
         /// <param name="container">The container to use.</param>
         public static void UseContainer(IComponentContainer container)
         {
-            UseContainer(SharedInstance, container);
+            if(!TryUseContainer(SharedInstance, container))
+                throw new InvalidOperationException(
+                    "Configuration has already been initialized; " +
+                    "cannot replace container at this point.");
         }
 
         /// <summary>
@@ -70,21 +68,26 @@ namespace REstate
         /// </summary>
         /// <param name="host">The host to modify</param>
         /// <param name="container">The container to use.</param>
-        private static void UseContainer(REstateHost host, IComponentContainer container)
+        private static bool TryUseContainer(REstateHost host, IComponentContainer container)
         {
-            lock (host.ConfigurationSyncRoot)
+            if (host.HostConfiguration == null)
             {
-                if (host.HostConfiguration != null)
-                    throw new InvalidOperationException(
-                        "Configuration has already been initialized; " +
-                        "cannot replace container at this point.");
+                lock (host.ConfigurationSyncRoot)
+                {
+                    if (host.HostConfiguration == null)
+                    {
+                        var configuration = new HostConfiguration(container);
 
-                var configuration = new HostConfiguration(container);
+                        configuration.RegisterDefaults();
 
-                configuration.RegisterDefaults();
+                        host.HostConfiguration = configuration;
 
-                host.HostConfiguration = configuration;
+                        return true;
+                    }
+                }
             }
+
+            return false;
         }
     }
 
