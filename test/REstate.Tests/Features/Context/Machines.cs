@@ -15,12 +15,27 @@ namespace REstate.Tests.Features.Context
                 .CreateMachineAsync(schematic).GetAwaiter().GetResult();
         }
 
+        public void When_a_Machine_is_created_from_a_SchematicName(string schematicName)
+        {
+            CurrentMachine = CurrentHost.Agent()
+                .GetStateEngine<TState, TInput>()
+                .CreateMachineAsync(schematicName).GetAwaiter().GetResult();
+        }
+
         public void When_a_Machine_is_created_from_a_Schematic_with_a_predefined_MachineId(
             Schematic<TState, TInput> schematic, string machineId)
         {
             CurrentMachine = CurrentHost.Agent()
                 .GetStateEngine<TState, TInput>()
                 .CreateMachineAsync(schematic, machineId).GetAwaiter().GetResult();
+        }
+
+        public void When_a_Machine_is_created_from_a_SchematicName_with_a_predefined_MachineId(
+            string schematicName, string machineId)
+        {
+            CurrentMachine = CurrentHost.Agent()
+                .GetStateEngine<TState, TInput>()
+                .CreateMachineAsync(schematicName, machineId).GetAwaiter().GetResult();
         }
 
         public void Then_the_Machine_is_created_successfully(IStateMachine<TState, TInput> machine)
