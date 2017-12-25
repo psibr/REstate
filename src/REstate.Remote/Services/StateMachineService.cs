@@ -29,8 +29,8 @@ namespace REstate.Remote.Services
     using StoreSchematicAsyncDelegate = Func<object, CancellationToken, Task<StoreSchematicResponse>>;
     using GetMachineSchematicAsyncDelegate = Func<string, CancellationToken, Task<GetMachineSchematicResponse>>;
     using GetMachineMetadataAsyncDelegate = Func<string, CancellationToken, Task<GetMachineMetadataResponse>>;
-    using CreateMachineFromStoreAsyncDelegate = Func<string, IDictionary<string, string>, CancellationToken, Task<CreateMachineResponse>>;
-    using CreateMachineFromSchematicAsyncDelegate = Func<object, IDictionary<string, string>, CancellationToken, Task<CreateMachineResponse>>;
+    using CreateMachineFromStoreAsyncDelegate = Func<string, string, IDictionary<string, string>, CancellationToken, Task<CreateMachineResponse>>;
+    using CreateMachineFromSchematicAsyncDelegate = Func<object, string, IDictionary<string, string>, CancellationToken, Task<CreateMachineResponse>>;
     using BulkCreateMachineFromStoreAsyncDelegate = Func<string, IEnumerable<IDictionary<string, string>>, CancellationToken, Task>;
     using BulkCreateMachineFromSchematicAsyncDelegate = Func<object, IEnumerable<IDictionary<string, string>>, CancellationToken, Task>;
     using GetSchematicAsyncDelegate = Func<string, CancellationToken, Task<GetSchematicResponse>>;
@@ -437,6 +437,7 @@ namespace REstate.Remote.Services
                     valueFactory: tuple =>
                     {
                         var schematicNameParameter = Expression.Parameter(typeof(string), "schematicName");
+                        var machineIdParameter = Expression.Parameter(typeof(string), "machineId");
                         var metadataParameter = Expression.Parameter(typeof(IDictionary<string, string>), "metadata");
                         var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
@@ -448,12 +449,14 @@ namespace REstate.Remote.Services
                                 arguments: new Expression[]
                                 {
                                     schematicNameParameter,
+                                    machineIdParameter,
                                     metadataParameter,
                                     cancellationTokenParameter
                                 }),
                             parameters: new ParameterExpression[]
                             {
                                 schematicNameParameter,
+                                machineIdParameter,
                                 metadataParameter,
                                 cancellationTokenParameter
                             })
@@ -462,18 +465,22 @@ namespace REstate.Remote.Services
 
             return await createMachineFromStoreAsync(
                 request.SchematicName, 
+                request.MachineId,
                 request.Metadata, 
                 GetCallCancellationToken());
         }
 
-        internal virtual async Task<CreateMachineResponse> CreateMachineFromStoreAsync<TState, TInput>(string schematicName,
-            IDictionary<string, string> metadata, CancellationToken cancellationToken = default)
+        internal virtual async Task<CreateMachineResponse> CreateMachineFromStoreAsync<TState, TInput>(
+            string schematicName,
+            string machineId,
+            IDictionary<string, string> metadata, 
+            CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
                 .AsLocal()
                 .GetStateEngine<TState, TInput>();
 
-            var machine = await engine.CreateMachineAsync(schematicName, metadata, cancellationToken);
+            var machine = await engine.CreateMachineAsync(schematicName, machineId, metadata, cancellationToken);
 
             return new CreateMachineResponse
             {
@@ -502,6 +509,7 @@ namespace REstate.Remote.Services
                     valueFactory: tuple =>
                     {
                         var schematicParameter = Expression.Parameter(typeof(object), "schematic");
+                        var machineIdParameter = Expression.Parameter(typeof(string), "machineId");
                         var metadataParameter = Expression.Parameter(typeof(IDictionary<string, string>), "metadata");
                         var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
@@ -513,12 +521,14 @@ namespace REstate.Remote.Services
                                 arguments: new Expression[]
                                 {
                                     Expression.Convert(schematicParameter, schematicType),
+                                    machineIdParameter,
                                     metadataParameter,
                                     cancellationTokenParameter
                                 }),
                             parameters: new ParameterExpression[]
                             {
                                 schematicParameter,
+                                machineIdParameter,
                                 metadataParameter,
                                 cancellationTokenParameter
                             })
@@ -527,12 +537,14 @@ namespace REstate.Remote.Services
 
             return await createMachineFromSchematicAsync(
                 schematic, 
+                request.MachineId,
                 request.Metadata, 
                 GetCallCancellationToken());
         }
 
         internal virtual async Task<CreateMachineResponse> CreateMachineFromSchematicAsync<TState, TInput>(
             Schematic<TState, TInput> schematic,
+            string machineId,
             IDictionary<string, string> metadata,
             CancellationToken cancellationToken = default)
         {
@@ -540,7 +552,7 @@ namespace REstate.Remote.Services
                 .AsLocal()
                 .GetStateEngine<TState, TInput>();
 
-            var machine = await engine.CreateMachineAsync(schematic, metadata, cancellationToken);
+            var machine = await engine.CreateMachineAsync(schematic, machineId, metadata, cancellationToken);
 
             return new CreateMachineResponse
             {

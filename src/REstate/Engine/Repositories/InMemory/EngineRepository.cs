@@ -39,25 +39,27 @@ namespace REstate.Engine.Repositories.InMemory
         }
 
         public Task<MachineStatus<TState, TInput>> CreateMachineAsync(
-            string schematicName, 
+            string schematicName,
+            string machineId,
             Metadata metadata, 
             CancellationToken cancellationToken = default)
         {
             var schematic = Schematics[schematicName];
 
-            return CreateMachineAsync(schematic, metadata, cancellationToken);
+            return CreateMachineAsync(schematic, machineId, metadata, cancellationToken);
         }
 
         public Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             Schematic<TState, TInput> schematic,
+            string machineId,
             Metadata metadata, 
             CancellationToken cancellationToken = default)
         {
-            var machineId = Guid.NewGuid().ToString();
+            var id = machineId ?? Guid.NewGuid().ToString();
 
             var record = new MachineStatus<TState, TInput>
             {
-                MachineId = machineId,
+                MachineId = id,
                 Schematic = schematic,
                 State = schematic.InitialState,
                 CommitTag = Guid.NewGuid(),
@@ -65,7 +67,7 @@ namespace REstate.Engine.Repositories.InMemory
                 Metadata = metadata
             };
 
-            Machines.Add(machineId, (record, metadata));
+            Machines.Add(id, (record, metadata));
 
             return Task.FromResult(record);
         }

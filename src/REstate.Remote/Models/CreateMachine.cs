@@ -11,6 +11,9 @@ namespace REstate.Remote.Models
 
         [Key(1)]
         public IDictionary<string, string> Metadata { get; set; }
+
+        [Key(2)]
+        public string MachineId { get; set; }
     }
 
     [MessagePackObject]
@@ -21,6 +24,9 @@ namespace REstate.Remote.Models
 
         [Key(1)]
         public IDictionary<string, string> Metadata { get; set; }
+
+        [Key(2)]
+        public string MachineId { get; set; }
     }
 
     [MessagePackObject]
