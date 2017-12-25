@@ -237,6 +237,7 @@ namespace REstate.Remote.Tests.Units
             _stateMachineServiceMock
                 .Setup(_ => _.CreateMachineFromStoreAsync<string, string>(
                     It.Is<string>(it => it == schematicName),
+                    It.Is<string>(it => it == machineId),
                     It.Is<IDictionary<string, string>>(it => it[key] == metadata[key]),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CreateMachineResponse
@@ -249,7 +250,8 @@ namespace REstate.Remote.Tests.Units
                 .CreateMachineFromStoreAsync(new CreateMachineFromStoreRequest
                 {
                     SchematicName = schematicName,
-                    Metadata = metadata
+                    Metadata = metadata,
+                    MachineId = machineId
                 });
 
             //Assert
@@ -261,7 +263,12 @@ namespace REstate.Remote.Tests.Units
         public async Task CreateMachineFromSchematicAsync()
         {
             // Arrange
-            var schematic = new Schematic<string, string> { SchematicName = "schematic name" };
+            var schematic = new Schematic<string, string>
+            {
+                SchematicName = "schematic name",
+                InitialState = "initial state",
+                States = new State<string, string>[] { new State<string, string> { Value = "initial state" } }
+            };
             var schematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
             var key = "key";
             var value = "value";
@@ -271,6 +278,7 @@ namespace REstate.Remote.Tests.Units
             _stateMachineServiceMock
                 .Setup(_ => _.CreateMachineFromSchematicAsync(
                     It.Is<Schematic<string, string>>(it => it.SchematicName == schematic.SchematicName),
+                    It.Is<string>(it => it == machineId),
                     It.Is<IDictionary<string, string>>(it => it[key] == metadata[key]),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CreateMachineResponse
@@ -283,7 +291,8 @@ namespace REstate.Remote.Tests.Units
                 .CreateMachineFromSchematicAsync(new CreateMachineFromSchematicRequest
                 {
                     SchematicBytes = schematicBytes,
-                    Metadata = metadata
+                    Metadata = metadata,
+                    MachineId = machineId
                 });
 
             // Assert

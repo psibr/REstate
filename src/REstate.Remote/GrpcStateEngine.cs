@@ -38,10 +38,24 @@ namespace REstate.Remote
             ISchematic<TState, TInput> schematic,
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default)
-            => CreateMachineAsync(schematic.Clone(), metadata, cancellationToken);
+            => CreateMachineAsync(schematic.Clone(), null, metadata, cancellationToken);
+
+        public Task<IStateMachine<TState, TInput>> CreateMachineAsync(
+            ISchematic<TState, TInput> schematic,
+            string machineId,
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default)
+            => CreateMachineAsync(schematic.Clone(), machineId, metadata, cancellationToken);
+
+        public Task<IStateMachine<TState, TInput>> CreateMachineAsync(
+            Schematic<TState, TInput> schematic,
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default)
+            => CreateMachineAsync(schematic, null, metadata, cancellationToken);
 
         public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(
             Schematic<TState, TInput> schematic,
+            string machineId,
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default)
         {
@@ -50,14 +64,22 @@ namespace REstate.Remote
                 .CreateMachineFromSchematicAsync(new CreateMachineFromSchematicRequest
                 {
                     SchematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance),
-                    Metadata = metadata
+                    Metadata = metadata,
+                    MachineId = machineId
                 });
 
             return new GrpcStateMachine<TState, TInput>(_stateMachineService, response.MachineId);
         }
 
+        public Task<IStateMachine<TState, TInput>> CreateMachineAsync(
+            string schematicName,
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default)
+            => CreateMachineAsync(schematicName, null, metadata, cancellationToken);
+
         public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(
             string schematicName,
+            string machineId,
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default)
         {
@@ -66,7 +88,8 @@ namespace REstate.Remote
                 .CreateMachineFromStoreAsync(new CreateMachineFromStoreRequest
                 {
                     SchematicName = schematicName,
-                    Metadata = metadata
+                    Metadata = metadata,
+                    MachineId = machineId
                 });
 
             return new GrpcStateMachine<TState, TInput>(_stateMachineService, response.MachineId);
