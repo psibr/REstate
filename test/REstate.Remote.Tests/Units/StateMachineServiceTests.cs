@@ -5,6 +5,7 @@ using REstate.Remote.Models;
 using REstate.Remote.Services;
 using REstate.Schematics;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -14,13 +15,22 @@ using Xunit;
 
 namespace REstate.Remote.Tests.Units
 {
+    // method name, state type, input type, payload type
+    using MethodKey = ValueTuple<string, Type, Type, Type>;
+
     public class StateMachineServiceTests
     {
         private readonly Mock<StateMachineService> _stateMachineServiceMock;
+        private readonly Mock<IStateMachineServiceLocalAdapter> _localAdapterMock;
 
         public StateMachineServiceTests()
         {
-            _stateMachineServiceMock = new Mock<StateMachineService>();
+            _localAdapterMock = new Mock<IStateMachineServiceLocalAdapter>(MockBehavior.Strict);
+
+            _stateMachineServiceMock = new Mock<StateMachineService>(
+                MockBehavior.Strict, 
+                new ConcurrentDictionary<MethodKey, Delegate>(), 
+                _localAdapterMock.Object);
 
             _stateMachineServiceMock
                 .Setup(_ => _.GetGenericsFromHeaders())
@@ -57,7 +67,7 @@ namespace REstate.Remote.Tests.Units
             var updatedCommitTag = new Guid();
             var updatedTime = DateTime.Now;
 
-            _stateMachineServiceMock
+            _localAdapterMock
                 .Setup(_ => _.SendAsync<string, string>(
                     It.Is<string>(it => it == machineId),
                     It.Is<string>(it => it == input),
@@ -102,7 +112,7 @@ namespace REstate.Remote.Tests.Units
             var updatedCommitTag = Guid.NewGuid();
             var updatedTime = DateTime.Now;
 
-            _stateMachineServiceMock
+            _localAdapterMock
                 .Setup(_ => _.SendWithPayloadAsync<string, string, string>(
                     It.Is<string>(it => it == machineId),
                     It.Is<string>(it => it == input),
@@ -142,7 +152,7 @@ namespace REstate.Remote.Tests.Units
             var schematic = new Schematic<string, string>{ SchematicName = "schematic name" };
             var schematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
 
-            _stateMachineServiceMock
+            _localAdapterMock
                 .Setup(_ => _.StoreSchematicAsync(
                     It.Is<Schematic<string, string>>(it => it.SchematicName == schematic.SchematicName),
                     It.IsAny<CancellationToken>()))
@@ -170,7 +180,7 @@ namespace REstate.Remote.Tests.Units
             var machineId = "some value";
             var schematicBytes = new byte[50];
 
-            _stateMachineServiceMock
+            _localAdapterMock
                 .Setup(_ => _.GetMachineSchematicAsync<string, string>(
                     It.Is<string>(it => it == machineId), 
                     It.IsAny<CancellationToken>()))
@@ -202,7 +212,7 @@ namespace REstate.Remote.Tests.Units
             var value = "value";
             var metadata = new Dictionary<string, string> { { key, value } };
 
-            _stateMachineServiceMock
+            _localAdapterMock
                 .Setup(_ => _.GetMachineMetadataAsync<string, string>(
                     It.Is<string>(it => it == machineId),
                     It.IsAny<CancellationToken>()))
@@ -234,7 +244,7 @@ namespace REstate.Remote.Tests.Units
             var metadata = new Dictionary<string, string> { { key, value } };
             var machineId = "some machineId";
 
-            _stateMachineServiceMock
+            _localAdapterMock
                 .Setup(_ => _.CreateMachineFromStoreAsync<string, string>(
                     It.Is<string>(it => it == schematicName),
                     machineId,
@@ -275,7 +285,7 @@ namespace REstate.Remote.Tests.Units
             var metadata = new Dictionary<string, string> { { key, value } };
             var machineId = "some machineId";
 
-            _stateMachineServiceMock
+            _localAdapterMock
                 .Setup(_ => _.CreateMachineFromSchematicAsync(
                     It.Is<Schematic<string, string>>(it => it.SchematicName == schematic.SchematicName),
                     machineId,
@@ -315,12 +325,10 @@ namespace REstate.Remote.Tests.Units
             metadataEnumerable.Add(firstMetadataEntry);
             metadataEnumerable.Add(secondMetadataEntry);
 
-            _stateMachineServiceMock
+            _localAdapterMock
                 .Setup(_ => _.BulkCreateMachineFromStoreAsync<string, string>(
                     It.Is<string>(it => it == schematicName),
-                    It.Is<List<IDictionary<string, string>>>(it =>
-                        it[0][firstKey] == metadataEnumerable[0][firstKey]
-                        && it[1][secondKey] == metadataEnumerable[1][secondKey]),
+                    It.IsAny<IEnumerable<IDictionary<string, string>>>(),
                     It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
@@ -333,8 +341,11 @@ namespace REstate.Remote.Tests.Units
                 });
 
             // Assert
-            _stateMachineServiceMock.Verify(
-                expression: _ => _.BulkCreateMachineFromStoreAsync<string, string>(schematicName, metadataEnumerable, CancellationToken.None),
+            _localAdapterMock.Verify(
+                expression: _ => _.BulkCreateMachineFromStoreAsync<string, string>(
+                    schematicName,
+                    metadataEnumerable,
+                    CancellationToken.None),
                 times: Times.Once());
         }
 
@@ -359,12 +370,10 @@ namespace REstate.Remote.Tests.Units
             metadataEnumerable.Add(firstMetadataEntry);
             metadataEnumerable.Add(secondMetadataEntry);
 
-            _stateMachineServiceMock
+            _localAdapterMock
                 .Setup(_ => _.BulkCreateMachineFromSchematicAsync<string, string>(
                     It.Is<Schematic<string, string>>(it => it.SchematicName == schematic.SchematicName),
-                    It.Is<List<IDictionary<string, string>>>(it =>
-                        it[0][firstKey] == metadataEnumerable[0][firstKey]
-                        && it[1][secondKey] == metadataEnumerable[1][secondKey]),
+                    It.IsAny<IEnumerable<IDictionary<string, string>>>(),
                     It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
@@ -378,7 +387,7 @@ namespace REstate.Remote.Tests.Units
 
             // Assert
             // Note: first parameter has to be checked for It.Is, other parameters CANNOT or the verify will fail
-            _stateMachineServiceMock.Verify(
+            _localAdapterMock.Verify(
                 expression: _ => _.BulkCreateMachineFromSchematicAsync(
                     It.Is<Schematic<string, string>>(it => it.SchematicName == schematic.SchematicName), 
                     metadataEnumerable, 
@@ -394,7 +403,7 @@ namespace REstate.Remote.Tests.Units
             var schematic = new Schematic<string, string> { SchematicName = "schematic name" };
             var schematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
 
-            _stateMachineServiceMock
+            _localAdapterMock
                 .Setup(_ => _.GetSchematicAsync<string, string>(
                     It.Is<string>(it => it == schematicName),
                     It.IsAny<CancellationToken>()))
@@ -422,7 +431,7 @@ namespace REstate.Remote.Tests.Units
             var machineId = "some machine";
 
             // This one has to return a completed task or you get a null ref exception
-            _stateMachineServiceMock
+            _localAdapterMock
                 .Setup(_ => _.DeleteMachineAsync<string, string>(
                     It.Is<string>(it => it == machineId),
                     It.IsAny<CancellationToken>()))
@@ -436,7 +445,7 @@ namespace REstate.Remote.Tests.Units
                 });
 
             // Assert
-            _stateMachineServiceMock.Verify(
+            _localAdapterMock.Verify(
                 expression: _ => _.DeleteMachineAsync<string, string>(machineId, CancellationToken.None),
                 times: Times.Once());
         }

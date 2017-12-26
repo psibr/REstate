@@ -3,16 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Grpc.Core;
 using MagicOnion;
-using MagicOnion.Client;
 using MagicOnion.Server;
 using MessagePack;
 using MessagePack.Resolvers;
-using REstate.Engine;
 using REstate.Remote.Models;
 using REstate.Schematics;
 
@@ -36,63 +32,39 @@ namespace REstate.Remote.Services
     using GetSchematicAsyncDelegate = Func<string, CancellationToken, Task<GetSchematicResponse>>;
     using DeleteMachineAsyncDelegate = Func<string, CancellationToken, Task>;
 
-    public interface IStateMachineServiceClient
-    {
-        IStateMachineService Create();
-    }
-
-    public interface IStateMachineService
-        : IService<IStateMachineService>
-    {
-        UnaryResult<SendResponse> SendAsync(SendRequest request);
-
-        UnaryResult<SendResponse> SendWithPayloadAsync(SendWithPayloadRequest request);
-
-        UnaryResult<StoreSchematicResponse> StoreSchematicAsync(StoreSchematicRequest request);
-
-        UnaryResult<GetMachineSchematicResponse> GetMachineSchematicAsync(GetMachineSchematicRequest request);
-
-        UnaryResult<GetMachineMetadataResponse> GetMachineMetadataAsync(GetMachineMetadataRequest request);
-
-        UnaryResult<GetSchematicResponse> GetSchematicAsync(GetSchematicRequest request);
-
-        UnaryResult<Nil> DeleteMachineAsync(DeleteMachineRequest request);
-
-        UnaryResult<CreateMachineResponse> CreateMachineFromStoreAsync(CreateMachineFromStoreRequest request);
-
-        UnaryResult<CreateMachineResponse> CreateMachineFromSchematicAsync(CreateMachineFromSchematicRequest request);
-
-        UnaryResult<Nil> BulkCreateMachineFromStoreAsync(BulkCreateMachineFromStoreRequest request);
-
-        UnaryResult<Nil> BulkCreateMachineFromSchematicAsync(BulkCreateMachineFromSchematicRequest request);
-    }
-
-    public class StateMachineServiceClient
-        : IStateMachineServiceClient
-    {
-        private readonly GrpcHostOptions _gRpcHostOptions;
-
-        public StateMachineServiceClient(GrpcHostOptions gRpcHostOptions)
-        {
-            _gRpcHostOptions = gRpcHostOptions;
-        }
-
-        public IStateMachineService Create() =>
-            MagicOnionClient.Create<IStateMachineService>(_gRpcHostOptions.Channel);
-    }
-
     public class StateMachineService
         : ServiceBase<IStateMachineService>
         , IStateMachineService
     {
+        private static readonly ConcurrentDictionary<MethodKey, Delegate> SharedDelegateCache =
+            new ConcurrentDictionary<MethodKey, Delegate>();
+
         private const string StateTypeHeaderKey = "Status-Type";
         private const string InputTypeHeaderKey = "Input-Type";
         private const Type NoPayloadType = null;
 
-        private readonly ConcurrentDictionary<MethodKey, Delegate> DelegateCache =
-            new ConcurrentDictionary<MethodKey, Delegate>();
+        private readonly ConcurrentDictionary<MethodKey, Delegate> DelegateCache;
+        private IStateMachineServiceLocalAdapter LocalAdapter { get; }
 
-        #region SendAsync
+        public StateMachineService()
+            : this(SharedDelegateCache, new StateMachineServiceLocalAdapter())
+        {
+        }
+
+        /// <summary>
+        /// This is primarily a test constructor. 
+        /// <para />
+        /// It allow us to test the expression trees without invoking any code 
+        /// and without caching delegates to the static, which interferes with scenario tests.
+        /// </summary>
+        /// <param name="delegateCache"></param>
+        /// <param name="localAdapter"></param>
+        internal StateMachineService(ConcurrentDictionary<MethodKey, Delegate> delegateCache,  IStateMachineServiceLocalAdapter localAdapter)
+        {
+            DelegateCache = delegateCache;
+            LocalAdapter = localAdapter;
+        }
+
         public async UnaryResult<SendResponse> SendAsync(SendRequest request)
         {
             (var stateType, var inputType) = GetGenericTupleFromHeaders();
@@ -114,7 +86,7 @@ namespace REstate.Remote.Services
 
                         return Expression.Lambda<SendAsyncDelegate>(
                                 Expression.Call(
-                                    instance: Expression.Constant(this, GetType()),
+                                    instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
                                     methodName: nameof(SendAsync),
                                     typeArguments: new[] { stateType, inputType },
                                     arguments: new Expression[]
@@ -139,40 +111,6 @@ namespace REstate.Remote.Services
                 GetCallCancellationToken());
         }
 
-        internal virtual async Task<SendResponse> SendAsync<TState, TInput>(
-            string machineId,
-            TInput input,
-            Guid? commitTag,
-            CancellationToken cancellationToken = default)
-        {
-            var engine = REstateHost.Agent.AsLocal()
-                .GetStateEngine<TState, TInput>();
-
-            var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
-
-            Status<TState> newStatus;
-
-            try
-            {
-                newStatus = commitTag != null
-                    ? await machine.SendAsync(input, commitTag.Value, cancellationToken).ConfigureAwait(false)
-                    : await machine.SendAsync(input, cancellationToken).ConfigureAwait(false);
-            }
-            catch (StateConflictException conflictException)
-            {
-                throw new ReturnStatusException(StatusCode.AlreadyExists, conflictException.Message);
-            }
-
-            return new SendResponse
-            {
-                MachineId = machineId,
-                CommitTag = newStatus.CommitTag,
-                StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance)
-            };
-        }
-        #endregion SendAsync
-
-        #region SendWithPayloadAsync
         public async UnaryResult<SendResponse> SendWithPayloadAsync(SendWithPayloadRequest request)
         {
             (var stateType, var inputType) = GetGenericTupleFromHeaders();
@@ -198,7 +136,7 @@ namespace REstate.Remote.Services
 
                         return Expression.Lambda<SendWithPayloadAsyncDelegate>(
                                 Expression.Call(
-                                    instance: Expression.Constant(this, GetType()),
+                                    instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
                                     methodName: nameof(SendWithPayloadAsync),
                                     typeArguments: new[] { stateType, inputType, payloadType },
                                     arguments: new Expression[]
@@ -226,37 +164,6 @@ namespace REstate.Remote.Services
                     GetCallCancellationToken());
         }
 
-        internal virtual async Task<SendResponse> SendWithPayloadAsync<TState, TInput, TPayload>(string machineId, TInput input, TPayload payload, Guid? commitTag, CancellationToken cancellationToken = default)
-        {
-            var engine = REstateHost.Agent.AsLocal()
-                .GetStateEngine<TState, TInput>();
-
-            var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
-
-            Status<TState> newStatus;
-
-            try
-            {
-                newStatus = commitTag != null
-                    ? await machine.SendAsync(input, payload, commitTag.Value, cancellationToken).ConfigureAwait(false)
-                    : await machine.SendAsync(input, payload, cancellationToken).ConfigureAwait(false);
-            }
-            catch (StateConflictException conflictException)
-            {
-                throw new ReturnStatusException(StatusCode.AlreadyExists, conflictException.Message);
-            }
-
-            return new SendResponse
-            {
-                MachineId = machineId,
-                CommitTag = newStatus.CommitTag,
-                StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
-                UpdatedTime = newStatus.UpdatedTime
-            };
-        }
-        #endregion SendWithPayloadAsync
-
-        #region StoreSchematicAsync
         public async UnaryResult<StoreSchematicResponse> StoreSchematicAsync(StoreSchematicRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
@@ -280,7 +187,7 @@ namespace REstate.Remote.Services
 
                         return Expression.Lambda<StoreSchematicAsyncDelegate>(
                                 body: Expression.Call(
-                                    instance: Expression.Constant(this, GetType()),
+                                    instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
                                     methodName: nameof(StoreSchematicAsync),
                                     typeArguments: genericTypes,
                                     arguments: new Expression[]
@@ -300,21 +207,6 @@ namespace REstate.Remote.Services
             return await storeSchematicAsync(schematic, GetCallCancellationToken());
         }
 
-        internal virtual async Task<StoreSchematicResponse> StoreSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default)
-        {
-            var engine = REstateHost.Agent.AsLocal()
-                .GetStateEngine<TState, TInput>();
-
-            var newSchematic = await engine.StoreSchematicAsync(schematic, cancellationToken).ConfigureAwait(false);
-
-            return new StoreSchematicResponse
-            {
-                SchematicBytes = MessagePackSerializer.NonGeneric.Serialize(newSchematic.GetType(), newSchematic, ContractlessStandardResolver.Instance)
-            };
-        }
-        #endregion StoreSchematicAsync
-
-        #region GetMachineSchematicAsync
         public async UnaryResult<GetMachineSchematicResponse> GetMachineSchematicAsync(GetMachineSchematicRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
@@ -331,7 +223,7 @@ namespace REstate.Remote.Services
 
                         return Expression.Lambda<GetMachineSchematicAsyncDelegate>(
                                 body: Expression.Call(
-                                    instance: Expression.Constant(this, GetType()),
+                                    instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
                                     methodName: nameof(GetMachineSchematicAsync),
                                     typeArguments: genericTypes,
                                     arguments: new Expression[]
@@ -351,26 +243,6 @@ namespace REstate.Remote.Services
             return await getMachineSchematicAsync(request.MachineId, GetCallCancellationToken());
         }
 
-        internal virtual async Task<GetMachineSchematicResponse> GetMachineSchematicAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default)
-        {
-            var engine = REstateHost.Agent
-                .AsLocal()
-                .GetStateEngine<TState, TInput>();
-
-            var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
-
-            var schematic = await machine.GetSchematicAsync(cancellationToken).ConfigureAwait(false);
-
-            return new GetMachineSchematicResponse
-            {
-                MachineId = machine.MachineId,
-                SchematicBytes = MessagePackSerializer.NonGeneric
-                    .Serialize(schematic.GetType(), schematic, ContractlessStandardResolver.Instance)
-            };
-        }
-        #endregion GetMachineSchematicAsync
-
-        #region GetMachineMetadataAsync
         public async UnaryResult<GetMachineMetadataResponse> GetMachineMetadataAsync(GetMachineMetadataRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
@@ -387,7 +259,7 @@ namespace REstate.Remote.Services
 
                         return Expression.Lambda<GetMachineMetadataAsyncDelegate>(
                             body: Expression.Call(
-                                instance: Expression.Constant(this, GetType()),
+                                instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
                                 methodName: nameof(GetMachineMetadataAsync),
                                 typeArguments: genericTypes,
                                 arguments: new Expression[]
@@ -406,25 +278,6 @@ namespace REstate.Remote.Services
             return await getMachineMetadataAsync(request.MachineId, GetCallCancellationToken());
         }
 
-        internal virtual async Task<GetMachineMetadataResponse> GetMachineMetadataAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default)
-        {
-            var engine = REstateHost.Agent
-                .AsLocal()
-                .GetStateEngine<TState, TInput>();
-
-            var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
-
-            var metadata = await machine.GetMetadataAsync(cancellationToken).ConfigureAwait(false);
-
-            return new GetMachineMetadataResponse
-            {
-                MachineId = machine.MachineId,
-                Metadata = (IDictionary<string, string>)metadata
-            };
-        }
-        #endregion GetMachineMetadataAsync
-
-        #region CreateMachineFromStoreAsync
         public async UnaryResult<CreateMachineResponse> CreateMachineFromStoreAsync(CreateMachineFromStoreRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
@@ -443,7 +296,7 @@ namespace REstate.Remote.Services
 
                         return Expression.Lambda<CreateMachineFromStoreAsyncDelegate>(
                             body: Expression.Call(
-                                instance: Expression.Constant(this, GetType()),
+                                instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
                                 methodName: nameof(CreateMachineFromStoreAsync),
                                 typeArguments: genericTypes,
                                 arguments: new Expression[]
@@ -469,27 +322,7 @@ namespace REstate.Remote.Services
                 request.Metadata, 
                 GetCallCancellationToken());
         }
-
-        internal virtual async Task<CreateMachineResponse> CreateMachineFromStoreAsync<TState, TInput>(
-            string schematicName,
-            string machineId,
-            IDictionary<string, string> metadata, 
-            CancellationToken cancellationToken = default)
-        {
-            var engine = REstateHost.Agent
-                .AsLocal()
-                .GetStateEngine<TState, TInput>();
-
-            var machine = await engine.CreateMachineAsync(schematicName, machineId, metadata, cancellationToken);
-
-            return new CreateMachineResponse
-            {
-                MachineId = machine.MachineId
-            };
-        }
-        #endregion CreateMachineFromStoreAsync
-
-        #region CreateMachineFromSchematicAsync
+        
         public async UnaryResult<CreateMachineResponse> CreateMachineFromSchematicAsync(CreateMachineFromSchematicRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
@@ -515,7 +348,7 @@ namespace REstate.Remote.Services
 
                         return Expression.Lambda<CreateMachineFromSchematicAsyncDelegate>(
                             body: Expression.Call(
-                                instance: Expression.Constant(this, GetType()),
+                                instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
                                 methodName: nameof(CreateMachineFromSchematicAsync),
                                 typeArguments: genericTypes,
                                 arguments: new Expression[]
@@ -541,27 +374,7 @@ namespace REstate.Remote.Services
                 request.Metadata, 
                 GetCallCancellationToken());
         }
-
-        internal virtual async Task<CreateMachineResponse> CreateMachineFromSchematicAsync<TState, TInput>(
-            Schematic<TState, TInput> schematic,
-            string machineId,
-            IDictionary<string, string> metadata,
-            CancellationToken cancellationToken = default)
-        {
-            var engine = REstateHost.Agent
-                .AsLocal()
-                .GetStateEngine<TState, TInput>();
-
-            var machine = await engine.CreateMachineAsync(schematic, machineId, metadata, cancellationToken);
-
-            return new CreateMachineResponse
-            {
-                MachineId = machine.MachineId
-            };
-        }
-        #endregion CreateMachineFromSchematicAsync
-
-        #region BulkCreateMachineFromStoreAsync
+        
         public async UnaryResult<Nil> BulkCreateMachineFromStoreAsync(BulkCreateMachineFromStoreRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
@@ -579,7 +392,7 @@ namespace REstate.Remote.Services
 
                             return Expression.Lambda<BulkCreateMachineFromStoreAsyncDelegate>(
                                 body: Expression.Call(
-                                    instance: Expression.Constant(this, GetType()),
+                                    instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
                                     methodName: nameof(BulkCreateMachineFromStoreAsync),
                                     typeArguments: genericTypes,
                                     arguments: new Expression[]
@@ -601,21 +414,7 @@ namespace REstate.Remote.Services
 
             return Nil.Default;
         }
-
-        internal virtual async Task BulkCreateMachineFromStoreAsync<TState, TInput>(
-            string schematicName,
-            IEnumerable<IDictionary<string, string>> metadata,
-            CancellationToken cancellationToken = default)
-        {
-            var engine = REstateHost.Agent
-                .AsLocal()
-                .GetStateEngine<TState, TInput>();
-
-            await engine.BulkCreateMachinesAsync(schematicName, metadata, cancellationToken);
-        }
-        #endregion BulkCreateMachineFromStoreAsync
-
-        #region BulkCreateMachineFromSchematicAsync
+        
         public async UnaryResult<Nil> BulkCreateMachineFromSchematicAsync(BulkCreateMachineFromSchematicRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
@@ -640,7 +439,7 @@ namespace REstate.Remote.Services
 
                         return Expression.Lambda<BulkCreateMachineFromSchematicAsyncDelegate>(
                             body: Expression.Call(
-                                instance: Expression.Constant(this, GetType()),
+                                instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
                                 methodName: nameof(BulkCreateMachineFromSchematicAsync),
                                 typeArguments: genericTypes,
                                 arguments: new Expression[]
@@ -661,21 +460,7 @@ namespace REstate.Remote.Services
 
             return Nil.Default;
         }
-
-        internal virtual async Task BulkCreateMachineFromSchematicAsync<TState, TInput>(
-            Schematic<TState, TInput> schematic,
-            IEnumerable<IDictionary<string, string>> metadata, 
-            CancellationToken cancellationToken = default)
-        {
-            var engine = REstateHost.Agent
-                .AsLocal()
-                .GetStateEngine<TState, TInput>();
-
-            await engine.BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
-        }
-        #endregion BulkCreateMachineFromSchematicAsync
-
-        #region GetSchematicAsync
+        
         public async UnaryResult<GetSchematicResponse> GetSchematicAsync(GetSchematicRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
@@ -692,7 +477,7 @@ namespace REstate.Remote.Services
 
                         return Expression.Lambda<GetSchematicAsyncDelegate>(
                             body: Expression.Call(
-                                instance: Expression.Constant(this, GetType()),
+                                instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
                                 methodName: nameof(GetSchematicAsync),
                                 typeArguments: genericTypes,
                                 arguments: new Expression[]
@@ -710,23 +495,7 @@ namespace REstate.Remote.Services
 
             return await getSchematicAsync(request.SchematicName, GetCallCancellationToken());
         }
-
-        internal virtual async Task<GetSchematicResponse> GetSchematicAsync<TState, TInput>(string schematicName, CancellationToken cancellationToken)
-        {
-            var stateEngine = REstateHost.Agent
-                .AsLocal()
-                .GetStateEngine<TState, TInput>();
-
-            var schematic = await stateEngine.GetSchematicAsync(schematicName, cancellationToken).ConfigureAwait(false);
-
-            return new GetSchematicResponse
-            {
-                SchematicBytes = MessagePackSerializer.NonGeneric.Serialize(schematic.GetType(), schematic, ContractlessStandardResolver.Instance)
-            };
-        }
-        #endregion GetSchematicAsync
-
-        #region DeleteMachineAsync
+        
         public async UnaryResult<Nil> DeleteMachineAsync(DeleteMachineRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
@@ -743,7 +512,7 @@ namespace REstate.Remote.Services
 
                         return Expression.Lambda<DeleteMachineAsyncDelegate>(
                             body: Expression.Call(
-                                instance: Expression.Constant(this, GetType()),
+                                instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
                                 methodName: nameof(DeleteMachineAsync),
                                 typeArguments: genericTypes,
                                 arguments: new Expression[]
@@ -763,16 +532,6 @@ namespace REstate.Remote.Services
 
             return Nil.Default;
         }
-
-        internal virtual async Task DeleteMachineAsync<TState, TInput>(string machineId, CancellationToken cancellationToken)
-        {
-            var stateEngine = REstateHost.Agent
-                .AsLocal()
-                .GetStateEngine<TState, TInput>();
-
-            await stateEngine.DeleteMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
-        }
-        #endregion DeleteMachineAsync
 
         internal virtual Type[] GetGenericsFromHeaders()
         {
