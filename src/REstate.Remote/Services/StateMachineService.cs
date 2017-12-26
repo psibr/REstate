@@ -12,8 +12,6 @@ using MessagePack.Resolvers;
 using REstate.Remote.Models;
 using REstate.Schematics;
 
-#pragma warning disable 1998
-
 namespace REstate.Remote.Services
 {
     // method name, state type, input type, payload type
@@ -43,7 +41,7 @@ namespace REstate.Remote.Services
         private const string InputTypeHeaderKey = "Input-Type";
         private const Type NoPayloadType = null;
 
-        private readonly ConcurrentDictionary<MethodKey, Delegate> DelegateCache;
+        private ConcurrentDictionary<MethodKey, Delegate> DelegateCache { get; }
         private IStateMachineServiceLocalAdapter LocalAdapter { get; }
 
         public StateMachineService()
