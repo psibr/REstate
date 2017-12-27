@@ -33,7 +33,21 @@ I want to retrieve previously created machines")]
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Machine_exists_with_MachineId_MACHINEID(_.CurrentSchematic, machineId),
                 _ => _.When_a_Machine_is_retrieved_with_MachineId_MACHINEID(machineId),
+                _ => _.Then_no_exception_was_thrown(),
                 _ => _.Then_the_Machine_is_valid(_.CurrentMachine));
+        }
+
+        [Scenario]
+        public void A_NonExistant_Machine_cannot_be_retrieved()
+        {
+            var uniqueId = MethodBase.GetCurrentMethod().Name;
+
+            var machineId = uniqueId;
+
+            Runner.WithContext<REstateContext<string, string>>().RunScenario(
+                _ => _.Given_a_new_host(),
+                _ => _.When_a_Machine_is_retrieved_with_MachineId_MACHINEID(machineId),
+                _ => _.Then_MachineDoesNotExistException_is_thrown());
         }
 
         #region Constructor

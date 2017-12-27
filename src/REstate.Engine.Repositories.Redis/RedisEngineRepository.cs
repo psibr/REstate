@@ -28,10 +28,19 @@ namespace REstate.Engine.Repositories.Redis
             _restateDatabase = restateDatabase;
         }
 
+        /// <summary>
+        /// Retrieves a previously stored Schematic by name.
+        /// </summary>
+        /// <param name="schematicName">The name of the Schematic</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="schematicName"/> is null.</exception>
+        /// <exception cref="SchematicDoesNotExistException">Thrown when no matching Schematic was found for the given name.</exception>
         public async Task<Schematic<TState, TInput>> RetrieveSchematicAsync(
             string schematicName,
             CancellationToken cancellationToken = default)
         {
+            if (schematicName == null) throw new ArgumentNullException(nameof(schematicName));
+
             var value = await _restateDatabase.StringGetAsync($"{SchematicKeyPrefix}/{schematicName}").ConfigureAwait(false);
 
             var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(value,
@@ -40,10 +49,20 @@ namespace REstate.Engine.Repositories.Redis
             return schematic;
         }
 
+        /// <summary>
+        /// Stores a Schematic, using its <c>SchematicName</c> as the key.
+        /// </summary>
+        /// <param name="schematic">The Schematic to store</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="schematic"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="schematic"/> has a null <c>SchematicName</c> property.</exception>
         public async Task<Schematic<TState, TInput>> StoreSchematicAsync(
             Schematic<TState, TInput> schematic,
             CancellationToken cancellationToken = default)
         {
+            if (schematic == null) throw new ArgumentNullException(nameof(schematic));
+            if (schematic.SchematicName == null) throw new ArgumentException("Schematic must have a name to be stored.", nameof(schematic));
+
             var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
 
             await _restateDatabase.StringSetAsync($"{SchematicKeyPrefix}/{schematic.SchematicName}", schematicBytes);
@@ -51,23 +70,44 @@ namespace REstate.Engine.Repositories.Redis
             return schematic;
         }
 
+        /// <summary>
+        /// Creates a new Machine from a provided Schematic.
+        /// </summary>
+        /// <param name="schematicName">The name of the stored Schematic</param>
+        /// <param name="machineId">The Id of Machine to create; if null, an Id will be generated.</param>
+        /// <param name="metadata">Related metadata for the Machine</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="schematicName"/> is null.</exception>
         public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             string schematicName,
             string machineId,
             Metadata metadata,
             CancellationToken cancellationToken = default)
         {
+            if (schematicName == null) throw new ArgumentNullException(nameof(schematicName));
+
             var schematic = await RetrieveSchematicAsync(schematicName, cancellationToken).ConfigureAwait(false);
 
             return await CreateMachineAsync(schematic, machineId, metadata, cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Creates a new Machine from a provided Schematic.
+        /// </summary>
+        /// <param name="schematic">The Schematic of the Machine</param>
+        /// <param name="machineId">The Id of Machine to create; if null, an Id will be generated.</param>
+        /// <param name="metadata">Related metadata for the Machine</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="schematic"/> is null.</exception>
+        /// <exception cref="SchematicDoesNotExistException">Thrown when no matching Schematic was found for the given name.</exception>
         public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             Schematic<TState, TInput> schematic,
             string machineId,
             Metadata metadata,
             CancellationToken cancellationToken = default)
         {
+            if (schematic == null) throw new ArgumentNullException(nameof(schematic));
+
             var id = machineId ?? Guid.NewGuid().ToString();
 
             var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
@@ -161,18 +201,40 @@ namespace REstate.Engine.Repositories.Redis
             return await BulkCreateMachinesAsync(schematic, metadata, cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Deletes a Machine.
+        /// </summary>
+        /// <remarks>
+        /// Does not throw an exception if a matching Machine was not found.
+        /// </remarks>
+        /// <param name="machineId">The Id of the Machine to delete</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
         public async Task DeleteMachineAsync(
             string machineId,
             CancellationToken cancellationToken = default)
         {
+            if (machineId == null) throw new ArgumentNullException(nameof(machineId));
+
             await _restateDatabase.KeyDeleteAsync($"{MachinesKeyPrefix}/{machineId}").ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Retrieves the record for a Machine Status.
+        /// </summary>
+        /// <param name="machineId">The Id of the Machine</param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
+        /// <exception cref="MachineDoesNotExistException">Thrown when no matching MachineId was found.</exception>
         public async Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(
             string machineId,
             CancellationToken cancellationToken = default)
         {
+            if (machineId == null) throw new ArgumentNullException(nameof(machineId));
+
             var machineBytes = await _restateDatabase.StringGetAsync($"{MachinesKeyPrefix}/{machineId}").ConfigureAwait(false);
+
+            if (!machineBytes.HasValue) throw new MachineDoesNotExistException(machineId);
 
             var redisRecord = MessagePackSerializer.Deserialize<RedisMachineStatus<TState, TInput>>(
                 machineBytes);
@@ -195,12 +257,26 @@ namespace REstate.Engine.Repositories.Redis
             };
         }
 
+        /// <summary>
+        /// Updates the Status record of a Machine
+        /// </summary>
+        /// <param name="machineId">The Id of the Machine</param>
+        /// <param name="state">The state to which the Status is set.</param>
+        /// <param name="lastCommitTag">
+        /// If provided, will guarentee the update will occur only 
+        /// if the value matches the current Status's CommitTag.
+        /// </param>
+        /// <param name="cancellationToken"></param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
+        /// <exception cref="MachineDoesNotExistException">Thrown when no matching MachineId was found.</exception>
+        /// <exception cref="StateConflictException">Thrown when a conflict occured on CommitTag; no update was performed.</exception>
         public async Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
             string machineId,
             TState state,
             Guid? lastCommitTag,
             CancellationToken cancellationToken = default)
         {
+            if (machineId == null) throw new ArgumentNullException(nameof(machineId));
 
             var machineKey = $"{MachinesKeyPrefix}/{machineId}";
             var machineBytes = await _restateDatabase.StringGetAsync(machineKey).ConfigureAwait(false);
@@ -216,21 +292,24 @@ namespace REstate.Engine.Repositories.Redis
             }
             else
             {
-                throw new StateConflictException("CommitTag did not match.");
+                throw new StateConflictException();
             }
 
             var newMachineBytes = MessagePackSerializer.Serialize(status);
             
             var transaction = _restateDatabase.CreateTransaction();
+
+            // Veify the record has not changed since read.
             transaction.AddCondition(Condition.StringEqual(machineKey, machineBytes));
+
             var setTask = transaction.StringSetAsync(machineKey, newMachineBytes);
             var schematicBytesTask = transaction.StringGetAsync($"{MachineSchematicsKeyPrefix}/{status.SchematicHash}");
             var committed = await transaction.ExecuteAsync().ConfigureAwait(false);
 
             await setTask.ConfigureAwait(false);
 
-            if(!committed)
-                throw new StateConflictException("CommitTag did not match.");
+            // If the transaction failed, we had a conflict.
+            if(!committed) throw new StateConflictException();
 
             var schematicBytes = await schematicBytesTask.ConfigureAwait(false);
 

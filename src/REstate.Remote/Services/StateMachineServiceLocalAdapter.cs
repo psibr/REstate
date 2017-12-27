@@ -48,10 +48,10 @@ namespace REstate.Remote.Services
         }
 
         public async Task<SendResponse> SendWithPayloadAsync<TState, TInput, TPayload>(
-            string machineId, 
-            TInput input, 
-            TPayload payload, 
-            Guid? commitTag, 
+            string machineId,
+            TInput input,
+            TPayload payload,
+            Guid? commitTag,
             CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent.AsLocal()
@@ -82,7 +82,7 @@ namespace REstate.Remote.Services
         }
 
         public async Task<StoreSchematicResponse> StoreSchematicAsync<TState, TInput>(
-            Schematic<TState, TInput> schematic, 
+            Schematic<TState, TInput> schematic,
             CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent.AsLocal()
@@ -93,21 +93,29 @@ namespace REstate.Remote.Services
             return new StoreSchematicResponse
             {
                 SchematicBytes = MessagePackSerializer.NonGeneric.Serialize(
-                    newSchematic.GetType(), 
-                    newSchematic, 
+                    newSchematic.GetType(),
+                    newSchematic,
                     ContractlessStandardResolver.Instance)
             };
         }
 
         public async Task<GetMachineSchematicResponse> GetMachineSchematicAsync<TState, TInput>(
-            string machineId, 
+            string machineId,
             CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
                 .AsLocal()
                 .GetStateEngine<TState, TInput>();
 
-            var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
+            IStateMachine<TState, TInput> machine;
+            try
+            {
+                machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
+            }
+            catch (MachineDoesNotExistException machineDoesNotExistException)
+            {
+                throw new ReturnStatusException(StatusCode.NotFound, machineDoesNotExistException.Message);
+            }
 
             var schematic = await machine.GetSchematicAsync(cancellationToken).ConfigureAwait(false);
 
@@ -120,7 +128,7 @@ namespace REstate.Remote.Services
         }
 
         public async Task<GetMachineMetadataResponse> GetMachineMetadataAsync<TState, TInput>(
-            string machineId, 
+            string machineId,
             CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent
@@ -149,9 +157,9 @@ namespace REstate.Remote.Services
                 .GetStateEngine<TState, TInput>();
 
             var machine = await engine.CreateMachineAsync(
-                schematicName, 
-                machineId, 
-                metadata, 
+                schematicName,
+                machineId,
+                metadata,
                 cancellationToken);
 
             return new CreateMachineResponse
@@ -171,9 +179,9 @@ namespace REstate.Remote.Services
                 .GetStateEngine<TState, TInput>();
 
             var machine = await engine.CreateMachineAsync(
-                schematic, 
-                machineId, 
-                metadata, 
+                schematic,
+                machineId,
+                metadata,
                 cancellationToken);
 
             return new CreateMachineResponse
@@ -207,7 +215,7 @@ namespace REstate.Remote.Services
         }
 
         public async Task<GetSchematicResponse> GetSchematicAsync<TState, TInput>(
-            string schematicName, 
+            string schematicName,
             CancellationToken cancellationToken)
         {
             var stateEngine = REstateHost.Agent
@@ -215,20 +223,20 @@ namespace REstate.Remote.Services
                 .GetStateEngine<TState, TInput>();
 
             var schematic = await stateEngine.GetSchematicAsync(
-                schematicName, 
+                schematicName,
                 cancellationToken).ConfigureAwait(false);
 
             return new GetSchematicResponse
             {
                 SchematicBytes = MessagePackSerializer.NonGeneric.Serialize(
-                    schematic.GetType(), 
-                    schematic, 
+                    schematic.GetType(),
+                    schematic,
                     ContractlessStandardResolver.Instance)
             };
         }
 
         public async Task DeleteMachineAsync<TState, TInput>(
-            string machineId, 
+            string machineId,
             CancellationToken cancellationToken)
         {
             var stateEngine = REstateHost.Agent
@@ -236,7 +244,7 @@ namespace REstate.Remote.Services
                 .GetStateEngine<TState, TInput>();
 
             await stateEngine.DeleteMachineAsync(
-                machineId, 
+                machineId,
                 cancellationToken).ConfigureAwait(false);
         }
     }

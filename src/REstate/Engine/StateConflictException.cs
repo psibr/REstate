@@ -9,6 +9,7 @@ namespace REstate.Engine
         : Exception
     {
         public StateConflictException()
+            : this("CommitTag did not match; no update performed.")
         {
         }
 

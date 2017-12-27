@@ -98,13 +98,13 @@ namespace REstate.Remote
         public Task BulkCreateMachinesAsync(
             ISchematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
-            CancellationToken cancellationToken = default) 
+            CancellationToken cancellationToken = default)
             => BulkCreateMachinesAsync(schematic.Clone(), metadata, cancellationToken);
 
         public async Task BulkCreateMachinesAsync(
             Schematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
-            CancellationToken cancellationToken = default) 
+            CancellationToken cancellationToken = default)
             => await _stateMachineService
                 .WithCancellationToken(cancellationToken)
                 .BulkCreateMachineFromSchematicAsync(new BulkCreateMachineFromSchematicRequest
@@ -127,7 +127,7 @@ namespace REstate.Remote
 
         public async Task DeleteMachineAsync(
             string machineId,
-            CancellationToken cancellationToken = default) 
+            CancellationToken cancellationToken = default)
             => await _stateMachineService
                 .WithCancellationToken(cancellationToken)
                 .DeleteMachineAsync(new DeleteMachineRequest
@@ -135,11 +135,30 @@ namespace REstate.Remote
                     MachineId = machineId
                 });
 
-        public Task<IStateMachine<TState, TInput>> GetMachineAsync(
+        public async Task<IStateMachine<TState, TInput>> GetMachineAsync(
             string machineId,
-            CancellationToken cancellationToken = default) =>
-                Task.FromResult<IStateMachine<TState, TInput>>(
-                    new GrpcStateMachine<TState, TInput>(_stateMachineService, machineId));
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // We don't actually need the schematic here, but for the existence check.
+                await _stateMachineService
+                    .WithCancellationToken(cancellationToken)
+                    .GetMachineSchematicAsync(new GetMachineSchematicRequest
+                    {
+                        MachineId = machineId
+                    });
+            }
+            catch (RpcException exception)
+            {
+                if (exception.Status.StatusCode == StatusCode.NotFound)
+                    throw new MachineDoesNotExistException(machineId, exception.Status.Detail, exception);
+
+                throw;
+            }
+
+            return new GrpcStateMachine<TState, TInput>(_stateMachineService, machineId);
+        }
 
         public async Task<ISchematic<TState, TInput>> GetSchematicAsync(
             string schematicName,
@@ -177,7 +196,7 @@ namespace REstate.Remote
 
         public Task<ISchematic<TState, TInput>> StoreSchematicAsync(
             ISchematic<TState, TInput> schematic,
-            CancellationToken cancellationToken = default) 
+            CancellationToken cancellationToken = default)
             => StoreSchematicAsync(schematic.Clone(), cancellationToken);
     }
 }
