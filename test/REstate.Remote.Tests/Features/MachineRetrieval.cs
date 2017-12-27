@@ -6,6 +6,7 @@ using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
 using LightBDD.XUnit2;
 using REstate.Remote.Tests.Features.Context;
+using Xunit;
 using Xunit.Abstractions;
 
 // ReSharper disable InconsistentNaming
@@ -18,6 +19,8 @@ As a developer
 I want to retrieve Machines from a remote server")]
     [ScenarioCategory("Machine Retrieval")]
     [ScenarioCategory("Remote")]
+    [ScenarioCategory("gRPC")]
+    //[Collection("gRPC")]
     public class MachineRetrieval
         : FeatureFixture
     {
