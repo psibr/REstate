@@ -24,6 +24,7 @@ I want to use the configuration")]
             Runner.WithContext<REstateContext>().RunScenario(
                 _ => _.Given_a_new_host(),
                 _ => _.When_configuration_is_accessed(),
+                _ => _.Then_no_exception_was_thrown(),
                 _ => _.Then_configuration_is_not_null(),
                 _ => _.Then_configuration_has_a_container());
         }
@@ -36,6 +37,7 @@ I want to use the configuration")]
             Runner.WithContext<REstateContext>().RunScenario(
                 _ => _.Given_a_new_host_with_custom_ComponentContainer(customComponentContainer),
                 _ => _.When_configuration_is_accessed(),
+                _ => _.Then_no_exception_was_thrown(),
                 _ => _.Then_configuration_is_not_null(),
                 _ => _.Then_configuration_has_a_container());
         }

@@ -8,18 +8,23 @@ namespace REstate.Engine
     public class SchematicDoesNotExistException
         : Exception
     {
-        public SchematicDoesNotExistException()
+        public string RequestedSchematicName { get; }
+
+        public SchematicDoesNotExistException(string schematicName)
+            : this(schematicName, $"No Schematic with name matching {schematicName} was found.")
         {
         }
 
-        public SchematicDoesNotExistException(string message) 
+        public SchematicDoesNotExistException(string schematicName, string message) 
             : base(message)
         {
+            RequestedSchematicName = schematicName;
         }
 
-        public SchematicDoesNotExistException(string message, Exception innerException) 
+        public SchematicDoesNotExistException(string schematicName, string message, Exception innerException) 
             : base(message, innerException)
         {
+            RequestedSchematicName = schematicName;
         }
     }
 }

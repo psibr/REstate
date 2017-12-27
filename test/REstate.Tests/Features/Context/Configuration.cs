@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System;
+using Xunit;
 
 namespace REstate.Tests.Features.Context
 {
@@ -8,7 +9,14 @@ namespace REstate.Tests.Features.Context
 
         public void When_configuration_is_accessed()
         {
-            CurrentHostConfiguration = CurrentHost.Agent().Configuration;
+            try
+            {
+                CurrentHostConfiguration = CurrentHost.Agent().Configuration;
+            }
+            catch (Exception ex)
+            {
+                CurrentException = ex;
+            }
         }
 
         public void Then_configuration_has_a_container()

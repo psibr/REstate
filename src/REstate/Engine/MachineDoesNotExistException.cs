@@ -8,18 +8,23 @@ namespace REstate.Engine
     public class MachineDoesNotExistException
         : Exception
     {
-        public MachineDoesNotExistException()
+        public string RequestedMachineId { get; }
+
+        public MachineDoesNotExistException(string machineId)
+            : this(machineId, $"No Machine with MachineId matching {machineId} was found.")
         {
         }
 
-        public MachineDoesNotExistException(string message) 
+        public MachineDoesNotExistException(string machineId, string message) 
             : base(message)
         {
+            RequestedMachineId = machineId;
         }
 
-        public MachineDoesNotExistException(string message, Exception innerException) 
+        public MachineDoesNotExistException(string machineId, string message, Exception innerException) 
             : base(message, innerException)
         {
+            RequestedMachineId = machineId;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using REstate.Engine;
+﻿using System;
+using REstate.Engine;
 using REstate.Schematics;
 using Xunit;
 
@@ -10,32 +11,61 @@ namespace REstate.Tests.Features.Context
 
         public void When_a_Machine_is_created_from_a_Schematic(Schematic<TState, TInput> schematic)
         {
+            try
+            { 
             CurrentMachine = CurrentHost.Agent()
                 .GetStateEngine<TState, TInput>()
                 .CreateMachineAsync(schematic).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                CurrentException = ex;
+            }
         }
 
         public void When_a_Machine_is_created_from_a_SchematicName(string schematicName)
         {
-            CurrentMachine = CurrentHost.Agent()
-                .GetStateEngine<TState, TInput>()
-                .CreateMachineAsync(schematicName).GetAwaiter().GetResult();
+            try
+            {
+                CurrentMachine = CurrentHost.Agent()
+                    .GetStateEngine<TState, TInput>()
+                    .CreateMachineAsync(schematicName).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                CurrentException = ex;
+            }
+
         }
 
         public void When_a_Machine_is_created_from_a_Schematic_with_a_predefined_MachineId(
             Schematic<TState, TInput> schematic, string machineId)
         {
-            CurrentMachine = CurrentHost.Agent()
-                .GetStateEngine<TState, TInput>()
-                .CreateMachineAsync(schematic, machineId).GetAwaiter().GetResult();
+            try
+            {
+                CurrentMachine = CurrentHost.Agent()
+                    .GetStateEngine<TState, TInput>()
+                    .CreateMachineAsync(schematic, machineId).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                CurrentException = ex;
+            }
         }
 
         public void When_a_Machine_is_created_from_a_SchematicName_with_a_predefined_MachineId(
             string schematicName, string machineId)
         {
-            CurrentMachine = CurrentHost.Agent()
-                .GetStateEngine<TState, TInput>()
-                .CreateMachineAsync(schematicName, machineId).GetAwaiter().GetResult();
+            try
+            {
+                CurrentMachine = CurrentHost.Agent()
+                    .GetStateEngine<TState, TInput>()
+                    .CreateMachineAsync(schematicName, machineId).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                CurrentException = ex;
+            }
         }
 
         public void Then_the_Machine_is_valid(IStateMachine<TState, TInput> machine)
@@ -59,9 +89,22 @@ namespace REstate.Tests.Features.Context
 
         public void When_a_Machine_is_retrieved_with_MachineId_MACHINEID(string machineId)
         {
-            CurrentMachine = CurrentHost.Agent()
-                .GetStateEngine<TState, TInput>()
-                .GetMachineAsync(machineId).GetAwaiter().GetResult();
+            try
+            {
+                CurrentMachine = CurrentHost.Agent()
+                    .GetStateEngine<TState, TInput>()
+                    .GetMachineAsync(machineId).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                CurrentException = ex;
+            }
+        }
+
+        public void Then_MachineDoesNotExistException_is_thrown()
+        {
+            Assert.NotNull(CurrentException);
+            Assert.IsType<MachineDoesNotExistException>(CurrentException);
         }
     }
 }
