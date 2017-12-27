@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading.Tasks;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
@@ -24,14 +25,14 @@ I want to retrieve Machines from a remote server")]
         : FeatureFixture
     {
         [Scenario]
-        public void A_Machine_can_be_retrieved()
+        public async Task A_Machine_can_be_retrieved()
         {
-            var uniqueId = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_Machine_can_be_retrieved);
 
-            var schematicName = uniqueId;
-            var machineId = uniqueId;
+            const string schematicName = uniqueId;
+            const string machineId = uniqueId;
 
-            Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
+            await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.Given_a_REstate_gRPC_Server_running(),
                 _ => _.Given_the_default_agent_is_gRPC_remote(),
@@ -43,13 +44,13 @@ I want to retrieve Machines from a remote server")]
         }
 
         [Scenario]
-        public void A_NonExistant_Machine_cannot_be_retrieved()
+        public async Task A_NonExistant_Machine_cannot_be_retrieved()
         {
-            var uniqueId = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_NonExistant_Machine_cannot_be_retrieved);
 
-            var machineId = uniqueId;
+            const string machineId = uniqueId;
 
-            Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
+            await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.Given_a_REstate_gRPC_Server_running(),
                 _ => _.Given_the_default_agent_is_gRPC_remote(),

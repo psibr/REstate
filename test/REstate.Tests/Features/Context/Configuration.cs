@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace REstate.Tests.Features.Context
@@ -7,7 +8,7 @@ namespace REstate.Tests.Features.Context
     {
         public IHostConfiguration CurrentHostConfiguration { get; set; }
 
-        public void When_configuration_is_accessed()
+        public Task When_configuration_is_accessed()
         {
             try
             {
@@ -17,16 +18,22 @@ namespace REstate.Tests.Features.Context
             {
                 CurrentException = ex;
             }
+
+            return Task.CompletedTask;
         }
 
-        public void Then_configuration_has_a_container()
+        public Task Then_configuration_has_a_container()
         {
             Assert.NotNull(((HostConfiguration)CurrentHostConfiguration).Container);
+
+            return Task.CompletedTask;
         }
 
-        public void Then_configuration_is_not_null()
+        public Task Then_configuration_is_not_null()
         {
             Assert.NotNull(CurrentHostConfiguration);
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -20,7 +20,7 @@ namespace REstate.Remote.Tests.Features.Context
     public class REstateRemoteContext<TState, TInput>
         : REstateContext<TState, TInput>
     {
-        public void Given_a_REstate_gRPC_Server_running()
+        public Task Given_a_REstate_gRPC_Server_running()
         {
             if (CurrentGrpcServer == null)
             {
@@ -36,9 +36,11 @@ namespace REstate.Remote.Tests.Features.Context
             }
 
             CurrentGrpcServer.Start();
+
+            return Task.CompletedTask;
         }
 
-        public void When_a_REstate_gRPC_Server_is_created_and_started()
+        public Task When_a_REstate_gRPC_Server_is_created_and_started()
         {
             if (CurrentGrpcServer == null)
             {
@@ -54,9 +56,11 @@ namespace REstate.Remote.Tests.Features.Context
             }
 
             CurrentGrpcServer.Start();
+
+            return Task.CompletedTask;
         }
 
-        public void Given_the_default_agent_is_gRPC_remote()
+        public Task Given_the_default_agent_is_gRPC_remote()
         {
             CurrentHost.Agent().Configuration
                 .RegisterComponent(new GrpcRemoteHostComponent(new GrpcHostOptions
@@ -64,18 +68,22 @@ namespace REstate.Remote.Tests.Features.Context
                     Channel = new Channel("localhost", CurrentGrpcServer.BoundPorts[0], ChannelCredentials.Insecure),
                     UseAsDefaultEngine = true
                 }));
+
+            return Task.CompletedTask;
         }
 
-        public void Then_REstate_gRPC_Server_has_bound_ports()
+        public Task Then_REstate_gRPC_Server_has_bound_ports()
         {
             Assert.NotNull(CurrentGrpcServer);
             Assert.NotEmpty(CurrentGrpcServer.BoundPorts);
             Assert.DoesNotContain(0, CurrentGrpcServer.BoundPorts);
+
+            return Task.CompletedTask;
         }
 
-        public void Given_a_REstate_gRPC_Server_failure()
+        public async Task Given_a_REstate_gRPC_Server_failure()
         {
-            CurrentGrpcServer.KillAsync().GetAwaiter().GetResult();
+            await CurrentGrpcServer.KillAsync();
         }
     }
 }

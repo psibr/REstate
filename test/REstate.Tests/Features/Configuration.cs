@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
@@ -19,9 +20,9 @@ I want to use the configuration")]
         : FeatureFixture
     {
         [Scenario]
-        public void Configuration_is_accessible_with_default_container()
+        public async Task Configuration_is_accessible_with_default_container()
         {
-            Runner.WithContext<REstateContext>().RunScenario(
+            await Runner.WithContext<REstateContext>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.When_configuration_is_accessed(),
                 _ => _.Then_no_exception_was_thrown(),
@@ -30,11 +31,11 @@ I want to use the configuration")]
         }
 
         [Scenario]
-        public void Configuration_is_accessible_with_custom_container()
+        public async Task Configuration_is_accessible_with_custom_container()
         {
             var customComponentContainer = new BoDiComponentContainer(new ObjectContainer());
 
-            Runner.WithContext<REstateContext>().RunScenario(
+            await Runner.WithContext<REstateContext>().RunScenarioAsync(
                 _ => _.Given_a_new_host_with_custom_ComponentContainer(customComponentContainer),
                 _ => _.When_configuration_is_accessed(),
                 _ => _.Then_no_exception_was_thrown(),
