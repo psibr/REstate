@@ -18,7 +18,7 @@ I want to create Machines from Schematics on a remote server")]
     [ScenarioCategory("Machine Creation")]
     [ScenarioCategory("Remote")]
     [ScenarioCategory("gRPC")]
-    //[Collection("gRPC")]
+    [Collection("gRPC")]
     public class MachineCreation
         : FeatureFixture
     {

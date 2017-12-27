@@ -20,7 +20,7 @@ I want to retrieve Machines from a remote server")]
     [ScenarioCategory("Machine Retrieval")]
     [ScenarioCategory("Remote")]
     [ScenarioCategory("gRPC")]
-    //[Collection("gRPC")]
+    [Collection("gRPC")]
     public class MachineRetrieval
         : FeatureFixture
     {
