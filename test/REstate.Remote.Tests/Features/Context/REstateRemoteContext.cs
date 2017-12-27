@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using Grpc.Core;
 using REstate.Tests.Features.Context;
 
@@ -29,10 +30,9 @@ namespace REstate.Remote.Tests.Features.Context
                 CurrentGrpcServer = CurrentHost.Agent()
                     .AsRemote()
                     .CreateGrpcServer(new ServerPort("0.0.0.0", 12345, ServerCredentials.Insecure));
-
-                CurrentGrpcServer.Start();
             }
-            
+
+            CurrentGrpcServer.Start();
         }
 
         public void Given_the_default_agent_is_gRPC_remote_on_default_endpoint()
@@ -43,6 +43,11 @@ namespace REstate.Remote.Tests.Features.Context
                     Channel = new Channel("localhost", 12345, ChannelCredentials.Insecure),
                     UseAsDefaultEngine = true
                 }));
+        }
+
+        public void Given_a_REstate_gRPC_Server_failure()
+        {
+            CurrentGrpcServer.KillAsync().GetAwaiter().GetResult();
         }
     }
 }

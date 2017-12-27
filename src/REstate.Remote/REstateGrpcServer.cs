@@ -50,13 +50,19 @@ namespace REstate.Remote
         public Task StartAsync()
         {
             Server.Start();
-
             return Server.ShutdownTask;
         }
 
         public void Start()
         {
-            Server.Start();
+            try
+            {
+                Server.Start();
+            }
+            catch (InvalidOperationException)
+            {
+                // Swallow server already started exceptions
+            }
         }
 
         public Task ShutdownAsync()

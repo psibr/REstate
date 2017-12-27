@@ -4,6 +4,7 @@ using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
 using LightBDD.XUnit2;
 using REstate.Remote.Tests.Features.Context;
+using Xunit;
 using Xunit.Abstractions;
 
 // ReSharper disable InconsistentNaming
@@ -16,6 +17,8 @@ As a developer
 I want to create Machines from Schematics on a remote server")]
     [ScenarioCategory("Machine Creation")]
     [ScenarioCategory("Remote")]
+    [ScenarioCategory("gRPC")]
+    //[Collection("gRPC")]
     public class MachineCreation
         : FeatureFixture
     {
