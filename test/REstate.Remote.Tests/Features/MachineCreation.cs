@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
@@ -20,7 +20,7 @@ I want to create Machines from Schematics on a remote server")]
         : FeatureFixture
     {
         [Scenario]
-        public void A_machine_can_be_created_from_a_Schematic()
+        public void A_Machine_can_be_created_from_a_Schematic()
         {
             var schematicName = MethodBase.GetCurrentMethod().Name;
 
@@ -30,11 +30,11 @@ I want to create Machines from Schematics on a remote server")]
                 _ => _.Given_the_default_agent_is_gRPC_remote_on_default_endpoint(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.When_a_Machine_is_created_from_a_Schematic(_.CurrentSchematic),
-                _ => _.Then_the_Machine_is_created_successfully(_.CurrentMachine));
+                _ => _.Then_the_Machine_is_valid(_.CurrentMachine));
         }
 
         [Scenario]
-        public void A_machine_can_be_created_from_a_SchematicName()
+        public void A_Machine_can_be_created_from_a_SchematicName()
         {
             var schematicName = MethodBase.GetCurrentMethod().Name;
 
@@ -45,11 +45,11 @@ I want to create Machines from Schematics on a remote server")]
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Schematic_is_stored(_.CurrentSchematic),
                 _ => _.When_a_Machine_is_created_from_a_SchematicName(_.CurrentSchematic.SchematicName),
-                _ => _.Then_the_Machine_is_created_successfully(_.CurrentMachine));
+                _ => _.Then_the_Machine_is_valid(_.CurrentMachine));
         }
 
         [Scenario]
-        public void A_machine_can_be_created_from_a_Schematic_with_a_predefined_MachineId()
+        public void A_Machine_can_be_created_from_a_Schematic_with_a_predefined_MachineId()
         {
             var schematicName = MethodBase.GetCurrentMethod().Name;
             var machineId = MethodBase.GetCurrentMethod().Name;
@@ -60,12 +60,12 @@ I want to create Machines from Schematics on a remote server")]
                 _ => _.Given_the_default_agent_is_gRPC_remote_on_default_endpoint(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.When_a_Machine_is_created_from_a_Schematic_with_a_predefined_MachineId(_.CurrentSchematic, machineId),
-                _ => _.Then_the_Machine_is_created_successfully(_.CurrentMachine),
+                _ => _.Then_the_Machine_is_valid(_.CurrentMachine),
                 _=> _.Then_the_MachineId_is_MACHINEID(_.CurrentMachine, machineId));
         }
 
         [Scenario]
-        public void A_machine_can_be_created_from_a_SchematicName_with_a_predefined_MachineId()
+        public void A_Machine_can_be_created_from_a_SchematicName_with_a_predefined_MachineId()
         {
             var schematicName = MethodBase.GetCurrentMethod().Name;
             var machineId = MethodBase.GetCurrentMethod().Name;
@@ -77,7 +77,7 @@ I want to create Machines from Schematics on a remote server")]
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Schematic_is_stored(_.CurrentSchematic),
                 _ => _.When_a_Machine_is_created_from_a_SchematicName_with_a_predefined_MachineId(_.CurrentSchematic.SchematicName, machineId),
-                _ => _.Then_the_Machine_is_created_successfully(_.CurrentMachine),
+                _ => _.Then_the_Machine_is_valid(_.CurrentMachine),
                 _ => _.Then_the_MachineId_is_MACHINEID(_.CurrentMachine, machineId));
         }
 
@@ -88,7 +88,4 @@ I want to create Machines from Schematics on a remote server")]
         }
         #endregion
     }
-
-
 }
-
