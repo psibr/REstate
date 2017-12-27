@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Grpc.Core;
 using REstate.Tests.Features.Context;
+using Xunit;
 
 namespace REstate.Remote.Tests.Features.Context
 {
@@ -13,36 +14,63 @@ namespace REstate.Remote.Tests.Features.Context
     {
         public static REstateGrpcServer CurrentGrpcServer { get; set; }
 
-        public static object CurrentGrpcServerSyncRoot = new object();
+        public static readonly object CurrentGrpcServerSyncRoot = new object();
     }
 
     public class REstateRemoteContext<TState, TInput>
         : REstateContext<TState, TInput>
     {
-        public void Given_a_REstate_gRPC_Server_running_on_the_default_endpoint()
+        public void Given_a_REstate_gRPC_Server_running()
         {
-            if(CurrentGrpcServer != null) return;
-
-            lock (CurrentGrpcServerSyncRoot)
+            if (CurrentGrpcServer == null)
             {
-                if(CurrentGrpcServer != null) return;
-
-                CurrentGrpcServer = CurrentHost.Agent()
-                    .AsRemote()
-                    .CreateGrpcServer(new ServerPort("0.0.0.0", 12345, ServerCredentials.Insecure));
+                lock (CurrentGrpcServerSyncRoot)
+                {
+                    if (CurrentGrpcServer == null)
+                    {
+                        CurrentGrpcServer = CurrentHost.Agent()
+                            .AsRemote()
+                            .CreateGrpcServer(new ServerPort("0.0.0.0", 0, ServerCredentials.Insecure));
+                    }
+                }
             }
 
             CurrentGrpcServer.Start();
         }
 
-        public void Given_the_default_agent_is_gRPC_remote_on_default_endpoint()
+        public void When_a_REstate_gRPC_Server_is_created_and_started()
+        {
+            if (CurrentGrpcServer == null)
+            {
+                lock (CurrentGrpcServerSyncRoot)
+                {
+                    if (CurrentGrpcServer == null)
+                    {
+                        CurrentGrpcServer = CurrentHost.Agent()
+                            .AsRemote()
+                            .CreateGrpcServer(new ServerPort("0.0.0.0", 0, ServerCredentials.Insecure));
+                    }
+                }
+            }
+
+            CurrentGrpcServer.Start();
+        }
+
+        public void Given_the_default_agent_is_gRPC_remote()
         {
             CurrentHost.Agent().Configuration
                 .RegisterComponent(new GrpcRemoteHostComponent(new GrpcHostOptions
                 {
-                    Channel = new Channel("localhost", 12345, ChannelCredentials.Insecure),
+                    Channel = new Channel("localhost", CurrentGrpcServer.BoundPorts[0], ChannelCredentials.Insecure),
                     UseAsDefaultEngine = true
                 }));
+        }
+
+        public void Then_REstate_gRPC_Server_has_bound_ports()
+        {
+            Assert.NotNull(CurrentGrpcServer);
+            Assert.NotEmpty(CurrentGrpcServer.BoundPorts);
+            Assert.DoesNotContain(0, CurrentGrpcServer.BoundPorts);
         }
 
         public void Given_a_REstate_gRPC_Server_failure()

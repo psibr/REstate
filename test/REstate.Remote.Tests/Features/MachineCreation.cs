@@ -18,7 +18,6 @@ I want to create Machines from Schematics on a remote server")]
     [ScenarioCategory("Machine Creation")]
     [ScenarioCategory("Remote")]
     [ScenarioCategory("gRPC")]
-    [Collection("gRPC")]
     public class MachineCreation
         : FeatureFixture
     {
@@ -29,8 +28,8 @@ I want to create Machines from Schematics on a remote server")]
 
             Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
                 _ => _.Given_a_new_host(),
-                _ => _.Given_a_REstate_gRPC_Server_running_on_the_default_endpoint(),
-                _ => _.Given_the_default_agent_is_gRPC_remote_on_default_endpoint(),
+                _ => _.Given_a_REstate_gRPC_Server_running(),
+                _ => _.Given_the_default_agent_is_gRPC_remote(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.When_a_Machine_is_created_from_a_Schematic(_.CurrentSchematic),
                 _ => _.Then_no_exception_was_thrown(),
@@ -44,8 +43,8 @@ I want to create Machines from Schematics on a remote server")]
 
             Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
                 _ => _.Given_a_new_host(),
-                _ => _.Given_a_REstate_gRPC_Server_running_on_the_default_endpoint(),
-                _ => _.Given_the_default_agent_is_gRPC_remote_on_default_endpoint(),
+                _ => _.Given_a_REstate_gRPC_Server_running(),
+                _ => _.Given_the_default_agent_is_gRPC_remote(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Schematic_is_stored(_.CurrentSchematic),
                 _ => _.When_a_Machine_is_created_from_a_SchematicName(_.CurrentSchematic.SchematicName),
@@ -61,8 +60,8 @@ I want to create Machines from Schematics on a remote server")]
 
             Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
                 _ => _.Given_a_new_host(),
-                _ => _.Given_a_REstate_gRPC_Server_running_on_the_default_endpoint(),
-                _ => _.Given_the_default_agent_is_gRPC_remote_on_default_endpoint(),
+                _ => _.Given_a_REstate_gRPC_Server_running(),
+                _ => _.Given_the_default_agent_is_gRPC_remote(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.When_a_Machine_is_created_from_a_Schematic_with_a_predefined_MachineId(_.CurrentSchematic, machineId),
                 _ => _.Then_no_exception_was_thrown(),
@@ -78,8 +77,8 @@ I want to create Machines from Schematics on a remote server")]
 
             Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
                 _ => _.Given_a_new_host(),
-                _ => _.Given_a_REstate_gRPC_Server_running_on_the_default_endpoint(),
-                _ => _.Given_the_default_agent_is_gRPC_remote_on_default_endpoint(),
+                _ => _.Given_a_REstate_gRPC_Server_running(),
+                _ => _.Given_the_default_agent_is_gRPC_remote(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Schematic_is_stored(_.CurrentSchematic),
                 _ => _.When_a_Machine_is_created_from_a_SchematicName_with_a_predefined_MachineId(_.CurrentSchematic.SchematicName, machineId),

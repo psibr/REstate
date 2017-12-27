@@ -1,4 +1,7 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MagicOnion.Server;
@@ -47,6 +50,8 @@ namespace REstate.Remote
 
         public Task ShutdownTask => Server.ShutdownTask;
 
+        public int[] BoundPorts { get; private set; }
+
         public Task StartAsync()
         {
             Server.Start();
@@ -58,11 +63,14 @@ namespace REstate.Remote
             try
             {
                 Server.Start();
+                Server.ShutdownTask.ContinueWith(task => BoundPorts = new int[0]);
             }
             catch (InvalidOperationException)
             {
                 // Swallow server already started exceptions
             }
+
+            BoundPorts = Server.Ports.Select(port => port.BoundPort).ToArray();
         }
 
         public Task ShutdownAsync()

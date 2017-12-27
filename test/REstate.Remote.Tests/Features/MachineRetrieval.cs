@@ -20,7 +20,6 @@ I want to retrieve Machines from a remote server")]
     [ScenarioCategory("Machine Retrieval")]
     [ScenarioCategory("Remote")]
     [ScenarioCategory("gRPC")]
-    [Collection("gRPC")]
     public class MachineRetrieval
         : FeatureFixture
     {
@@ -34,8 +33,8 @@ I want to retrieve Machines from a remote server")]
 
             Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
                 _ => _.Given_a_new_host(),
-                _ => _.Given_a_REstate_gRPC_Server_running_on_the_default_endpoint(),
-                _ => _.Given_the_default_agent_is_gRPC_remote_on_default_endpoint(),
+                _ => _.Given_a_REstate_gRPC_Server_running(),
+                _ => _.Given_the_default_agent_is_gRPC_remote(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Machine_exists_with_MachineId_MACHINEID(_.CurrentSchematic, machineId),
                 _ => _.When_a_Machine_is_retrieved_with_MachineId_MACHINEID(machineId),
@@ -52,8 +51,8 @@ I want to retrieve Machines from a remote server")]
 
             Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
                 _ => _.Given_a_new_host(),
-                _ => _.Given_a_REstate_gRPC_Server_running_on_the_default_endpoint(),
-                _ => _.Given_the_default_agent_is_gRPC_remote_on_default_endpoint(),
+                _ => _.Given_a_REstate_gRPC_Server_running(),
+                _ => _.Given_the_default_agent_is_gRPC_remote(),
                 _ => _.When_a_Machine_is_retrieved_with_MachineId_MACHINEID(machineId),
                 _ => _.Then_MachineDoesNotExistException_is_thrown());
         }
