@@ -38,7 +38,7 @@ namespace REstate.Tests.Features.Context
                 .CreateMachineAsync(schematicName, machineId).GetAwaiter().GetResult();
         }
 
-        public void Then_the_Machine_is_created_successfully(IStateMachine<TState, TInput> machine)
+        public void Then_the_Machine_is_valid(IStateMachine<TState, TInput> machine)
         {
             Assert.NotNull(machine);
             Assert.NotNull(machine.MachineId);
