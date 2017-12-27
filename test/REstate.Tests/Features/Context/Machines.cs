@@ -49,5 +49,19 @@ namespace REstate.Tests.Features.Context
         {
             Assert.Equal(machineId, CurrentMachine.MachineId);
         }
+
+        public void Given_a_Machine_exists_with_MachineId_MACHINEID(Schematic<TState, TInput> schematic, string machineId)
+        {
+            CurrentHost.Agent()
+                .GetStateEngine<TState, TInput>()
+                .CreateMachineAsync(schematic, machineId).GetAwaiter().GetResult();
+        }
+
+        public void When_a_Machine_is_retrieved_with_MachineId_MACHINEID(string machineId)
+        {
+            CurrentMachine = CurrentHost.Agent()
+                .GetStateEngine<TState, TInput>()
+                .GetMachineAsync(machineId).GetAwaiter().GetResult();
+        }
     }
 }
