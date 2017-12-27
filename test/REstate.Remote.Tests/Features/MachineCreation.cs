@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Threading.Tasks;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
@@ -22,11 +23,13 @@ I want to create Machines from Schematics on a remote server")]
         : FeatureFixture
     {
         [Scenario]
-        public void A_Machine_can_be_created_from_a_Schematic()
+        public async Task A_Machine_can_be_created_from_a_Schematic()
         {
-            var schematicName = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_Machine_can_be_created_from_a_Schematic);
 
-            Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
+            const string schematicName = uniqueId;
+
+            await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.Given_a_REstate_gRPC_Server_running(),
                 _ => _.Given_the_default_agent_is_gRPC_remote(),
@@ -37,11 +40,13 @@ I want to create Machines from Schematics on a remote server")]
         }
 
         [Scenario]
-        public void A_Machine_can_be_created_from_a_SchematicName()
+        public async Task A_Machine_can_be_created_from_a_SchematicName()
         {
-            var schematicName = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_Machine_can_be_created_from_a_SchematicName);
 
-            Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
+            const string schematicName = uniqueId;
+
+            await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.Given_a_REstate_gRPC_Server_running(),
                 _ => _.Given_the_default_agent_is_gRPC_remote(),
@@ -53,12 +58,14 @@ I want to create Machines from Schematics on a remote server")]
         }
 
         [Scenario]
-        public void A_Machine_can_be_created_from_a_Schematic_with_a_predefined_MachineId()
+        public async Task A_Machine_can_be_created_from_a_Schematic_with_a_predefined_MachineId()
         {
-            var schematicName = MethodBase.GetCurrentMethod().Name;
-            var machineId = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_Machine_can_be_created_from_a_Schematic_with_a_predefined_MachineId);
 
-            Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
+            const string schematicName = uniqueId;
+            const string machineId = uniqueId;
+
+            await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.Given_a_REstate_gRPC_Server_running(),
                 _ => _.Given_the_default_agent_is_gRPC_remote(),
@@ -70,12 +77,14 @@ I want to create Machines from Schematics on a remote server")]
         }
 
         [Scenario]
-        public void A_Machine_can_be_created_from_a_SchematicName_with_a_predefined_MachineId()
+        public async Task A_Machine_can_be_created_from_a_SchematicName_with_a_predefined_MachineId()
         {
-            var schematicName = MethodBase.GetCurrentMethod().Name;
-            var machineId = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_Machine_can_be_created_from_a_SchematicName_with_a_predefined_MachineId);
 
-            Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
+            const string schematicName = uniqueId;
+            const string machineId = uniqueId;
+
+            await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.Given_a_REstate_gRPC_Server_running(),
                 _ => _.Given_the_default_agent_is_gRPC_remote(),

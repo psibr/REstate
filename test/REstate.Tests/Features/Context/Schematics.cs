@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using REstate.Schematics;
 
 namespace REstate.Tests.Features.Context
@@ -8,20 +9,22 @@ namespace REstate.Tests.Features.Context
     {
         public Schematic<TState, TInput> CurrentSchematic { get; set; }
 
-        public void Given_a_Schematic_with_an_initial_state_INITIALSTATE(string schematicName, TState initialState)
+        public Task Given_a_Schematic_with_an_initial_state_INITIALSTATE(string schematicName, TState initialState)
         {
             CurrentSchematic = CurrentHost.Agent()
                 .CreateSchematic<TState, TInput>(schematicName)
                 .WithState(initialState, state => state
                     .AsInitialState())
                 .Build();
+
+            return Task.CompletedTask;
         }
 
-        public void Given_a_Schematic_is_stored(Schematic<TState, TInput> schematic)
+        public async Task Given_a_Schematic_is_stored(Schematic<TState, TInput> schematic)
         {
-            CurrentHost.Agent()
+            await CurrentHost.Agent()
                 .GetStateEngine<TState, TInput>()
-                .StoreSchematicAsync(schematic).GetAwaiter().GetResult();
+                .StoreSchematicAsync(schematic);
         }
     }
 }

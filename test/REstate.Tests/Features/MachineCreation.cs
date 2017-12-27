@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Threading.Tasks;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
@@ -19,11 +20,13 @@ I want to create machines from schematics")]
         : FeatureFixture
     {
         [Scenario]
-        public void A_Machine_can_be_created_from_a_Schematic()
+        public async Task A_Machine_can_be_created_from_a_Schematic()
         {
-            var schematicName = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_Machine_can_be_created_from_a_Schematic);
 
-            Runner.WithContext<REstateContext<string, string>>().RunScenario(
+            const string schematicName = uniqueId;
+
+            await Runner.WithContext<REstateContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.When_a_Machine_is_created_from_a_Schematic(_.CurrentSchematic),
@@ -32,11 +35,13 @@ I want to create machines from schematics")]
         }
 
         [Scenario]
-        public void A_Machine_can_be_created_from_a_SchematicName()
+        public async Task A_Machine_can_be_created_from_a_SchematicName()
         {
-            var schematicName = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_Machine_can_be_created_from_a_SchematicName);
 
-            Runner.WithContext<REstateContext<string, string>>().RunScenario(
+            const string schematicName = uniqueId;
+
+            await Runner.WithContext<REstateContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Schematic_is_stored(_.CurrentSchematic),
@@ -46,12 +51,14 @@ I want to create machines from schematics")]
         }
 
         [Scenario]
-        public void A_Machine_can_be_created_from_a_Schematic_with_a_predefined_MachineId()
+        public async Task A_Machine_can_be_created_from_a_Schematic_with_a_predefined_MachineId()
         {
-            var schematicName = MethodBase.GetCurrentMethod().Name;
-            var machineId = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_Machine_can_be_created_from_a_Schematic_with_a_predefined_MachineId);
 
-            Runner.WithContext<REstateContext<string, string>>().RunScenario(
+            const string schematicName = uniqueId;
+            const string machineId = uniqueId;
+
+            await Runner.WithContext<REstateContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.When_a_Machine_is_created_from_a_Schematic_with_a_predefined_MachineId(_.CurrentSchematic, machineId),
@@ -61,12 +68,14 @@ I want to create machines from schematics")]
         }
 
         [Scenario]
-        public void A_Machine_can_be_created_from_a_SchematicName_with_a_predefined_MachineId()
+        public async Task A_Machine_can_be_created_from_a_SchematicName_with_a_predefined_MachineId()
         {
-            var schematicName = MethodBase.GetCurrentMethod().Name;
-            var machineId = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_Machine_can_be_created_from_a_SchematicName_with_a_predefined_MachineId);
 
-            Runner.WithContext<REstateContext<string, string>>().RunScenario(
+            const string schematicName = uniqueId;
+            const string machineId = uniqueId;
+
+            await Runner.WithContext<REstateContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Schematic_is_stored(_.CurrentSchematic),

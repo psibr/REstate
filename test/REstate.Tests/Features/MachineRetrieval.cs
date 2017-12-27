@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading.Tasks;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
@@ -21,14 +22,14 @@ I want to retrieve previously created machines")]
         : FeatureFixture
     {
         [Scenario]
-        public void A_Machine_can_be_retrieved()
+        public async Task A_Machine_can_be_retrieved()
         {
-            var uniqueId = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_Machine_can_be_retrieved);
 
-            var schematicName = uniqueId;
-            var machineId = uniqueId;
+            const string schematicName = uniqueId;
+            const string machineId = uniqueId;
 
-            Runner.WithContext<REstateContext<string, string>>().RunScenario(
+            await Runner.WithContext<REstateContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Machine_exists_with_MachineId_MACHINEID(_.CurrentSchematic, machineId),
@@ -38,13 +39,13 @@ I want to retrieve previously created machines")]
         }
 
         [Scenario]
-        public void A_NonExistant_Machine_cannot_be_retrieved()
+        public async Task A_NonExistant_Machine_cannot_be_retrieved()
         {
-            var uniqueId = MethodBase.GetCurrentMethod().Name;
+            const string uniqueId = nameof(A_NonExistant_Machine_cannot_be_retrieved);
 
-            var machineId = uniqueId;
+            const string machineId = uniqueId;
 
-            Runner.WithContext<REstateContext<string, string>>().RunScenario(
+            await Runner.WithContext<REstateContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.When_a_Machine_is_retrieved_with_MachineId_MACHINEID(machineId),
                 _ => _.Then_MachineDoesNotExistException_is_thrown());
