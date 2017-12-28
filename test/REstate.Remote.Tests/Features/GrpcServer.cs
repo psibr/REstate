@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
@@ -23,9 +24,9 @@ I want to connect using gRPC to a remote REstate server")]
         : FeatureFixture
     {
         [Scenario]
-        public void REstate_gRPC_Server_Sets_BoundPorts_on_start()
+        public async Task REstate_gRPC_Server_Sets_BoundPorts_on_start()
         {
-            Runner.WithContext<REstateRemoteContext<string, string>>().RunScenario(
+            await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.When_a_REstate_gRPC_Server_is_created_and_started(),
                 _ => _.Then_REstate_gRPC_Server_has_bound_ports());
