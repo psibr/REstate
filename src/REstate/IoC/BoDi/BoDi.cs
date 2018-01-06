@@ -38,6 +38,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -349,7 +350,7 @@ namespace REstate.IoC.BoDi
 
                         obj = container.CreateObject(typeToConstruct, resolutionPath, keyToResolve);
 
-                        container.objectPool.Add(pooledObjectKey, obj);
+                        container.objectPool.TryAdd(pooledObjectKey, obj);
                     }
                 }
 
@@ -484,9 +485,9 @@ namespace REstate.IoC.BoDi
 
         private bool isDisposed = false;
         private readonly ObjectContainer baseContainer;
-        private readonly Dictionary<RegistrationKey, IRegistration> registrations = new Dictionary<RegistrationKey, IRegistration>();
-        private readonly Dictionary<RegistrationKey, object> resolvedObjects = new Dictionary<RegistrationKey, object>();
-        private readonly Dictionary<RegistrationKey, object> objectPool = new Dictionary<RegistrationKey, object>();
+        private readonly ConcurrentDictionary<RegistrationKey, IRegistration> registrations = new ConcurrentDictionary<RegistrationKey, IRegistration>();
+        private readonly ConcurrentDictionary<RegistrationKey, object> resolvedObjects = new ConcurrentDictionary<RegistrationKey, object>();
+        private readonly ConcurrentDictionary<RegistrationKey, object> objectPool = new ConcurrentDictionary<RegistrationKey, object>();
 
         public event Action<object> ObjectCreated;
 
@@ -648,7 +649,7 @@ namespace REstate.IoC.BoDi
 
         private void ClearRegistrations(RegistrationKey registrationKey)
         {
-            registrations.Remove(registrationKey);
+            registrations.TryRemove(registrationKey, out var _);
         }
 
 #endregion
@@ -692,12 +693,11 @@ namespace REstate.IoC.BoDi
             AssertNotDisposed();
 
             var keyToResolve = new RegistrationKey(typeToResolve, name);
-            object resolvedObject;
-            if (!resolvedObjects.TryGetValue(keyToResolve, out resolvedObject))
-            {
-                resolvedObject = ResolveObject(keyToResolve, resolutionPath);
-                resolvedObjects.Add(keyToResolve, resolvedObject);
-            }
+
+            var resolvedObject = resolvedObjects.GetOrAdd(
+                keyToResolve, 
+                key => ResolveObject(key, resolutionPath));
+
             return resolvedObject;
         }
 
