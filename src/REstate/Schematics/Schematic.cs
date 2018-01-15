@@ -9,10 +9,11 @@ namespace REstate.Schematics
     public class Schematic<TState, TInput> 
         : ISchematic<TState, TInput>
     {
-        public Schematic(string schematicName, TState initialState, State<TState, TInput>[] states)
+        public Schematic(string schematicName, TState initialState, int stateConflictRetryCount, params State<TState, TInput>[] states)
         {
             SchematicName = schematicName;
             InitialState = initialState;
+            StateConflictRetryCount = stateConflictRetryCount;
             States = states;
         }
 
@@ -25,6 +26,8 @@ namespace REstate.Schematics
 
         [Required]
         public TState InitialState { get; set; }
+
+        public int StateConflictRetryCount { get; set; }
 
         IReadOnlyDictionary<TState, IState<TState, TInput>> ISchematic<TState, TInput>.States => 
             States.ToDictionary(

@@ -23,6 +23,8 @@ namespace REstate.Schematics.Builder.Implementation
 
         public TState InitialState { get; private set; }
 
+        public int StateConflictRetryCount { get; private set; }
+
         internal void SetInitialState(TState state)  
         {
             InitialState = state;
@@ -90,7 +92,7 @@ namespace REstate.Schematics.Builder.Implementation
             if (!_stateConfigurations.ContainsKey(resultantState))
                 throw new ArgumentException("Resultant stateBuilderAction was not defined.", nameof(resultantState));
 
-            if (_stateConfigurations.TryGetValue(sourceState, out IStateBuilder<TState, TInput> stateBuilder))
+            if (_stateConfigurations.TryGetValue(sourceState, out var stateBuilder))
             {
                 try
                 {
@@ -122,11 +124,27 @@ namespace REstate.Schematics.Builder.Implementation
 
             return new Schematic<TState, TInput>(
                 schematic.SchematicName, 
-                schematic.InitialState, 
+                schematic.InitialState,
+                schematic.StateConflictRetryCount,
                 schematic.States.Values
                     .Select(SchematicCloner.Clone)
                     .ToArray());
             
+        }
+
+        public ISchematicBuilder<TState, TInput> WithStateConflictRetries()
+        {
+            return WithStateConflictRetries(-1);
+        }
+
+        public ISchematicBuilder<TState, TInput> WithStateConflictRetries(int retryCount)
+        {
+            if(retryCount < -1)
+                throw new ArgumentException("Values below -1 are not valid.", nameof(retryCount));
+
+            StateConflictRetryCount = retryCount;
+
+            return this;
         }
     }
 }

@@ -6,6 +6,8 @@ namespace REstate.Schematics.Builder
     public interface ISchematicBuilder<TState, TInput>
         : ISchematic<TState, TInput>
     {
+        ISchematicBuilder<TState, TInput> WithStateConflictRetries();
+        ISchematicBuilder<TState, TInput> WithStateConflictRetries(int retryCount);
         ISchematicBuilder<TState, TInput> WithState(TState state, Action<IStateBuilder<TState, TInput>> stateBuilderAction = null);
         ISchematicBuilder<TState, TInput> WithStates(ICollection<TState> states, Action<IStateBuilder<TState, TInput>> stateBuilderAction = null);
         ISchematicBuilder<TState, TInput> WithStates(params TState[] states);
