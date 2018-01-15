@@ -74,71 +74,92 @@ namespace REstate.Engine
         {
             using (var dataContext = await  _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
-                Status<TState> currentStatus = await dataContext.Machines
-                    .GetMachineStatusAsync(MachineId, cancellationToken).ConfigureAwait(false);
+                int retries = 0;
 
-                var schematicState = Schematic.States[currentStatus.State];
-
-                if(!schematicState.Transitions.TryGetValue(input, out var transition))
+                while (true)
                 {
-                    throw new InvalidOperationException($"No transition defined for status: '{currentStatus.State}' using input: '{input}'");
-                }
+                    Status<TState> currentStatus = await dataContext.Machines
+                        .GetMachineStatusAsync(MachineId, cancellationToken).ConfigureAwait(false);
 
-                if (transition.Guard != null)
-                {
-                    var guardConnector =  _connectorResolver.ResolveGuardianConnector(transition.Guard.ConnectorKey);
+                    var schematicState = Schematic.States[currentStatus.State];
 
-                    if (!await guardConnector.GuardAsync(
-                        schematic: Schematic, 
-                        machine: this, 
-                        status: currentStatus, 
-                        inputParameters: new InputParameters<TInput, TPayload>(input, payload),
-                        connectorSettings: transition.Guard.Settings,
-                        cancellationToken: cancellationToken).ConfigureAwait(false))
+                    if (!schematicState.Transitions.TryGetValue(input, out var transition))
                     {
-                        throw new InvalidOperationException("Guard clause prevented transition.");
+                        throw new InvalidOperationException(
+                            $"No transition defined for status: '{currentStatus.State}' using input: '{input}'");
                     }
-                }
 
-                currentStatus = await dataContext.Machines.SetMachineStateAsync(
-                    machineId: MachineId,
-                    state: transition.ResultantState,
-                    lastCommitTag: lastCommitTag == default ? currentStatus.CommitTag : lastCommitTag, 
-                    cancellationToken: cancellationToken).ConfigureAwait(false);
+                    if (transition.Guard != null)
+                    {
+                        var guardConnector = _connectorResolver.ResolveGuardianConnector(transition.Guard.ConnectorKey);
 
-                schematicState = Schematic.States[currentStatus.State];
+                        if (!await guardConnector.GuardAsync(
+                            schematic: Schematic,
+                            machine: this,
+                            status: currentStatus,
+                            inputParameters: new InputParameters<TInput, TPayload>(input, payload),
+                            connectorSettings: transition.Guard.Settings,
+                            cancellationToken: cancellationToken).ConfigureAwait(false))
+                        {
+                            throw new InvalidOperationException("Guard clause prevented transition.");
+                        }
+                    }
+                    
+                    try
+                    {
+                        currentStatus = await dataContext.Machines.SetMachineStateAsync(
+                            machineId: MachineId,
+                            state: transition.ResultantState,
+                            lastCommitTag: lastCommitTag == default ? currentStatus.CommitTag : lastCommitTag,
+                            cancellationToken: cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (StateConflictException)
+                    {
+                        if (Schematic.StateConflictRetryCount == -1 
+                            || retries < Schematic.StateConflictRetryCount)
+                        {
+                            retries++;
+                            continue;
+                        }
 
-                var preActionState = currentStatus;
-
-                NotifyOnTransition(input, payload, preActionState);
-
-                if (schematicState.OnEntry == null) return currentStatus;
-
-                try
-                {
-                    var entryConnector = _connectorResolver.ResolveEntryConnector(schematicState.OnEntry.ConnectorKey);
-                        
-                    await entryConnector.OnEntryAsync(
-                        schematic: Schematic,
-                        machine: this,
-                        status: currentStatus,
-                        inputParameters: new InputParameters<TInput,TPayload>(input, payload),
-                        connectorSettings: schematicState.OnEntry.Settings,
-                        cancellationToken: cancellationToken).ConfigureAwait(false);
-                }
-                catch
-                {
-                    if (schematicState.OnEntry.OnExceptionInput == null)
                         throw;
+                    }
 
-                    currentStatus = await SendAsync(
-                        input: schematicState.OnEntry.OnExceptionInput.Input,
-                        payload: payload,
-                        lastCommitTag: currentStatus.CommitTag,
-                        cancellationToken: cancellationToken).ConfigureAwait(false);
+                    schematicState = Schematic.States[currentStatus.State];
+
+                    var preActionState = currentStatus;
+
+                    NotifyOnTransition(input, payload, preActionState);
+
+                    if (schematicState.OnEntry == null) return currentStatus;
+
+                    try
+                    {
+                        var entryConnector =
+                            _connectorResolver.ResolveEntryConnector(schematicState.OnEntry.ConnectorKey);
+
+                        await entryConnector.OnEntryAsync(
+                            schematic: Schematic,
+                            machine: this,
+                            status: currentStatus,
+                            inputParameters: new InputParameters<TInput, TPayload>(input, payload),
+                            connectorSettings: schematicState.OnEntry.Settings,
+                            cancellationToken: cancellationToken).ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        if (schematicState.OnEntry.OnExceptionInput == null)
+                            throw;
+
+                        currentStatus = await SendAsync(
+                            input: schematicState.OnEntry.OnExceptionInput.Input,
+                            payload: payload,
+                            lastCommitTag: currentStatus.CommitTag,
+                            cancellationToken: cancellationToken).ConfigureAwait(false);
+                    }
+
+                    return currentStatus;
                 }
-
-                return currentStatus;
             }
         }
 

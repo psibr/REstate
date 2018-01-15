@@ -9,6 +9,7 @@ namespace REstate.Schematics
             new Schematic<TState, TInput>(
                 schematic.SchematicName,
                 schematic.InitialState,
+                schematic.StateConflictRetryCount,
                 schematic.States.Values
                     .Select(Clone)
                     .ToArray());

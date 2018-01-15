@@ -6,6 +6,7 @@ namespace REstate.Schematics
     {
         string SchematicName { get; }
         TState InitialState { get; }
+        int StateConflictRetryCount { get; }
         IReadOnlyDictionary<TState, IState<TState, TInput>> States { get; }
     }
 }
