@@ -8,8 +8,10 @@ namespace REstate.Engine
     public class StateConflictException
         : Exception
     {
+        private const string StandardMessage = "CommitTag did not match; no update performed.";
+
         public StateConflictException()
-            : this("CommitTag did not match; no update performed.")
+            : this(StandardMessage)
         {
         }
 
@@ -21,6 +23,12 @@ namespace REstate.Engine
         public StateConflictException(string message, Exception innerException) 
             : base(message, innerException)
         {
+        }
+
+        public StateConflictException(Exception innerException)
+            : this(StandardMessage, innerException)
+        {
+
         }
     }
 }
