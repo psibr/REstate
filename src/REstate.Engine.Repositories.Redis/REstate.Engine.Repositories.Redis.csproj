@@ -15,7 +15,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>REstate</PackageTags>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
