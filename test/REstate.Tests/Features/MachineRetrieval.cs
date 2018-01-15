@@ -24,10 +24,10 @@ I want to retrieve previously created machines")]
         [Scenario]
         public async Task A_Machine_can_be_retrieved()
         {
-            const string uniqueId = nameof(A_Machine_can_be_retrieved);
+            var uniqueId = Guid.NewGuid().ToString();
 
-            const string schematicName = uniqueId;
-            const string machineId = uniqueId;
+            var schematicName = uniqueId;
+            var machineId = uniqueId;
 
             await Runner.WithContext<REstateContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
@@ -41,9 +41,9 @@ I want to retrieve previously created machines")]
         [Scenario]
         public async Task A_NonExistant_Machine_cannot_be_retrieved()
         {
-            const string uniqueId = nameof(A_NonExistant_Machine_cannot_be_retrieved);
+            var uniqueId = Guid.NewGuid().ToString();
 
-            const string machineId = uniqueId;
+            var machineId = uniqueId;
 
             await Runner.WithContext<REstateContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),

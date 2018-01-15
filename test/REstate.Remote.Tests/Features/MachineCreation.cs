@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using LightBDD.Framework;
@@ -25,9 +26,9 @@ I want to create Machines from Schematics on a remote server")]
         [Scenario]
         public async Task A_Machine_can_be_created_from_a_Schematic()
         {
-            const string uniqueId = nameof(A_Machine_can_be_created_from_a_Schematic);
+            var uniqueId = Guid.NewGuid().ToString();
 
-            const string schematicName = uniqueId;
+            var schematicName = uniqueId;
 
             await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
@@ -42,9 +43,9 @@ I want to create Machines from Schematics on a remote server")]
         [Scenario]
         public async Task A_Machine_can_be_created_from_a_SchematicName()
         {
-            const string uniqueId = nameof(A_Machine_can_be_created_from_a_SchematicName);
+            var uniqueId = Guid.NewGuid().ToString();
 
-            const string schematicName = uniqueId;
+            var schematicName = uniqueId;
 
             await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
@@ -60,10 +61,10 @@ I want to create Machines from Schematics on a remote server")]
         [Scenario]
         public async Task A_Machine_can_be_created_from_a_Schematic_with_a_predefined_MachineId()
         {
-            const string uniqueId = nameof(A_Machine_can_be_created_from_a_Schematic_with_a_predefined_MachineId);
+            var uniqueId = Guid.NewGuid().ToString();
 
-            const string schematicName = uniqueId;
-            const string machineId = uniqueId;
+            var schematicName = uniqueId;
+            var machineId = uniqueId;
 
             await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),
@@ -79,10 +80,10 @@ I want to create Machines from Schematics on a remote server")]
         [Scenario]
         public async Task A_Machine_can_be_created_from_a_SchematicName_with_a_predefined_MachineId()
         {
-            const string uniqueId = nameof(A_Machine_can_be_created_from_a_SchematicName_with_a_predefined_MachineId);
+            var uniqueId = Guid.NewGuid().ToString();
 
-            const string schematicName = uniqueId;
-            const string machineId = uniqueId;
+            var schematicName = uniqueId;
+            var machineId = uniqueId;
 
             await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
                 _ => _.Given_a_new_host(),

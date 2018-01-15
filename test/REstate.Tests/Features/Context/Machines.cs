@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using REstate.Engine;
 using REstate.Schematics;
 using Xunit;
+using Xunit.Sdk;
 
 namespace REstate.Tests.Features.Context
 {
