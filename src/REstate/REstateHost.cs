@@ -26,21 +26,19 @@ namespace REstate
 
         public REstateHost()
         {
-            ((IHasAgentLazy) this).AgentLazy = new Lazy<IAgent>(CreateAgent);
+            ((IHasAgentLazy)this).AgentLazy = new Lazy<IAgent>(CreateAgent);
         }
 
-        private static REstateHost SharedInstance => new REstateHost();
+        internal static readonly REstateHost SharedInstance = new REstateHost();
 
         internal readonly object ConfigurationSyncRoot = new object();
 
         private IAgent CreateAgent()
         {
-            lock (ConfigurationSyncRoot)
-            {
-                TryUseContainer(this, new BoDiComponentContainer(new ObjectContainer()));
+            TryUseContainer(this, new BoDiComponentContainer(new ObjectContainer()));
 
-                return new Agent(HostConfiguration);
-            }
+            return new Agent(HostConfiguration);
+
         }
 
         Lazy<IAgent> IHasAgentLazy.AgentLazy { get; set; }
@@ -56,7 +54,7 @@ namespace REstate
         /// <param name="container">The container to use.</param>
         public static void UseContainer(IComponentContainer container)
         {
-            if(!TryUseContainer(SharedInstance, container))
+            if (!TryUseContainer(SharedInstance, container))
                 throw new InvalidOperationException(
                     "Configuration has already been initialized; " +
                     "cannot replace container at this point.");
