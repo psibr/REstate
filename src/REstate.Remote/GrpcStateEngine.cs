@@ -95,17 +95,18 @@ namespace REstate.Remote
             return new GrpcStateMachine<TState, TInput>(_stateMachineService, response.MachineId);
         }
 
-        public Task BulkCreateMachinesAsync(
+        public Task<IEnumerable<IStateMachine<TState, TInput>>> BulkCreateMachinesAsync(
             ISchematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default)
             => BulkCreateMachinesAsync(schematic.Clone(), metadata, cancellationToken);
 
-        public async Task BulkCreateMachinesAsync(
+        public async Task<IEnumerable<IStateMachine<TState, TInput>>> BulkCreateMachinesAsync(
             Schematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default)
-            => await _stateMachineService
+        {
+            var response = await _stateMachineService
                 .WithCancellationToken(cancellationToken)
                 .BulkCreateMachineFromSchematicAsync(new BulkCreateMachineFromSchematicRequest
                 {
@@ -113,17 +114,24 @@ namespace REstate.Remote
                     Metadata = metadata
                 });
 
-        public async Task BulkCreateMachinesAsync(
+            return response.MachineIds.Select(machineId => new GrpcStateMachine<TState, TInput>(_stateMachineService, machineId));
+        }
+
+        public async Task<IEnumerable<IStateMachine<TState, TInput>>> BulkCreateMachinesAsync(
             string schematicName,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default)
-            => await _stateMachineService
+        {
+            var response = await _stateMachineService
                 .WithCancellationToken(cancellationToken)
                 .BulkCreateMachineFromStoreAsync(new BulkCreateMachineFromStoreRequest
                 {
                     SchematicName = schematicName,
                     Metadata = metadata
                 });
+
+            return response.MachineIds.Select(machineId => new GrpcStateMachine<TState, TInput>(_stateMachineService, machineId));
+        }
 
         public async Task DeleteMachineAsync(
             string machineId,

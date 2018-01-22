@@ -2,22 +2,21 @@
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
-using REstate.Remote.Tests.Features.Context;
+using REstate.Engine.Repositories.EntityFrameworkCore.Tests.Features.Context;
 using REstate.Tests.Features.Templates;
 
 // ReSharper disable InconsistentNaming
 
-namespace REstate.Remote.Tests.Features
+namespace REstate.Engine.Repositories.EntityFrameworkCore.Tests.Features
 {
     [FeatureDescription(@"
-In order to support cloud scaling
+In order to use familiar storage
 As a developer
-I want to retrieve Machines from a remote server")]
+I want to retrieve previously created Machines stored using Entity Framework Core")]
     [ScenarioCategory("Machine Retrieval")]
-    [ScenarioCategory("Remote")]
-    [ScenarioCategory("gRPC")]
+    [ScenarioCategory("EntityFrameworkCore")]
     public class MachineRetrieval
-        : MachineRetrievalScenarios<REstateRemoteContext<string, string>>
+        : MachineRetrievalScenarios<REstateEntityFrameworkCoreContext<string, string>>
     {        
         protected override Task<CompositeStep> Given_host_configuration_is_applied()
         {
@@ -26,8 +25,7 @@ I want to retrieve Machines from a remote server")]
                     .DefineNew()
                     .WithContext(Context)
                     .AddAsyncSteps(
-                        _ => _.Given_a_REstate_gRPC_Server_running(),
-                        _ => _.Given_the_default_agent_is_gRPC_remote())
+                        _ => _.Given_EntityFrameworkCore_is_the_registered_repository())
                     .Build());
         }
     }

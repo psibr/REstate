@@ -1,6 +1,4 @@
 ﻿using System;
-using Grpc.Core;
-using MagicOnion.Client;
 using REstate.Engine;
 using REstate.Remote.Services;
 using REstate.IoC;

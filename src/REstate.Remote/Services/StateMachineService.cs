@@ -25,8 +25,8 @@ namespace REstate.Remote.Services
     using GetMachineMetadataAsyncDelegate = Func<string, CancellationToken, Task<GetMachineMetadataResponse>>;
     using CreateMachineFromStoreAsyncDelegate = Func<string, string, IDictionary<string, string>, CancellationToken, Task<CreateMachineResponse>>;
     using CreateMachineFromSchematicAsyncDelegate = Func<object, string, IDictionary<string, string>, CancellationToken, Task<CreateMachineResponse>>;
-    using BulkCreateMachineFromStoreAsyncDelegate = Func<string, IEnumerable<IDictionary<string, string>>, CancellationToken, Task>;
-    using BulkCreateMachineFromSchematicAsyncDelegate = Func<object, IEnumerable<IDictionary<string, string>>, CancellationToken, Task>;
+    using BulkCreateMachineFromStoreAsyncDelegate = Func<string, IEnumerable<IDictionary<string, string>>, CancellationToken, Task<BulkCreateMachineResponse>>;
+    using BulkCreateMachineFromSchematicAsyncDelegate = Func<object, IEnumerable<IDictionary<string, string>>, CancellationToken, Task<BulkCreateMachineResponse>>;
     using GetSchematicAsyncDelegate = Func<string, CancellationToken, Task<GetSchematicResponse>>;
     using DeleteMachineAsyncDelegate = Func<string, CancellationToken, Task>;
 
@@ -373,7 +373,7 @@ namespace REstate.Remote.Services
                 GetCallCancellationToken());
         }
         
-        public async UnaryResult<Nil> BulkCreateMachineFromStoreAsync(BulkCreateMachineFromStoreRequest request)
+        public async UnaryResult<BulkCreateMachineResponse> BulkCreateMachineFromStoreAsync(BulkCreateMachineFromStoreRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
 
@@ -408,12 +408,10 @@ namespace REstate.Remote.Services
                                 .Compile();
                         });
 
-            await bulkCreateMachineFromStoreAsync(request.SchematicName, request.Metadata, GetCallCancellationToken());
-
-            return Nil.Default;
+            return await bulkCreateMachineFromStoreAsync(request.SchematicName, request.Metadata, GetCallCancellationToken());
         }
         
-        public async UnaryResult<Nil> BulkCreateMachineFromSchematicAsync(BulkCreateMachineFromSchematicRequest request)
+        public async UnaryResult<BulkCreateMachineResponse> BulkCreateMachineFromSchematicAsync(BulkCreateMachineFromSchematicRequest request)
         {
             var genericTypes = GetGenericsFromHeaders();
 
@@ -454,9 +452,7 @@ namespace REstate.Remote.Services
                             .Compile();
                     });
 
-            await bulkCreateMachineFromSchematicAsync(schematic, request.Metadata, GetCallCancellationToken());
-
-            return Nil.Default;
+            return await bulkCreateMachineFromSchematicAsync(schematic, request.Metadata, GetCallCancellationToken());
         }
         
         public async UnaryResult<GetSchematicResponse> GetSchematicAsync(GetSchematicRequest request)

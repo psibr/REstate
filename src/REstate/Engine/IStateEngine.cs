@@ -40,17 +40,17 @@ namespace REstate.Engine
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default);
 
-        Task BulkCreateMachinesAsync(
+        Task<IEnumerable<IStateMachine<TState, TInput>>> BulkCreateMachinesAsync(
             Schematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default);
 
-        Task BulkCreateMachinesAsync(
+        Task<IEnumerable<IStateMachine<TState, TInput>>> BulkCreateMachinesAsync(
             ISchematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default);
 
-        Task BulkCreateMachinesAsync(
+        Task<IEnumerable<IStateMachine<TState, TInput>>> BulkCreateMachinesAsync(
             string schematicName,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default);

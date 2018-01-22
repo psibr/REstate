@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
@@ -12,13 +12,13 @@ namespace REstate.Remote.Tests.Features
     [FeatureDescription(@"
 In order to support cloud scaling
 As a developer
-I want to create Machines from Schematics on a remote server")]
-    [ScenarioCategory("Machine Creation")]
+I want to delete Machines from a remote server")]
+    [ScenarioCategory("Machine Deletion")]
     [ScenarioCategory("Remote")]
     [ScenarioCategory("gRPC")]
-    public class MachineCreation
-        : MachineCreationScenarios<REstateRemoteContext<string, string>>
-    {
+    public class MachineDeletion
+        : MachineDeletionScenarios<REstateRemoteContext<string, string>>
+    {        
         protected override Task<CompositeStep> Given_host_configuration_is_applied()
         {
             return Task.FromResult(

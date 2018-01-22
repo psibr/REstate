@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
 using LightBDD.XUnit2;
 using REstate.Remote.Tests.Features.Context;
+using REstate.Tests.Features.Templates;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace REstate.Remote.Tests.Features
 {
@@ -21,22 +18,15 @@ I want to connect using gRPC to a remote REstate server")]
     [ScenarioCategory("gRPC")]
     [Collection("gRPC")]
     public class GrpcServer
-        : FeatureFixture
+        : REstateFeature<REstateRemoteContext<string, string>>
     {
         [Scenario]
         public async Task REstate_gRPC_Server_Sets_BoundPorts_on_start()
         {
-            await Runner.WithContext<REstateRemoteContext<string, string>>().RunScenarioAsync(
+            await Runner.WithContext(Context).RunScenarioAsync(
                 _ => _.Given_a_new_host(),
                 _ => _.When_a_REstate_gRPC_Server_is_created_and_started(),
                 _ => _.Then_REstate_gRPC_Server_has_bound_ports());
         }
-
-        #region Constructor
-        public GrpcServer(ITestOutputHelper output)
-            : base(output)
-        {
-        }
-        #endregion
     }
 }

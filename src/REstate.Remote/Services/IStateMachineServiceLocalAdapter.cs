@@ -9,8 +9,8 @@ namespace REstate.Remote.Services
 {
     internal interface IStateMachineServiceLocalAdapter
     {
-        Task BulkCreateMachineFromSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default);
-        Task BulkCreateMachineFromStoreAsync<TState, TInput>(string schematicName, IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default);
+        Task<BulkCreateMachineResponse> BulkCreateMachineFromSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default);
+        Task<BulkCreateMachineResponse> BulkCreateMachineFromStoreAsync<TState, TInput>(string schematicName, IEnumerable<IDictionary<string, string>> metadata, CancellationToken cancellationToken = default);
         Task<CreateMachineResponse> CreateMachineFromSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default);
         Task<CreateMachineResponse> CreateMachineFromStoreAsync<TState, TInput>(string schematicName, string machineId, IDictionary<string, string> metadata, CancellationToken cancellationToken = default);
         Task DeleteMachineAsync<TState, TInput>(string machineId, CancellationToken cancellationToken);

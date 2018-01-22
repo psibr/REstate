@@ -11,6 +11,7 @@ namespace REstate.Tests.Features.Context
 
         public Exception CurrentException { get; set; }
 
+        #region GIVEN
         public Task Given_a_new_host()
         {
             CurrentHost = new REstateHost();
@@ -24,12 +25,19 @@ namespace REstate.Tests.Features.Context
 
             return Task.CompletedTask;
         }
+        #endregion
 
+        #region WHEN
+
+        #endregion
+
+        #region THEN
         public Task Then_no_exception_was_thrown()
         {
             Assert.Null(CurrentException);
 
             return Task.CompletedTask;
         }
+        #endregion
     }
 }

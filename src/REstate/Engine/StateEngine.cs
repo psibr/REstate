@@ -218,7 +218,7 @@ namespace REstate.Engine
 #pragma warning restore 4014
         }
 
-        public Task BulkCreateMachinesAsync(
+        public Task<IEnumerable<IStateMachine<TState, TInput>>> BulkCreateMachinesAsync(
             ISchematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default)
@@ -226,7 +226,7 @@ namespace REstate.Engine
             return BulkCreateMachinesAsync(schematic.Clone(), metadata, cancellationToken);
         }
 
-        public async Task BulkCreateMachinesAsync(
+        public async Task<IEnumerable<IStateMachine<TState, TInput>>> BulkCreateMachinesAsync(
             Schematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default)
@@ -242,19 +242,21 @@ namespace REstate.Engine
 
             var machines = 
                 machineStatuses
-                    .Select(status => ValueTuple.Create(
-                        item1: _stateMachineFactory
+                    .Select(status => (
+                        machine: _stateMachineFactory
                             .ConstructFromSchematic(
                                 status.MachineId,
                                 schematic,
                                 new ReadOnlyDictionary<string, string>(
                                     status.Metadata ?? new Dictionary<string, string>(0))),
-                        item2: status))
+                        status))
                     .ToList();
 
             NotifyBulkOnMachineCreated(schematic, machineStatuses);
 
             await BulkCallOnInitialEntryAction(schematic, machines, cancellationToken);
+
+            return machines.Select(tuple => tuple.machine);
         }
 
         private void NotifyBulkOnMachineCreated(
@@ -276,7 +278,7 @@ namespace REstate.Engine
 #pragma warning restore 4014
         }
 
-        public async Task BulkCreateMachinesAsync(
+        public async Task<IEnumerable<IStateMachine<TState, TInput>>> BulkCreateMachinesAsync(
             string schematicName,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default)
@@ -296,20 +298,21 @@ namespace REstate.Engine
             }
 
             var machines = machineStatuses
-                .Select(status => ValueTuple.Create(
-                    item1: _stateMachineFactory
+                .Select(status => (
+                    machine: _stateMachineFactory
                         .ConstructFromSchematic(
                             machineId: status.MachineId,
                             schematic: schematic,
                             metadata: new ReadOnlyDictionary<string, string>(
                                 status.Metadata ?? new Dictionary<string, string>(0))),
-                    item2: status))
+                    status))
                 .ToList();
 
             NotifyBulkOnMachineCreated(schematic, machineStatuses);
 
             await BulkCallOnInitialEntryAction(schematic, machines, cancellationToken);
 
+            return machines.Select(tuple => tuple.machine);
         }
 
         private async Task BulkCallOnInitialEntryAction(
