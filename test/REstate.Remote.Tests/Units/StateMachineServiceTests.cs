@@ -7,7 +7,7 @@ using REstate.Schematics;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MagicOnion.Server;
@@ -28,8 +28,8 @@ namespace REstate.Remote.Tests.Units
             _localAdapterMock = new Mock<IStateMachineServiceLocalAdapter>(MockBehavior.Strict);
 
             _stateMachineServiceMock = new Mock<StateMachineService>(
-                MockBehavior.Strict, 
-                new ConcurrentDictionary<MethodKey, Delegate>(), 
+                MockBehavior.Strict,
+                new ConcurrentDictionary<MethodKey, Delegate>(),
                 _localAdapterMock.Object);
 
             _stateMachineServiceMock
@@ -149,7 +149,7 @@ namespace REstate.Remote.Tests.Units
         public async Task StoreSchematicAsync()
         {
             // Arrange
-            var schematic = new Schematic<string, string>{ SchematicName = "schematic name" };
+            var schematic = new Schematic<string, string> { SchematicName = "schematic name" };
             var schematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
 
             _localAdapterMock
@@ -182,14 +182,14 @@ namespace REstate.Remote.Tests.Units
 
             _localAdapterMock
                 .Setup(_ => _.GetMachineSchematicAsync<string, string>(
-                    It.Is<string>(it => it == machineId), 
+                    It.Is<string>(it => it == machineId),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new GetMachineSchematicResponse
                 {
                     MachineId = machineId,
                     SchematicBytes = schematicBytes
                 });
-            
+
             // Act
             var response = await _stateMachineServiceMock.Object
                 .GetMachineSchematicAsync(new GetMachineSchematicRequest
@@ -330,7 +330,11 @@ namespace REstate.Remote.Tests.Units
                     It.Is<string>(it => it == schematicName),
                     It.IsAny<IEnumerable<IDictionary<string, string>>>(),
                     It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
+                .Returns(Task.FromResult(
+                    new BulkCreateMachineResponse
+                    {
+                        MachineIds = new[] { "a", "b" }
+                    }));
 
             // Act
             var response = await _stateMachineServiceMock.Object
@@ -347,6 +351,11 @@ namespace REstate.Remote.Tests.Units
                     metadataEnumerable,
                     CancellationToken.None),
                 times: Times.Once());
+
+            Assert.NotNull(response);
+            Assert.NotNull(response.MachineIds);
+            Assert.Collection(response.MachineIds, Assert.NotNull, Assert.NotNull);
+            Assert.Collection(response.MachineIds, machineId => Assert.Equal("a", machineId), machineId => Assert.Equal("b", machineId));
         }
 
         [Fact]
@@ -375,7 +384,11 @@ namespace REstate.Remote.Tests.Units
                     It.Is<Schematic<string, string>>(it => it.SchematicName == schematic.SchematicName),
                     It.IsAny<IEnumerable<IDictionary<string, string>>>(),
                     It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
+                .Returns(Task.FromResult(
+                    new BulkCreateMachineResponse
+                    {
+                        MachineIds = new[] { "a", "b" }
+                    }));
 
             // Act
             var response = await _stateMachineServiceMock.Object
@@ -389,10 +402,15 @@ namespace REstate.Remote.Tests.Units
             // Note: first parameter has to be checked for It.Is, other parameters CANNOT or the verify will fail
             _localAdapterMock.Verify(
                 expression: _ => _.BulkCreateMachineFromSchematicAsync(
-                    It.Is<Schematic<string, string>>(it => it.SchematicName == schematic.SchematicName), 
-                    metadataEnumerable, 
+                    It.Is<Schematic<string, string>>(it => it.SchematicName == schematic.SchematicName),
+                    metadataEnumerable,
                     CancellationToken.None),
                 times: Times.Once());
+
+            Assert.NotNull(response);
+            Assert.NotNull(response.MachineIds);
+            Assert.Collection(response.MachineIds, Assert.NotNull, Assert.NotNull);
+            Assert.Collection(response.MachineIds, machineId => Assert.Equal("a", machineId), machineId => Assert.Equal("b", machineId));
         }
 
         [Fact]

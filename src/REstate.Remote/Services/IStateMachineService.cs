@@ -25,8 +25,8 @@ namespace REstate.Remote.Services
 
         UnaryResult<CreateMachineResponse> CreateMachineFromSchematicAsync(CreateMachineFromSchematicRequest request);
 
-        UnaryResult<Nil> BulkCreateMachineFromStoreAsync(BulkCreateMachineFromStoreRequest request);
+        UnaryResult<BulkCreateMachineResponse> BulkCreateMachineFromStoreAsync(BulkCreateMachineFromStoreRequest request);
 
-        UnaryResult<Nil> BulkCreateMachineFromSchematicAsync(BulkCreateMachineFromSchematicRequest request);
+        UnaryResult<BulkCreateMachineResponse> BulkCreateMachineFromSchematicAsync(BulkCreateMachineFromSchematicRequest request);
     }
 }

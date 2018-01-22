@@ -8,6 +8,11 @@ namespace REstate.Tests.Features.Context
     {
         public IHostConfiguration CurrentHostConfiguration { get; set; }
 
+        #region GIVEN
+
+        #endregion
+
+        #region WHEN
         public Task When_configuration_is_accessed()
         {
             try
@@ -21,7 +26,9 @@ namespace REstate.Tests.Features.Context
 
             return Task.CompletedTask;
         }
+        #endregion
 
+        #region THEN
         public Task Then_configuration_has_a_container()
         {
             Assert.NotNull(((HostConfiguration)CurrentHostConfiguration).Container);
@@ -35,5 +42,7 @@ namespace REstate.Tests.Features.Context
 
             return Task.CompletedTask;
         }
+        #endregion
+
     }
 }

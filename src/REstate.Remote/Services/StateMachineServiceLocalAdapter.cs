@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -190,7 +191,7 @@ namespace REstate.Remote.Services
             };
         }
 
-        public async Task BulkCreateMachineFromStoreAsync<TState, TInput>(
+        public async Task<BulkCreateMachineResponse> BulkCreateMachineFromStoreAsync<TState, TInput>(
             string schematicName,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default)
@@ -199,10 +200,15 @@ namespace REstate.Remote.Services
                 .AsLocal()
                 .GetStateEngine<TState, TInput>();
 
-            await engine.BulkCreateMachinesAsync(schematicName, metadata, cancellationToken);
+            var machines = await engine.BulkCreateMachinesAsync(schematicName, metadata, cancellationToken);
+
+            return new BulkCreateMachineResponse
+            {
+                MachineIds = machines.Select(machine => machine.MachineId)
+            };
         }
 
-        public async Task BulkCreateMachineFromSchematicAsync<TState, TInput>(
+        public async Task<BulkCreateMachineResponse> BulkCreateMachineFromSchematicAsync<TState, TInput>(
             Schematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
             CancellationToken cancellationToken = default)
@@ -211,7 +217,12 @@ namespace REstate.Remote.Services
                 .AsLocal()
                 .GetStateEngine<TState, TInput>();
 
-            await engine.BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
+            var machines = await engine.BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
+            
+            return new BulkCreateMachineResponse
+            {
+                MachineIds = machines.Select(machine => machine.MachineId)
+            };
         }
 
         public async Task<GetSchematicResponse> GetSchematicAsync<TState, TInput>(

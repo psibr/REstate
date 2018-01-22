@@ -5,7 +5,6 @@ using LightBDD.Framework.Scenarios.Extended;
 using LightBDD.XUnit2;
 using REstate.IoC.BoDi;
 using REstate.Tests.Features.Context;
-using Xunit.Abstractions;
 
 // ReSharper disable InconsistentNaming
 
@@ -42,12 +41,5 @@ I want to use the configuration")]
                 _ => _.Then_configuration_is_not_null(),
                 _ => _.Then_configuration_has_a_container());
         }
-
-        #region Constructor
-        public Configuration(ITestOutputHelper output)
-            : base(output)
-        {
-        }
-        #endregion
     }
 }

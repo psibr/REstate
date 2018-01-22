@@ -22,4 +22,11 @@ namespace REstate.Remote.Models
         [Key(1)]
         public IEnumerable<IDictionary<string, string>> Metadata { get; set; }
     }
+
+    [MessagePackObject]
+    public class BulkCreateMachineResponse
+    {
+        [Key(0)]
+        public IEnumerable<string> MachineIds { get; set; }
+    }
 }

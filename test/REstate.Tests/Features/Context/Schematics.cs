@@ -9,6 +9,7 @@ namespace REstate.Tests.Features.Context
     {
         public Schematic<TState, TInput> CurrentSchematic { get; set; }
 
+        #region GIVEN
         public Task Given_a_Schematic_with_an_initial_state_INITIALSTATE(string schematicName, TState initialState)
         {
             CurrentSchematic = CurrentHost.Agent()
@@ -26,5 +27,14 @@ namespace REstate.Tests.Features.Context
                 .GetStateEngine<TState, TInput>()
                 .StoreSchematicAsync(schematic);
         }
+        #endregion
+
+        #region WHEN
+
+        #endregion
+
+        #region THEN
+
+        #endregion
     }
 }
