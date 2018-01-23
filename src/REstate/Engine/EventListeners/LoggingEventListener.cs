@@ -12,26 +12,24 @@ namespace REstate.Engine.EventListeners
     /// An <see cref="IEventListener"/> that writes events as log messages.
     /// </summary>
     public class LoggingEventListener
-        : IEventListener
+        : EventListener
     {
         private readonly LogLevel _loggingLevel;
 
-        private static readonly BlockingCollection<Action> LoggerQueue =
-            new BlockingCollection<Action>(
-                new ConcurrentQueue<Action>());
-
-        private static readonly Lazy<LoggingEventListener> LazyTrace = 
+        private static readonly Lazy<LoggingEventListener> LazyTrace =
             new Lazy<LoggingEventListener>(() => CreateAndStart(LogLevel.Trace));
 
-        private static readonly Lazy<LoggingEventListener> LazyDebug = 
+        private static readonly Lazy<LoggingEventListener> LazyDebug =
             new Lazy<LoggingEventListener>(() => CreateAndStart(LogLevel.Debug));
 
-        private static readonly Lazy<LoggingEventListener> LazyInfo = 
+        private static readonly Lazy<LoggingEventListener> LazyInfo =
             new Lazy<LoggingEventListener>(() => CreateAndStart(LogLevel.Info));
 
         private static ILog Logger => LogProvider.For<LoggingEventListener>();
 
         private LoggingEventListener(LogLevel loggingLevel)
+            // only process events if log level is enabled.
+            : base(() => Logger.Log(loggingLevel, null))
         {
             _loggingLevel = loggingLevel;
         }
@@ -58,38 +56,16 @@ namespace REstate.Engine.EventListeners
             return listener;
         }
 
-        /// <summary>
-        /// Instructs the listener to begin its monitoring.
-        /// </summary>
-        /// <param name="shutdownCancellationToken">
-        /// A <see cref="CancellationToken"/> that signals the application is shutting-down.
-        /// </param>
-        public Task StartListenerAsync(CancellationToken shutdownCancellationToken)
+        protected override Task OnMachineCreatedAsync<TState, TInput>(
+            ISchematic<TState, TInput> schematic, 
+            MachineCreationEventData<TState> machineCreationEventData)
         {
-            return Task.Run(() =>
-            {
-                foreach (var action in LoggerQueue.GetConsumingEnumerable())
-                {
-                    action();
-                }
-            }, CancellationToken.None);
-        }
-
-        Task IEventListener.OnMachineCreatedAsync<TState, TInput>(
-            ISchematic<TState, TInput> schematic,
-            ICollection<MachineCreationEventData<TState>> initialStatuses)
-        {
-            if (Logger.Log(_loggingLevel, null))
-                foreach (var machineInfo in initialStatuses)
-                    LoggerQueue.Add(
-                        item: () =>
-                            Logger.LogFormat(
-                                _loggingLevel,
-                                "Machine {machineId} created in state {state} with commit tag of {commitTag}.",
-                                machineInfo.InitialStatus.MachineId,
-                                machineInfo.InitialStatus.State,
-                                machineInfo.InitialStatus.CommitTag),
-                        cancellationToken: CancellationToken.None);
+            Logger.LogFormat(
+                _loggingLevel,
+                "Machine {machineId} created in state {state} with commit tag of {commitTag}.",
+                machineCreationEventData.InitialStatus.MachineId,
+                machineCreationEventData.InitialStatus.State,
+                machineCreationEventData.InitialStatus.CommitTag);
 
 #if NET45
             return Task.FromResult(0);
@@ -98,24 +74,21 @@ namespace REstate.Engine.EventListeners
 #endif
         }
 
-        Task IEventListener.OnTransitionAsync<TState, TInput, TPayload>(
-            ISchematic<TState, TInput> schematic,
-            Status<TState> status,
+        protected override Task OnTransitionAsync<TState, TInput, TPayload>(
+            ISchematic<TState, TInput> schematic, 
+            Status<TState> status, 
             IReadOnlyDictionary<string, string> metadata,
-            TInput input,
+            TInput input, 
             TPayload payload)
         {
-            if (Logger.Log(_loggingLevel, null))
-                LoggerQueue.Add(
-                    item: () => Logger.LogFormat(
-                        _loggingLevel,
-                        "Machine {machineId} transitioned to {state} with input {input}.",
-                        status.MachineId,
-                        status.State,
-                        input,
-                        payload,
-                        status.CommitTag),
-                    cancellationToken: CancellationToken.None);
+            Logger.LogFormat(
+                _loggingLevel,
+                "Machine {machineId} transitioned to {state} with input {input}.",
+                status.MachineId,
+                status.State,
+                input,
+                payload,
+                status.CommitTag);
 
 #if NET45
             return Task.FromResult(0);
@@ -124,18 +97,12 @@ namespace REstate.Engine.EventListeners
 #endif
         }
 
-        Task IEventListener.OnMachineDeletedAsync(
-            IEnumerable<string> machineIds)
+        protected override Task OnMachineDeletedAsync(string machineId)
         {
-            if (Logger.Log(_loggingLevel, null))
-                foreach (var machineId in machineIds)
-                    LoggerQueue.Add(
-                        item: () =>
-                            Logger.LogFormat(
-                                _loggingLevel,
-                                "Machine {machineId} deleted.",
-                                machineId),
-                        cancellationToken: CancellationToken.None);
+            Logger.LogFormat(
+                _loggingLevel,
+                "Machine {machineId} deleted.",
+                machineId);
 
 #if NET45
             return Task.FromResult(0);

@@ -16,12 +16,14 @@ namespace REstate.Engine
         /// <param name="state">The state to be represented by the status</param>
         /// <param name="updatedTime">The date and time the state interaction occured; the value will be converted to UTC</param>
         /// <param name="commitTag">A unique identifier for this state interaction</param>
-        public Status(string machineId, T state, DateTimeOffset updatedTime, Guid commitTag)
+        /// <param name="previousCommitTag">A unique identifier for the last state interaction</param>
+        public Status(string machineId, T state, DateTimeOffset updatedTime, Guid commitTag, Guid previousCommitTag)
         {
             MachineId = machineId;
             State = state;
             UpdatedTime = updatedTime;
             CommitTag = commitTag;
+            PreviousCommitTag = previousCommitTag;
         }
 
         /// <summary>
@@ -35,6 +37,15 @@ namespace REstate.Engine
         /// Empty Guid represents the absence of a commit tag and should not be used.
         /// </summary>
         public Guid CommitTag { get; }
+
+        /// <summary>
+        /// A value that indicates the last unique interaction of state within a machine.
+        /// <para />
+        /// Can serve as a form of causal ordering.
+        /// <para />
+        /// Empty Guid represents the absence of a commit tag and should not be used.
+        /// </summary>
+        public Guid PreviousCommitTag { get; }
 
         /// <summary>
         /// A unique identifier for the machine to which the status is related
