@@ -204,7 +204,7 @@ namespace REstate.Engine
 #pragma warning disable 4014
             Task.Run(async () => await Task.WhenAll(
                 _listeners.Select(listener =>
-                    listener.OnMachineCreatedAsync(
+                    listener.MachineCreatedAsync(
                         schematic,
                         new []
                         {
@@ -266,7 +266,7 @@ namespace REstate.Engine
 #pragma warning disable 4014
             Task.Run(async () => await Task.WhenAll(
                     _listeners.Select(listener =>
-                        listener.OnMachineCreatedAsync(
+                        listener.MachineCreatedAsync(
                             schematic,
                             machineStatuses.Select(status =>
                                 new MachineCreationEventData<TState>(
@@ -391,6 +391,8 @@ namespace REstate.Engine
             string machineId,
             CancellationToken cancellationToken = default)
         {
+            var deletionTime = DateTimeOffset.UtcNow;
+
             using (var repositories = await _repositoryContextFactory
                 .OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -399,15 +401,16 @@ namespace REstate.Engine
                     .ConfigureAwait(false);
             }
 
-            NotifyOnMachineDeleted(machineId);
+            NotifyOnMachineDeleted(deletionTime, machineId);
         }
 
-        private void NotifyOnMachineDeleted(string machineId)
+        private void NotifyOnMachineDeleted(DateTimeOffset deletionTime, string machineId)
         {
 #pragma warning disable 4014
             Task.Run(async () => await Task.WhenAll(
                 _listeners.Select(listener =>
-                    listener.OnMachineDeletedAsync(
+                    listener.MachineDeletedAsync(
+                        deletionTime: deletionTime,
                         machineIds: new[] { machineId }))),
                 CancellationToken.None);
 #pragma warning restore 4014

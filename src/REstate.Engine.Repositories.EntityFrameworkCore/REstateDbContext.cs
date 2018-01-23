@@ -9,6 +9,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         
         public Guid CommitTag { get; set; }
 
+        public Guid PreviousCommitTag { get; set; }
+
         public DateTimeOffset UpdatedTime { get; set; }
 
         public string StateJson { get; set; }

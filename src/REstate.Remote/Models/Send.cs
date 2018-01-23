@@ -46,5 +46,8 @@ namespace REstate.Remote.Models
 
         [Key(4)]
         public DateTimeOffset UpdatedTime { get; set; }
+
+        [Key(5)] 
+        public Guid PreviousCommitTag { get; set; }
     }
 }

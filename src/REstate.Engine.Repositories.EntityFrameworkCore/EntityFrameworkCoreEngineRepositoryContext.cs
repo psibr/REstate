@@ -137,6 +137,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     obj: metadata);
 
             var commitTag = Guid.NewGuid();
+            var previousCommitTag = Guid.Empty;
             var updatedTime = DateTimeOffset.UtcNow;
 
             var record = new EntityFrameworkCoreMachineStatus
@@ -145,6 +146,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 SchematicJson = schematicJson,
                 StateJson = stateJson,
                 CommitTag = commitTag,
+                PreviousCommitTag = previousCommitTag,
                 UpdatedTime = updatedTime,
                 MetadataJson = metadataJson
             };
@@ -160,6 +162,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 State = schematic.InitialState,
                 Metadata = metadata,
                 CommitTag = commitTag,
+                PreviousCommitTag = previousCommitTag,
                 UpdatedTime = updatedTime
             };
         }
@@ -179,6 +182,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 obj: schematic.InitialState, 
                 resolver: ContractlessStandardResolver.Instance);
 
+            var previousCommitTag = Guid.Empty;
             var commitTag = Guid.NewGuid();
             var updatedTime = DateTimeOffset.UtcNow;
 
@@ -200,6 +204,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     SchematicJson = schematicJson,
                     StateJson = stateJson,
                     CommitTag = commitTag,
+                    PreviousCommitTag = previousCommitTag,
                     UpdatedTime = updatedTime,
                     MetadataJson = metadataJson
                 });
@@ -211,6 +216,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     State = schematic.InitialState,
                     Metadata = dictionary,
                     CommitTag = commitTag,
+                    PreviousCommitTag = previousCommitTag,
                     UpdatedTime = updatedTime
                 });
             }
@@ -298,6 +304,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 State = state,
                 Metadata = metadata,
                 CommitTag = machineRecord.CommitTag,
+                PreviousCommitTag = machineRecord.PreviousCommitTag,
                 UpdatedTime = machineRecord.UpdatedTime
             };
         }
@@ -337,6 +344,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     resolver: ContractlessStandardResolver.Instance);
 
                 machineRecord.StateJson = stateJson;
+                machineRecord.PreviousCommitTag = machineRecord.CommitTag;
                 machineRecord.CommitTag = Guid.NewGuid();
                 machineRecord.UpdatedTime = DateTimeOffset.UtcNow;
             }
@@ -370,6 +378,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 State = state,
                 Metadata = metadata,
                 CommitTag = machineRecord.CommitTag,
+                PreviousCommitTag = machineRecord.PreviousCommitTag,
                 UpdatedTime = machineRecord.UpdatedTime
             };
         }

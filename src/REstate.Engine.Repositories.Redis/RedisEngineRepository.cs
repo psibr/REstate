@@ -122,6 +122,7 @@ namespace REstate.Engine.Repositories.Redis
             }
 
             var commitTag = Guid.NewGuid();
+            var previousCommitTag = Guid.Empty;
             var updatedTime = DateTimeOffset.UtcNow;
 
             var record = new RedisMachineStatus<TState, TInput>
@@ -130,6 +131,7 @@ namespace REstate.Engine.Repositories.Redis
                 SchematicHash = hash,
                 State = schematic.InitialState,
                 CommitTag = commitTag,
+                PreviousCommitTag = previousCommitTag,
                 UpdatedTime = updatedTime,
                 Metadata = metadata
             };
@@ -144,6 +146,7 @@ namespace REstate.Engine.Repositories.Redis
                 Schematic = schematic,
                 State = schematic.InitialState,
                 CommitTag = commitTag,
+                PreviousCommitTag = previousCommitTag,
                 UpdatedTime = updatedTime,
                 Metadata = metadata
             };
@@ -158,6 +161,8 @@ namespace REstate.Engine.Repositories.Redis
 
             var hash = Convert.ToBase64String(Murmur3.ComputeHashBytes(schematicBytes));
 
+            var previousCommitTag = Guid.Empty;
+
             var machineRecords =
                 metadata.Select(meta =>
                     new MachineStatus<TState, TInput>
@@ -167,7 +172,8 @@ namespace REstate.Engine.Repositories.Redis
                         State = schematic.InitialState,
                         CommitTag = Guid.NewGuid(),
                         UpdatedTime = DateTime.UtcNow,
-                        Metadata = meta
+                        Metadata = meta,
+                        PreviousCommitTag = previousCommitTag
                     }).ToList();
 
             await _restateDatabase.StringSetAsync($"{MachineSchematicsKeyPrefix}/{hash}", schematicBytes, null, When.NotExists);
@@ -181,7 +187,8 @@ namespace REstate.Engine.Repositories.Redis
                         State = s.State,
                         CommitTag = s.CommitTag,
                         UpdatedTime = s.UpdatedTime,
-                        Metadata = s.Metadata
+                        Metadata = s.Metadata,
+                        PreviousCommitTag = s.PreviousCommitTag
                     }))
             );
 
@@ -251,6 +258,7 @@ namespace REstate.Engine.Repositories.Redis
                 MachineId = redisRecord.MachineId,
                 Schematic = schematic,
                 CommitTag = redisRecord.CommitTag,
+                PreviousCommitTag = redisRecord.PreviousCommitTag,
                 State = redisRecord.State,
                 UpdatedTime = redisRecord.UpdatedTime,
                 Metadata = redisRecord.Metadata
@@ -287,6 +295,7 @@ namespace REstate.Engine.Repositories.Redis
             if (lastCommitTag == null || status.CommitTag == lastCommitTag)
             {
                 status.State = state;
+                status.PreviousCommitTag = status.CommitTag;
                 status.CommitTag = Guid.NewGuid();
                 status.UpdatedTime = DateTimeOffset.UtcNow;
             }

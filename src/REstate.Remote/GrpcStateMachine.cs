@@ -97,7 +97,8 @@ namespace REstate.Remote
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
                 response.UpdatedTime,
-                response.CommitTag);
+                response.CommitTag,
+                response.PreviousCommitTag);
         }
 
         public async Task<Status<TState>> SendAsync<TPayload>(TInput input, TPayload payload, Guid lastCommitTag, CancellationToken cancellationToken = default)
@@ -130,7 +131,8 @@ namespace REstate.Remote
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
                 response.UpdatedTime,
-                response.CommitTag);
+                response.CommitTag,
+                response.PreviousCommitTag);
         }
 
         public async Task<Status<TState>> SendAsync(TInput input, CancellationToken cancellationToken = default)
@@ -161,7 +163,8 @@ namespace REstate.Remote
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
                 response.UpdatedTime,
-                response.CommitTag);
+                response.CommitTag,
+                response.PreviousCommitTag);
         }
 
         public async Task<Status<TState>> SendAsync(TInput input, Guid lastCommitTag, CancellationToken cancellationToken = default)
@@ -193,7 +196,8 @@ namespace REstate.Remote
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
                 response.UpdatedTime,
-                response.CommitTag);
+                response.CommitTag,
+                response.PreviousCommitTag);
         }
     }
 }

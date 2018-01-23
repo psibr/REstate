@@ -44,7 +44,9 @@ namespace REstate.Remote.Services
             {
                 MachineId = machineId,
                 CommitTag = newStatus.CommitTag,
-                StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance)
+                StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
+                UpdatedTime = newStatus.UpdatedTime,
+                PreviousCommitTag = newStatus.PreviousCommitTag
             };
         }
 
@@ -78,7 +80,8 @@ namespace REstate.Remote.Services
                 MachineId = machineId,
                 CommitTag = newStatus.CommitTag,
                 StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
-                UpdatedTime = newStatus.UpdatedTime
+                UpdatedTime = newStatus.UpdatedTime,
+                PreviousCommitTag = newStatus.PreviousCommitTag
             };
         }
 

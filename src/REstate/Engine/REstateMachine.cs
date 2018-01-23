@@ -168,7 +168,7 @@ namespace REstate.Engine
 #pragma warning disable 4014
             Task.Run(async () => await Task.WhenAll(
                     _listeners.Select(listener =>
-                        listener.OnTransitionAsync(
+                        listener.TransitionAsync(
                             schematic: Schematic,
                             status: status,
                             metadata: _metadata,

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using REstate.Schematics;
@@ -18,18 +19,19 @@ namespace REstate.Engine.EventListeners
         /// </param>
         Task StartListenerAsync(CancellationToken shutdownCancellationToken);
 
-        Task OnMachineCreatedAsync<TState, TInput>(
+        Task MachineCreatedAsync<TState, TInput>(
             ISchematic<TState, TInput> schematic,
             ICollection<MachineCreationEventData<TState>> initialStatuses);
 
-        Task OnTransitionAsync<TState, TInput, TPayload>(
+        Task TransitionAsync<TState, TInput, TPayload>(
             ISchematic<TState, TInput> schematic,
             Status<TState> status,
             IReadOnlyDictionary<string, string> metadata,
             TInput input,
             TPayload payload);
 
-        Task OnMachineDeletedAsync(
+        Task MachineDeletedAsync(
+            DateTimeOffset deletionTime,
             IEnumerable<string> machineIds);
     }
 }

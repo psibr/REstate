@@ -54,12 +54,6 @@ namespace Semaphore
 
                         await Task.Delay(onFailedToGetSlotDelayMs);
                     }
-                    catch (StateConflictException)
-                    {
-                        // In-Memory repository uses optimistic concurrency only, 
-                        // so retries may need to happen with multiple writers.
-                        Log.Logger.Verbose("Encountered a StateConflict, retrying...");
-                    }
                 }
             }
         }
@@ -85,6 +79,7 @@ namespace Semaphore
         private static REstate.Schematics.Schematic<int, int> CreateSemaphoreSchematic() =>
             REstateHost.Agent
                 .CreateSchematic<int, int>("3SlotSemaphore")
+                .WithStateConflictRetries()
                 .WithState(0, state => state
                     .AsInitialState()
                     .DescribedAs("No slots filled.")
