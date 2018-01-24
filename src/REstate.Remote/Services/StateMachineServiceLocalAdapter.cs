@@ -19,7 +19,7 @@ namespace REstate.Remote.Services
         public async Task<SendResponse> SendAsync<TState, TInput>(
             string machineId,
             TInput input,
-            Guid? commitTag,
+            long? commitNumber,
             CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent.AsLocal()
@@ -31,8 +31,8 @@ namespace REstate.Remote.Services
 
             try
             {
-                newStatus = commitTag != null
-                    ? await machine.SendAsync(input, commitTag.Value, cancellationToken).ConfigureAwait(false)
+                newStatus = commitNumber != null
+                    ? await machine.SendAsync(input, commitNumber.Value, cancellationToken).ConfigureAwait(false)
                     : await machine.SendAsync(input, cancellationToken).ConfigureAwait(false);
             }
             catch (StateConflictException conflictException)
@@ -43,10 +43,9 @@ namespace REstate.Remote.Services
             return new SendResponse
             {
                 MachineId = machineId,
-                CommitTag = newStatus.CommitTag,
+                CommitNumber = newStatus.CommitNumber,
                 StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
-                UpdatedTime = newStatus.UpdatedTime,
-                PreviousCommitTag = newStatus.PreviousCommitTag
+                UpdatedTime = newStatus.UpdatedTime
             };
         }
 
@@ -54,7 +53,7 @@ namespace REstate.Remote.Services
             string machineId,
             TInput input,
             TPayload payload,
-            Guid? commitTag,
+            long? commitNumber,
             CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent.AsLocal()
@@ -66,8 +65,8 @@ namespace REstate.Remote.Services
 
             try
             {
-                newStatus = commitTag != null
-                    ? await machine.SendAsync(input, payload, commitTag.Value, cancellationToken).ConfigureAwait(false)
+                newStatus = commitNumber != null
+                    ? await machine.SendAsync(input, payload, commitNumber.Value, cancellationToken).ConfigureAwait(false)
                     : await machine.SendAsync(input, payload, cancellationToken).ConfigureAwait(false);
             }
             catch (StateConflictException conflictException)
@@ -78,10 +77,9 @@ namespace REstate.Remote.Services
             return new SendResponse
             {
                 MachineId = machineId,
-                CommitTag = newStatus.CommitTag,
+                CommitNumber = newStatus.CommitNumber,
                 StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
-                UpdatedTime = newStatus.UpdatedTime,
-                PreviousCommitTag = newStatus.PreviousCommitTag
+                UpdatedTime = newStatus.UpdatedTime
             };
         }
 

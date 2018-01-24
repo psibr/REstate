@@ -8,7 +8,7 @@ namespace REstate.Engine
     public class StateConflictException
         : Exception
     {
-        private const string StandardMessage = "CommitTag did not match; no update performed.";
+        private const string StandardMessage = "CommitNumber did not match; no update performed.";
 
         public StateConflictException()
             : this(StandardMessage)

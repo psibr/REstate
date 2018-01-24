@@ -15,15 +15,13 @@ namespace REstate.Engine
         /// <param name="machineId">The unique identifier of the machine to which this status relates</param>
         /// <param name="state">The state to be represented by the status</param>
         /// <param name="updatedTime">The date and time the state interaction occured; the value will be converted to UTC</param>
-        /// <param name="commitTag">A unique identifier for this state interaction</param>
-        /// <param name="previousCommitTag">A unique identifier for the last state interaction</param>
-        public Status(string machineId, T state, DateTimeOffset updatedTime, Guid commitTag, Guid previousCommitTag)
+        /// <param name="commitNumber">A unique identifier for this state interaction; calculated as previous commit number++</param>
+        public Status(string machineId, T state, DateTimeOffset updatedTime, long commitNumber)
         {
             MachineId = machineId;
             State = state;
             UpdatedTime = updatedTime;
-            CommitTag = commitTag;
-            PreviousCommitTag = previousCommitTag;
+            CommitNumber = commitNumber;
         }
 
         /// <summary>
@@ -32,20 +30,11 @@ namespace REstate.Engine
         public T State { get; }
 
         /// <summary>
-        /// A value that indicates a unique interaction of state within a machine.
+        /// A value that indicates a unique interaction of state within a machine
         /// <para />
-        /// Empty Guid represents the absence of a commit tag and should not be used.
+        /// Each state change increments this number as a way to show causal order
         /// </summary>
-        public Guid CommitTag { get; }
-
-        /// <summary>
-        /// A value that indicates the last unique interaction of state within a machine.
-        /// <para />
-        /// Can serve as a form of causal ordering.
-        /// <para />
-        /// Empty Guid represents the absence of a commit tag and should not be used.
-        /// </summary>
-        public Guid PreviousCommitTag { get; }
+        public long CommitNumber { get; }
 
         /// <summary>
         /// A unique identifier for the machine to which the status is related
@@ -68,10 +57,10 @@ namespace REstate.Engine
         }
 
         /// <summary>
-        /// Indicates whether the current object is equal to another object of the same type.
+        /// Indicates whether the current object is equal to another object of the same type
         /// </summary>
         /// <returns>
-        /// true if the current object is equal to the <paramref identifier="other"/> parameter; otherwise, false.
+        /// <c>true</c> if the current object is equal to the <paramref identifier="other"/> parameter; otherwise, <c>false</c>
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(Status<T> other)
@@ -109,31 +98,27 @@ namespace REstate.Engine
 
         /// <summary>
         /// Verifies that both statuses have the same state
-        /// AND verifies the commit tags match and are not empty.
+        /// AND verifies the commit numbers match.
         /// </summary>
         /// <param name="a">The left state.</param>
         /// <param name="b">The right state.</param>
         /// <returns>
         /// True if same commit of the same state;
-        /// false if the values or commit tags do not match 
-        /// OR if either commit tag is empty.
+        /// false if the values or commit numbers do not match
         /// </returns>
         public static bool IsSameCommit(Status<T> a, Status<T> b)
         {
-            return a == b 
-                && a.CommitTag != Guid.Empty 
-                && a.CommitTag == b.CommitTag;
+            return a == b && a.CommitNumber == b.CommitNumber;
         }
 
         /// <summary>
         /// Verifies that both statuses have the same state 
-        /// AND verifies the commit tags match and are not empty.
+        /// AND verifies the commit numbers match.
         /// </summary>
         /// <param name="other">The state to compare against.</param>
         /// <returns>
         /// True if same commit of the same state value;
-        /// false if the values or commit tags do not match 
-        /// OR if either commit tag is empty.
+        /// false if the values or commit numbers do not match 
         /// </returns>
         public bool IsSameCommit(Status<T> other)
         {

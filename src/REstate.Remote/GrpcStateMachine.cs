@@ -97,11 +97,10 @@ namespace REstate.Remote
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
                 response.UpdatedTime,
-                response.CommitTag,
-                response.PreviousCommitTag);
+                response.CommitNumber);
         }
 
-        public async Task<Status<TState>> SendAsync<TPayload>(TInput input, TPayload payload, Guid lastCommitTag, CancellationToken cancellationToken = default)
+        public async Task<Status<TState>> SendAsync<TPayload>(TInput input, TPayload payload, long lastCommitNumber, CancellationToken cancellationToken = default)
         {
             SendResponse response;
 
@@ -114,7 +113,7 @@ namespace REstate.Remote
                         MachineId = MachineId,
                         InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
                         PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload),
-                        CommitTag = lastCommitTag
+                        CommitNumber = lastCommitNumber
                     });
             }
             catch (RpcException exception)
@@ -131,8 +130,7 @@ namespace REstate.Remote
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
                 response.UpdatedTime,
-                response.CommitTag,
-                response.PreviousCommitTag);
+                response.CommitNumber);
         }
 
         public async Task<Status<TState>> SendAsync(TInput input, CancellationToken cancellationToken = default)
@@ -163,11 +161,10 @@ namespace REstate.Remote
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
                 response.UpdatedTime,
-                response.CommitTag,
-                response.PreviousCommitTag);
+                response.CommitNumber);
         }
 
-        public async Task<Status<TState>> SendAsync(TInput input, Guid lastCommitTag, CancellationToken cancellationToken = default)
+        public async Task<Status<TState>> SendAsync(TInput input, long lastCommitNumber, CancellationToken cancellationToken = default)
         {
             SendResponse response;
 
@@ -179,7 +176,7 @@ namespace REstate.Remote
                     {
                         MachineId = MachineId,
                         InputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
-                        CommitTag = lastCommitTag
+                        CommitNumber = lastCommitNumber
                     });
             }
             catch (RpcException exception)
@@ -196,8 +193,7 @@ namespace REstate.Remote
                     response.StateBytes,
                     ContractlessStandardResolver.Instance),
                 response.UpdatedTime,
-                response.CommitTag,
-                response.PreviousCommitTag);
+                response.CommitNumber);
         }
     }
 }
