@@ -16,7 +16,7 @@ namespace REstate.Remote.Models
         public byte[] PayloadBytes { get; set; }
 
         [Key(3)]
-        public Guid? CommitTag { get; set; }
+        public long? CommitNumber { get; set; }
     }
 
     [MessagePackObject]
@@ -29,7 +29,7 @@ namespace REstate.Remote.Models
         public byte[] InputBytes { get; set; }
 
         [Key(2)]
-        public Guid? CommitTag { get; set; }
+        public long? CommitNumber { get; set; }
     }
 
     [MessagePackObject]
@@ -39,15 +39,12 @@ namespace REstate.Remote.Models
         public string MachineId { get; set; }
 
         [Key(2)]
-        public Guid CommitTag { get; set; }
+        public long CommitNumber { get; set; }
 
         [Key(3)]
         public byte[] StateBytes { get; set; }
 
         [Key(4)]
         public DateTimeOffset UpdatedTime { get; set; }
-
-        [Key(5)] 
-        public Guid PreviousCommitTag { get; set; }
     }
 }

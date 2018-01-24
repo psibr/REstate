@@ -63,20 +63,20 @@ namespace REstate.Remote.Tests.Units
             var input = "some input";
             var inputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance);
             var stateBytes = new byte[50];
-            var commitTag = new Guid();
-            var updatedCommitTag = new Guid();
+            var commitNumber = 0L;
+            var updatedCommitNumber = commitNumber + 1;
             var updatedTime = DateTime.Now;
 
             _localAdapterMock
                 .Setup(_ => _.SendAsync<string, string>(
                     It.Is<string>(it => it == machineId),
                     It.Is<string>(it => it == input),
-                    It.Is<Guid>(it => it == commitTag),
+                    It.Is<long>(it => it == commitNumber),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new SendResponse
                 {
                     MachineId = machineId,
-                    CommitTag = updatedCommitTag,
+                    CommitNumber = updatedCommitNumber,
                     StateBytes = stateBytes,
                     UpdatedTime = updatedTime
                 });
@@ -86,14 +86,14 @@ namespace REstate.Remote.Tests.Units
                 .SendAsync(new SendRequest
                 {
                     MachineId = machineId,
-                    CommitTag = commitTag,
+                    CommitNumber = commitNumber,
                     InputBytes = inputBytes
                 });
 
             // Assert
             Assert.NotNull(response);
             Assert.Equal(machineId, response.MachineId);
-            Assert.Equal(updatedCommitTag, response.CommitTag);
+            Assert.Equal(updatedCommitNumber, response.CommitNumber);
             Assert.Equal(stateBytes, response.StateBytes);
             Assert.Equal(updatedTime, response.UpdatedTime);
         }
@@ -107,9 +107,9 @@ namespace REstate.Remote.Tests.Units
             var payload = "some payload";
             var inputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance);
             var payloadBytes = MessagePackSerializer.Typeless.Serialize(payload);
-            var commitTag = Guid.NewGuid();
+            var commitNumber = 0L;
             var stateBytes = new byte[50];
-            var updatedCommitTag = Guid.NewGuid();
+            var updatedCommitNumber = commitNumber + 1;
             var updatedTime = DateTime.Now;
 
             _localAdapterMock
@@ -117,12 +117,12 @@ namespace REstate.Remote.Tests.Units
                     It.Is<string>(it => it == machineId),
                     It.Is<string>(it => it == input),
                     It.Is<string>(it => it == payload),
-                    It.Is<Guid>(it => it == commitTag),
+                    It.Is<long>(it => it == commitNumber),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new SendResponse
                 {
                     MachineId = machineId,
-                    CommitTag = updatedCommitTag,
+                    CommitNumber = updatedCommitNumber,
                     StateBytes = stateBytes,
                     UpdatedTime = updatedTime
                 });
@@ -134,14 +134,14 @@ namespace REstate.Remote.Tests.Units
                     MachineId = machineId,
                     InputBytes = inputBytes,
                     PayloadBytes = payloadBytes,
-                    CommitTag = commitTag
+                    CommitNumber = commitNumber
                 });
 
             // Assert
             Assert.NotNull(response);
             Assert.Equal(machineId, response.MachineId);
             Assert.Equal(stateBytes, response.StateBytes);
-            Assert.Equal(updatedCommitTag, response.CommitTag);
+            Assert.Equal(updatedCommitNumber, response.CommitNumber);
             Assert.Equal(updatedTime, response.UpdatedTime);
         }
 

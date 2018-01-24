@@ -121,8 +121,7 @@ namespace REstate.Engine.Repositories.Redis
                 await _restateDatabase.StringSetAsync($"{MachineSchematicsKeyPrefix}/{hash}", schematicBytes);
             }
 
-            var commitTag = Guid.NewGuid();
-            var previousCommitTag = Guid.Empty;
+            const int commitNumber = 0;
             var updatedTime = DateTimeOffset.UtcNow;
 
             var record = new RedisMachineStatus<TState, TInput>
@@ -130,8 +129,7 @@ namespace REstate.Engine.Repositories.Redis
                 MachineId = id,
                 SchematicHash = hash,
                 State = schematic.InitialState,
-                CommitTag = commitTag,
-                PreviousCommitTag = previousCommitTag,
+                CommitNumber = commitNumber,
                 UpdatedTime = updatedTime,
                 Metadata = metadata
             };
@@ -145,8 +143,7 @@ namespace REstate.Engine.Repositories.Redis
                 MachineId = machineId,
                 Schematic = schematic,
                 State = schematic.InitialState,
-                CommitTag = commitTag,
-                PreviousCommitTag = previousCommitTag,
+                CommitNumber = commitNumber,
                 UpdatedTime = updatedTime,
                 Metadata = metadata
             };
@@ -161,7 +158,7 @@ namespace REstate.Engine.Repositories.Redis
 
             var hash = Convert.ToBase64String(Murmur3.ComputeHashBytes(schematicBytes));
 
-            var previousCommitTag = Guid.Empty;
+            const int commitNumber = 0;
 
             var machineRecords =
                 metadata.Select(meta =>
@@ -170,10 +167,9 @@ namespace REstate.Engine.Repositories.Redis
                         MachineId = Guid.NewGuid().ToString(),
                         Schematic = schematic,
                         State = schematic.InitialState,
-                        CommitTag = Guid.NewGuid(),
+                        CommitNumber = commitNumber,
                         UpdatedTime = DateTime.UtcNow,
-                        Metadata = meta,
-                        PreviousCommitTag = previousCommitTag
+                        Metadata = meta
                     }).ToList();
 
             await _restateDatabase.StringSetAsync($"{MachineSchematicsKeyPrefix}/{hash}", schematicBytes, null, When.NotExists);
@@ -185,10 +181,9 @@ namespace REstate.Engine.Repositories.Redis
                         MachineId = s.MachineId,
                         SchematicHash = hash,
                         State = s.State,
-                        CommitTag = s.CommitTag,
+                        CommitNumber = s.CommitNumber,
                         UpdatedTime = s.UpdatedTime,
-                        Metadata = s.Metadata,
-                        PreviousCommitTag = s.PreviousCommitTag
+                        Metadata = s.Metadata
                     }))
             );
 
@@ -257,8 +252,7 @@ namespace REstate.Engine.Repositories.Redis
             {
                 MachineId = redisRecord.MachineId,
                 Schematic = schematic,
-                CommitTag = redisRecord.CommitTag,
-                PreviousCommitTag = redisRecord.PreviousCommitTag,
+                CommitNumber = redisRecord.CommitNumber,
                 State = redisRecord.State,
                 UpdatedTime = redisRecord.UpdatedTime,
                 Metadata = redisRecord.Metadata
@@ -270,18 +264,18 @@ namespace REstate.Engine.Repositories.Redis
         /// </summary>
         /// <param name="machineId">The Id of the Machine</param>
         /// <param name="state">The state to which the Status is set.</param>
-        /// <param name="lastCommitTag">
+        /// <param name="lastCommitNumber">
         /// If provided, will guarentee the update will occur only 
-        /// if the value matches the current Status's CommitTag.
+        /// if the value matches the current Status's CommitNumber.
         /// </param>
         /// <param name="cancellationToken"></param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
         /// <exception cref="MachineDoesNotExistException">Thrown when no matching MachineId was found.</exception>
-        /// <exception cref="StateConflictException">Thrown when a conflict occured on CommitTag; no update was performed.</exception>
+        /// <exception cref="StateConflictException">Thrown when a conflict occured on CommitNumber; no update was performed.</exception>
         public async Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
             string machineId,
             TState state,
-            Guid? lastCommitTag,
+            long? lastCommitNumber,
             CancellationToken cancellationToken = default)
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
@@ -292,11 +286,10 @@ namespace REstate.Engine.Repositories.Redis
             var status = MessagePackSerializer.Deserialize<RedisMachineStatus<TState, TInput>>(
                 machineBytes);
 
-            if (lastCommitTag == null || status.CommitTag == lastCommitTag)
+            if (lastCommitNumber == null || status.CommitNumber == lastCommitNumber)
             {
                 status.State = state;
-                status.PreviousCommitTag = status.CommitTag;
-                status.CommitTag = Guid.NewGuid();
+                status.CommitNumber = status.CommitNumber++;
                 status.UpdatedTime = DateTimeOffset.UtcNow;
             }
             else
@@ -330,7 +323,7 @@ namespace REstate.Engine.Repositories.Redis
                 MachineId = status.MachineId,
                 Schematic = schematic,
                 State = status.State,
-                CommitTag = status.CommitTag,
+                CommitNumber = status.CommitNumber,
                 UpdatedTime = status.UpdatedTime,
                 Metadata = status.Metadata
             };

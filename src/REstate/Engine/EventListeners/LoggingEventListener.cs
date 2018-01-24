@@ -62,10 +62,10 @@ namespace REstate.Engine.EventListeners
         {
             Logger.LogFormat(
                 _loggingLevel,
-                "Machine {machineId} created in state {state} with commit tag of {commitTag}.",
+                "Machine {machineId} created in state {state} with commit number of {commitNumber}.",
                 machineCreationEventData.InitialStatus.MachineId,
                 machineCreationEventData.InitialStatus.State,
-                machineCreationEventData.InitialStatus.CommitTag);
+                machineCreationEventData.InitialStatus.CommitNumber);
 
 #if NET45
             return Task.FromResult(0);
@@ -88,7 +88,7 @@ namespace REstate.Engine.EventListeners
                 status.State,
                 input,
                 payload,
-                status.CommitTag);
+                status.CommitNumber);
 
 #if NET45
             return Task.FromResult(0);

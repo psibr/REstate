@@ -62,14 +62,14 @@ namespace REstate.Engine
 
         public Task<Status<TState>> SendAsync(
             TInput input,
-            Guid lastCommitTag,
+            long lastCommitNumber,
             CancellationToken cancellationToken = default) 
-            => SendAsync<object>(input, null, lastCommitTag, cancellationToken);
+            => SendAsync<object>(input, null, lastCommitNumber, cancellationToken);
 
         public async Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
-            Guid lastCommitTag,
+            long lastCommitNumber,
             CancellationToken cancellationToken = default)
         {
             using (var dataContext = await  _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
@@ -110,7 +110,7 @@ namespace REstate.Engine
                         currentStatus = await dataContext.Machines.SetMachineStateAsync(
                             machineId: MachineId,
                             state: transition.ResultantState,
-                            lastCommitTag: lastCommitTag == default ? currentStatus.CommitTag : lastCommitTag,
+                            lastCommitNumber: lastCommitNumber == default ? currentStatus.CommitNumber : lastCommitNumber,
                             cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
                     catch (StateConflictException)
@@ -154,7 +154,7 @@ namespace REstate.Engine
                         currentStatus = await SendAsync(
                             input: schematicState.OnEntry.OnExceptionInput.Input,
                             payload: payload,
-                            lastCommitTag: currentStatus.CommitTag,
+                            lastCommitNumber: currentStatus.CommitNumber,
                             cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
 

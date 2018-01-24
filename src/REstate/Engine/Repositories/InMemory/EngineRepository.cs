@@ -104,7 +104,7 @@ namespace REstate.Engine.Repositories.InMemory
                 MachineId = id,
                 Schematic = schematic,
                 State = schematic.InitialState,
-                CommitTag = Guid.NewGuid(),
+                CommitNumber = 0L,
                 UpdatedTime = DateTime.UtcNow,
                 Metadata = metadata
             };
@@ -126,7 +126,7 @@ namespace REstate.Engine.Repositories.InMemory
                         MachineId = Guid.NewGuid().ToString(),
                         Schematic = schematic,
                         State = schematic.InitialState,
-                        CommitTag = Guid.NewGuid(),
+                        CommitNumber = 0L,
                         UpdatedTime = DateTime.UtcNow,
                         Metadata = meta
                     },
@@ -199,18 +199,18 @@ namespace REstate.Engine.Repositories.InMemory
         /// </summary>
         /// <param name="machineId">The Id of the Machine</param>
         /// <param name="state">The state to which the Status is set.</param>
-        /// <param name="lastCommitTag">
+        /// <param name="lastCommitNumber">
         /// If provided, will guarentee the update will occur only 
-        /// if the value matches the current Status's CommitTag.
+        /// if the value matches the current Status's CommitNumber.
         /// </param>
         /// <param name="cancellationToken"></param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
         /// <exception cref="MachineDoesNotExistException">Thrown when no matching MachineId was found.</exception>
-        /// <exception cref="StateConflictException">Thrown when a conflict occured on CommitTag; no update was performed.</exception>
+        /// <exception cref="StateConflictException">Thrown when a conflict occured on CommitNumber; no update was performed.</exception>
         public Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
             string machineId,
             TState state,
-            Guid? lastCommitTag,
+            long? lastCommitNumber,
             CancellationToken cancellationToken = default)
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
@@ -220,10 +220,10 @@ namespace REstate.Engine.Repositories.InMemory
 
             lock (record.MachineStatus)
             {
-                if (lastCommitTag == null || record.MachineStatus.CommitTag == lastCommitTag)
+                if (lastCommitNumber == null || record.MachineStatus.CommitNumber == lastCommitNumber)
                 {
                     record.MachineStatus.State = state;
-                    record.MachineStatus.CommitTag = Guid.NewGuid();
+                    record.MachineStatus.CommitNumber++;
                     record.MachineStatus.UpdatedTime = DateTimeOffset.UtcNow;
                 }
                 else

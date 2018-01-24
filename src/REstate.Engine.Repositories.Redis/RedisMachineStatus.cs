@@ -17,15 +17,12 @@ namespace REstate.Engine.Repositories.Redis
         public TState State { get; set; }
 
         [Key(3)]
-        public Guid CommitTag { get; set; }
+        public long CommitNumber { get; set; }
 
         [Key(4)]
         public DateTimeOffset UpdatedTime { get; set; }
 
         [Key(5)]
         public IDictionary<string, string> Metadata { get; set; }
-
-        [Key(6)] 
-        public Guid PreviousCommitTag { get; set; }
     }
 }

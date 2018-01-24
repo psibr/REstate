@@ -71,7 +71,7 @@ namespace REstate.Engine.Connectors.AzureServiceBus
             var message = new QueueMessage<TState, TInput, TPayload>
             {
                 State = status.State,
-                CommitTag = status.CommitTag,
+                CommitNumber = status.CommitNumber,
                 MachineId = status.MachineId,
                 UpdatedTime = status.UpdatedTime,
                 Input = inputParameters.Input,

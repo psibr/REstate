@@ -12,9 +12,7 @@ namespace REstate.Engine.Repositories
 
         public TState State { get; set; }
 
-        public Guid CommitTag { get; set; }
-
-        public Guid PreviousCommitTag { get; set; }
+        public long CommitNumber { get; set; }
 
         public DateTimeOffset UpdatedTime { get; set; }
 
@@ -22,7 +20,7 @@ namespace REstate.Engine.Repositories
 
         public static implicit operator Status<TState>(MachineStatus<TState, TInput> record)
         {
-            return new Status<TState>(record.MachineId, record.State, record.UpdatedTime, record.CommitTag, record.PreviousCommitTag);
+            return new Status<TState>(record.MachineId, record.State, record.UpdatedTime, record.CommitNumber);
         }
     }
 }

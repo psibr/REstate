@@ -7,9 +7,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
     {
         public string MachineId { get; set; }
         
-        public Guid CommitTag { get; set; }
-
-        public Guid PreviousCommitTag { get; set; }
+        public long CommitNumber { get; set; }
 
         public DateTimeOffset UpdatedTime { get; set; }
 
@@ -58,7 +56,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 .HasKey(status => status.MachineId);
 
             modelBuilder.Entity<EntityFrameworkCoreMachineStatus>()
-                .Property(status => status.CommitTag)
+                .Property(status => status.CommitNumber)
                 .IsConcurrencyToken();
 
             modelBuilder.Entity<EntityFrameworkCoreSchematic>()

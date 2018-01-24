@@ -136,8 +136,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 metadataJson = MessagePackSerializer.ToJson(
                     obj: metadata);
 
-            var commitTag = Guid.NewGuid();
-            var previousCommitTag = Guid.Empty;
+            var commitNumber = 0L;
             var updatedTime = DateTimeOffset.UtcNow;
 
             var record = new EntityFrameworkCoreMachineStatus
@@ -145,8 +144,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 MachineId = id,
                 SchematicJson = schematicJson,
                 StateJson = stateJson,
-                CommitTag = commitTag,
-                PreviousCommitTag = previousCommitTag,
+                CommitNumber = commitNumber,
                 UpdatedTime = updatedTime,
                 MetadataJson = metadataJson
             };
@@ -161,8 +159,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 Schematic = schematic.Clone(),
                 State = schematic.InitialState,
                 Metadata = metadata,
-                CommitTag = commitTag,
-                PreviousCommitTag = previousCommitTag,
+                CommitNumber = commitNumber,
                 UpdatedTime = updatedTime
             };
         }
@@ -182,8 +179,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 obj: schematic.InitialState, 
                 resolver: ContractlessStandardResolver.Instance);
 
-            var previousCommitTag = Guid.Empty;
-            var commitTag = Guid.NewGuid();
+            const long commitNumber = 0L;
             var updatedTime = DateTimeOffset.UtcNow;
 
             var records = new List<EntityFrameworkCoreMachineStatus>();
@@ -203,8 +199,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     MachineId = machineId,
                     SchematicJson = schematicJson,
                     StateJson = stateJson,
-                    CommitTag = commitTag,
-                    PreviousCommitTag = previousCommitTag,
+                    CommitNumber = commitNumber,
                     UpdatedTime = updatedTime,
                     MetadataJson = metadataJson
                 });
@@ -215,8 +210,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     Schematic = schematic.Clone(),
                     State = schematic.InitialState,
                     Metadata = dictionary,
-                    CommitTag = commitTag,
-                    PreviousCommitTag = previousCommitTag,
+                    CommitNumber = commitNumber,
                     UpdatedTime = updatedTime
                 });
             }
@@ -303,8 +297,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 Schematic = schematic,
                 State = state,
                 Metadata = metadata,
-                CommitTag = machineRecord.CommitTag,
-                PreviousCommitTag = machineRecord.PreviousCommitTag,
+                CommitNumber = machineRecord.CommitNumber,
                 UpdatedTime = machineRecord.UpdatedTime
             };
         }
@@ -314,18 +307,18 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         /// </summary>
         /// <param name="machineId">The Id of the Machine</param>
         /// <param name="state">The state to which the Status is set.</param>
-        /// <param name="lastCommitTag">
+        /// <param name="lastCommitNumber">
         /// If provided, will guarentee the update will occur only 
-        /// if the value matches the current Status's CommitTag.
+        /// if the value matches the current Status's CommitNumber.
         /// </param>
         /// <param name="cancellationToken"></param>
         /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
         /// <exception cref="MachineDoesNotExistException">Thrown when no matching MachineId was found.</exception>
-        /// <exception cref="StateConflictException">Thrown when a conflict occured on CommitTag; no update was performed.</exception>
+        /// <exception cref="StateConflictException">Thrown when a conflict occured on CommitNumber; no update was performed.</exception>
         public async Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
             string machineId,
             TState state,
-            Guid? lastCommitTag,
+            long? lastCommitNumber,
             CancellationToken cancellationToken = default)
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
@@ -337,15 +330,14 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
             if(machineRecord == null) throw new MachineDoesNotExistException(machineId);
 
-            if (lastCommitTag == null || machineRecord.CommitTag == lastCommitTag)
+            if (lastCommitNumber == null || machineRecord.CommitNumber == lastCommitNumber)
             {
                 var stateJson = MessagePackSerializer.ToJson(
                     obj: state, 
                     resolver: ContractlessStandardResolver.Instance);
 
                 machineRecord.StateJson = stateJson;
-                machineRecord.PreviousCommitTag = machineRecord.CommitTag;
-                machineRecord.CommitTag = Guid.NewGuid();
+                machineRecord.CommitNumber++;
                 machineRecord.UpdatedTime = DateTimeOffset.UtcNow;
             }
             else
@@ -377,8 +369,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 Schematic = schematic,
                 State = state,
                 Metadata = metadata,
-                CommitTag = machineRecord.CommitTag,
-                PreviousCommitTag = machineRecord.PreviousCommitTag,
+                CommitNumber = machineRecord.CommitNumber,
                 UpdatedTime = machineRecord.UpdatedTime
             };
         }

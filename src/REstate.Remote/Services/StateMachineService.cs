@@ -18,8 +18,8 @@ namespace REstate.Remote.Services
     using MethodKey = ValueTuple<string, Type, Type, Type>;
 
     // non generic delegates for generic method calls
-    using SendAsyncDelegate = Func<string, object, Guid?, CancellationToken, Task<SendResponse>>;
-    using SendWithPayloadAsyncDelegate = Func<string, object, object, Guid?, CancellationToken, Task<SendResponse>>;
+    using SendAsyncDelegate = Func<string, object, long?, CancellationToken, Task<SendResponse>>;
+    using SendWithPayloadAsyncDelegate = Func<string, object, object, long?, CancellationToken, Task<SendResponse>>;
     using StoreSchematicAsyncDelegate = Func<object, CancellationToken, Task<StoreSchematicResponse>>;
     using GetMachineSchematicAsyncDelegate = Func<string, CancellationToken, Task<GetMachineSchematicResponse>>;
     using GetMachineMetadataAsyncDelegate = Func<string, CancellationToken, Task<GetMachineMetadataResponse>>;
@@ -79,7 +79,7 @@ namespace REstate.Remote.Services
                     {
                         var machineIdParameter = Expression.Parameter(typeof(string), "machineId");
                         var inputParameter = Expression.Parameter(typeof(object), "input");
-                        var commitTagParameter = Expression.Parameter(typeof(Guid?), "commitTag");
+                        var commitNumberParameter = Expression.Parameter(typeof(long?), "commitNumber");
                         var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
                         return Expression.Lambda<SendAsyncDelegate>(
@@ -91,13 +91,13 @@ namespace REstate.Remote.Services
                                     {
                                         machineIdParameter,
                                         Expression.Convert(inputParameter, inputType),
-                                        commitTagParameter,
+                                        commitNumberParameter,
                                         cancellationTokenParameter
                                     }),
                                 false,
                                 machineIdParameter,
                                 inputParameter,
-                                commitTagParameter,
+                                commitNumberParameter,
                                 cancellationTokenParameter)
                             .Compile();
                     });
@@ -105,7 +105,7 @@ namespace REstate.Remote.Services
             return await sendAsync(
                 request.MachineId,
                 input,
-                request.CommitTag,
+                request.CommitNumber,
                 GetCallCancellationToken());
         }
 
@@ -129,7 +129,7 @@ namespace REstate.Remote.Services
                         var machineIdParameter = Expression.Parameter(typeof(string), "machineId");
                         var inputParameter = Expression.Parameter(typeof(object), "input");
                         var payloadParameter = Expression.Parameter(typeof(object), "payload");
-                        var commitTagParameter = Expression.Parameter(typeof(Guid?), "commitTag");
+                        var commitNumberParameter = Expression.Parameter(typeof(long?), "commitNumber");
                         var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
                         return Expression.Lambda<SendWithPayloadAsyncDelegate>(
@@ -142,14 +142,14 @@ namespace REstate.Remote.Services
                                             machineIdParameter,
                                             Expression.Convert(inputParameter, inputType),
                                             Expression.Convert(payloadParameter, payloadType),
-                                            commitTagParameter,
+                                        commitNumberParameter,
                                             cancellationTokenParameter
                                     }),
                                 false,
                                 machineIdParameter,
                                 inputParameter,
                                 payloadParameter,
-                                commitTagParameter,
+                                commitNumberParameter,
                                 cancellationTokenParameter)
                             .Compile();
                     });
@@ -158,7 +158,7 @@ namespace REstate.Remote.Services
                     request.MachineId,
                     input,
                     payload,
-                    request.CommitTag,
+                    request.CommitNumber,
                     GetCallCancellationToken());
         }
 
@@ -194,7 +194,7 @@ namespace REstate.Remote.Services
                                         cancellationTokenParameter
                                     }),
                                 tailCall: false,
-                                parameters: new ParameterExpression[]
+                                parameters: new[]
                                 {
                                     schematicParameter,
                                     cancellationTokenParameter
@@ -230,7 +230,7 @@ namespace REstate.Remote.Services
                                         cancellationTokenParameter
                                     }),
                                 tailCall: false,
-                                parameters: new ParameterExpression[]
+                                parameters: new[]
                                 {
                                     machineIdParameter,
                                     cancellationTokenParameter
@@ -265,7 +265,7 @@ namespace REstate.Remote.Services
                                     machineIdParameter,
                                     cancellationTokenParameter
                                 }),
-                            parameters: new ParameterExpression[]
+                            parameters: new[]
                             {
                                 machineIdParameter,
                                 cancellationTokenParameter
@@ -304,7 +304,7 @@ namespace REstate.Remote.Services
                                     metadataParameter,
                                     cancellationTokenParameter
                                 }),
-                            parameters: new ParameterExpression[]
+                            parameters: new[]
                             {
                                 schematicNameParameter,
                                 machineIdParameter,
@@ -356,7 +356,7 @@ namespace REstate.Remote.Services
                                     metadataParameter,
                                     cancellationTokenParameter
                                 }),
-                            parameters: new ParameterExpression[]
+                            parameters: new[]
                             {
                                 schematicParameter,
                                 machineIdParameter,
@@ -399,7 +399,7 @@ namespace REstate.Remote.Services
                                         metadataParameter,
                                         cancellationTokenParameter
                                     }),
-                                parameters: new ParameterExpression[]
+                                parameters: new[]
                                 {
                                     schematicNameParameter,
                                     metadataParameter,
@@ -444,7 +444,7 @@ namespace REstate.Remote.Services
                                     metadataParameter,
                                     cancellationTokenParameter
                                 }),
-                            parameters: new ParameterExpression[] {
+                            parameters: new[] {
                                 schematicParameter,
                                 metadataParameter,
                                 cancellationTokenParameter
@@ -479,7 +479,7 @@ namespace REstate.Remote.Services
                                     schematicNameParameter,
                                     cancellationTokenParameter
                                 }),
-                            parameters: new ParameterExpression[]
+                            parameters: new[]
                             {
                                 schematicNameParameter,
                                 cancellationTokenParameter
@@ -514,7 +514,7 @@ namespace REstate.Remote.Services
                                     machineIdParameter,
                                     cancellationTokenParameter
                                 }),
-                            parameters: new ParameterExpression[]
+                            parameters: new[]
                             {
                                 machineIdParameter,
                                 cancellationTokenParameter
