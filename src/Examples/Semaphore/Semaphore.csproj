@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\REstate.Concurrency.Primitives\REstate.Concurrency.Primitives.csproj" />
     <ProjectReference Include="..\..\REstate\REstate.csproj" />
   </ItemGroup>
 

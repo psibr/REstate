@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2020
+VisualStudioVersion = 15.0.27130.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate", "src\REstate\REstate.csproj", "{8B02FF53-A9F3-4004-8CDC-32831070957D}"
 EndProject
@@ -32,6 +32,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Engine.Repositories.EntityFrameworkCore", "src\REstate.Engine.Repositories.EntityFrameworkCore\REstate.Engine.Repositories.EntityFrameworkCore.csproj", "{3E0263FE-540E-401E-818A-CB51350D30C2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Engine.Repositories.EntityFrameworkCore.Tests", "test\REstate.Engine.Repositories.EntityFrameworkCore.Tests\REstate.Engine.Repositories.EntityFrameworkCore.Tests.csproj", "{5F424F7B-4840-414D-9FA3-7700D81AD898}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "REstate.Concurrency.Primitives", "src\REstate.Concurrency.Primitives\REstate.Concurrency.Primitives.csproj", "{D699BD4C-9005-4475-A958-3A0AC2C6F575}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -83,6 +85,10 @@ Global
 		{5F424F7B-4840-414D-9FA3-7700D81AD898}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5F424F7B-4840-414D-9FA3-7700D81AD898}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F424F7B-4840-414D-9FA3-7700D81AD898}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D699BD4C-9005-4475-A958-3A0AC2C6F575}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D699BD4C-9005-4475-A958-3A0AC2C6F575}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D699BD4C-9005-4475-A958-3A0AC2C6F575}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D699BD4C-9005-4475-A958-3A0AC2C6F575}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -100,6 +106,7 @@ Global
 		{F15E390F-EFCF-4848-96C8-597BD75B7F9C} = {20BCC0A3-8FEB-4EFF-A175-22D1E3E4E233}
 		{3E0263FE-540E-401E-818A-CB51350D30C2} = {90E8D167-048D-467B-81D5-1007247226A3}
 		{5F424F7B-4840-414D-9FA3-7700D81AD898} = {88B4B54C-3DA1-40D2-8DCB-0181DD035955}
+		{D699BD4C-9005-4475-A958-3A0AC2C6F575} = {90E8D167-048D-467B-81D5-1007247226A3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0C35B35D-40C1-4521-BF0A-C5A6D7BFF4CD}
