@@ -15,6 +15,7 @@
     <RepositoryUrl>https://github.com/psibr/REstate.Engine</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>REstate</PackageTags>
+    <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)'=='Debug' ">

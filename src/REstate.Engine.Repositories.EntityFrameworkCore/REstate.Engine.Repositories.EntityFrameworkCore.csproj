@@ -17,6 +17,7 @@
     <PackageTags>REstate</PackageTags>
     <RuntimeFrameworkVersion>2.0.0</RuntimeFrameworkVersion>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
   </PropertyGroup>
 
   <ItemGroup>

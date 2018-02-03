@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2026
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate", "src\REstate\REstate.csproj", "{8B02FF53-A9F3-4004-8CDC-32831070957D}"
 EndProject
@@ -33,7 +33,23 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Engine.Repositories
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Engine.Repositories.EntityFrameworkCore.Tests", "test\REstate.Engine.Repositories.EntityFrameworkCore.Tests\REstate.Engine.Repositories.EntityFrameworkCore.Tests.csproj", "{5F424F7B-4840-414D-9FA3-7700D81AD898}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "REstate.Concurrency.Primitives", "src\REstate.Concurrency.Primitives\REstate.Concurrency.Primitives.csproj", "{D699BD4C-9005-4475-A958-3A0AC2C6F575}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Concurrency.Primitives", "src\REstate.Concurrency.Primitives\REstate.Concurrency.Primitives.csproj", "{D699BD4C-9005-4475-A958-3A0AC2C6F575}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Assets", "Assets", "{85E6545C-48B6-40EB-A6C7-827E16255AA6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Icons", "Icons", "{EE8E30B1-F341-4924-8B26-401DA680D213}"
+	ProjectSection(SolutionItems) = preProject
+		assets\icons\REstate-128.png = assets\icons\REstate-128.png
+		assets\icons\REstate-16.png = assets\icons\REstate-16.png
+		assets\icons\REstate-20.png = assets\icons\REstate-20.png
+		assets\icons\REstate-24.png = assets\icons\REstate-24.png
+		assets\icons\REstate-256.png = assets\icons\REstate-256.png
+		assets\icons\REstate-32.png = assets\icons\REstate-32.png
+		assets\icons\REstate-48.png = assets\icons\REstate-48.png
+		assets\icons\REstate-512.png = assets\icons\REstate-512.png
+		assets\icons\REstate-64.png = assets\icons\REstate-64.png
+		assets\icons\REstate.svg = assets\icons\REstate.svg
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -107,6 +123,7 @@ Global
 		{3E0263FE-540E-401E-818A-CB51350D30C2} = {90E8D167-048D-467B-81D5-1007247226A3}
 		{5F424F7B-4840-414D-9FA3-7700D81AD898} = {88B4B54C-3DA1-40D2-8DCB-0181DD035955}
 		{D699BD4C-9005-4475-A958-3A0AC2C6F575} = {90E8D167-048D-467B-81D5-1007247226A3}
+		{EE8E30B1-F341-4924-8B26-401DA680D213} = {85E6545C-48B6-40EB-A6C7-827E16255AA6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0C35B35D-40C1-4521-BF0A-C5A6D7BFF4CD}
