@@ -8,6 +8,7 @@
 [![NuGet REstate Redis Repo Release](https://img.shields.io/nuget/v/REstate.Engine.Repositories.Redis.svg?label=REstate.Engine.Repositories.Redis)](https://www.nuget.org/packages/REstate.Engine.Repositories.Redis)
 [![NuGet REstate EFCore Repo Release](https://img.shields.io/nuget/v/REstate.Engine.Repositories.Redis.svg?label=REstate.Engine.Repositories.EntityFrameworkCore)](https://www.nuget.org/packages/REstate.Engine.Repositories.EntityFrameworkCore)
 
+![REstate Logo](https://github.com/psibr/REstate/blob/master/assets/icons/REstate.svg) 
 # REstate
 
 REstate is a portable state-flow system. It allows you to define a set of possible states that a program can exist in and what input will cause the transition between any two states. When it transitions into a given state, you can define an action that will execute arbitrary code. This can be used to build complex, but deterministic and predefined systems, such as workflow systems or distributed systems.
@@ -16,7 +17,7 @@ A `Schematic` may be defined on one server or workstation, but then used on othe
 
 ### Given the following REstate schematic, represented in DOT Graph:
 
-![EchoMachine Schematic in DOT Graph](https://github.com/psibr/REstate.Engine/blob/master/LoggerMachine-Diagram.svg)
+![EchoMachine Schematic in DOT Graph](https://github.com/psibr/REstate/blob/master/LoggerMachine-Diagram.svg)
 
 ### Here is the code to build the schematic:
 
