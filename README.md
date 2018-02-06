@@ -9,6 +9,7 @@
 [![NuGet REstate EFCore Repo Release](https://img.shields.io/nuget/v/REstate.Engine.Repositories.Redis.svg?label=REstate.Engine.Repositories.EntityFrameworkCore)](https://www.nuget.org/packages/REstate.Engine.Repositories.EntityFrameworkCore)
 
 ![REstate Logo](https://github.com/psibr/REstate/blob/master/assets/icons/REstate.svg) 
+> "Android, bionic, hand, machine, palm, robot, technology icon" by [designforeat](https://www.iconfinder.com/designforeat), used under CC BY 3.0/Partially rotated from original
 # REstate
 
 REstate is a portable state-flow system. It allows you to define a set of possible states that a program can exist in and what input will cause the transition between any two states. When it transitions into a given state, you can define an action that will execute arbitrary code. This can be used to build complex, but deterministic and predefined systems, such as workflow systems or distributed systems.
