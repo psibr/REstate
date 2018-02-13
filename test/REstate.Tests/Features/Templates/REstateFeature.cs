@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
+using LightBDD.Framework.Scenarios.Extended;
 using LightBDD.XUnit2;
 using REstate.Tests.Features.Context;
 
@@ -23,6 +24,7 @@ namespace REstate.Tests.Features.Templates
                 CompositeStep
                     .DefineNew()
                     .WithContext(Context)
+                    .AddAsyncSteps(context => context.Given_a_new_host())
                     .Build());
         }
 

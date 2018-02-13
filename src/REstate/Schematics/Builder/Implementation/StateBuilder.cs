@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using REstate.Engine.Connectors;
 
 namespace REstate.Schematics.Builder.Implementation
 {
@@ -99,5 +100,10 @@ namespace REstate.Schematics.Builder.Implementation
 
             return this;
         }
+
+        public IStateBuilder<TState, TInput> WithOnEntry<TConnector>(
+            Action<IEntryActionBuilder<TInput>> onEntry = null)
+            where TConnector : IEntryConnector 
+            => WithOnEntry(typeof(TConnector).FullName, onEntry);
     }
 }

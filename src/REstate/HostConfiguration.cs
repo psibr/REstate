@@ -12,6 +12,8 @@ namespace REstate
     public interface IHostConfiguration
     {
         void RegisterComponent(IComponent component);
+
+        void RegisterComponent<TComponent>() where TComponent : IComponent, new();
     }
 
     internal class HostConfiguration
@@ -28,6 +30,12 @@ namespace REstate
 
         public void RegisterComponent(IComponent component) =>
             Container.RegisterComponent(component);
+
+        public void RegisterComponent<TComponent>() 
+            where TComponent : IComponent, new()
+        {
+            Container.RegisterComponent(new TComponent());
+        }
 
         /// <summary>
         /// Registers defaults and the REstate engine.

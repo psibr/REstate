@@ -35,10 +35,15 @@ namespace REstate.Engine.Connectors.Resolution
             var mappings = connectorTypeToIdentifierMappings.ToList();
 
             var entryConnectorMappings = mappings
-                .Join(inner: entryConnectors,
-                    outerKeySelector: mapping => mapping.ConnectorType,
-                    innerKeySelector: connector => connector.GetType().GetGenericTypeDefinition(),
-                    resultSelector: (mapping, connector) => (mapping.Identifier, Connector: connector))
+                .Join(inner: entryConnectors.Where(connector => connector != null),
+                    outerKeySelector: mapping => 
+                        mapping.ConnectorType,
+                    innerKeySelector: connector => 
+                        connector.GetType().IsConstructedGenericType 
+                        ? connector.GetType().GetGenericTypeDefinition() 
+                        : connector.GetType(),
+                    resultSelector: (mapping, connector) => 
+                        (mapping.Identifier, Connector: connector))
                 .ToList();
 
             EntryConnectors = entryConnectorMappings
@@ -54,9 +59,11 @@ namespace REstate.Engine.Connectors.Resolution
                 .ToLookup(tuple => tuple.Identifier, tuple => tuple.Connector, connectorStringComparer);
 
             GuardianConnectors = mappings
-                .Join(inner: guardianConnectors,
+                .Join(inner: guardianConnectors.Where(connector => connector != null),
                     outerKeySelector: mapping => mapping.ConnectorType,
-                    innerKeySelector: connector => connector.GetType().GetGenericTypeDefinition(),
+                    innerKeySelector: connector => connector.GetType().IsConstructedGenericType 
+                        ? connector.GetType().GetGenericTypeDefinition() 
+                        : connector.GetType(),
                     resultSelector: (mapping, connector) => (mapping.Identifier, Connector: connector))
                 .ToLookup(kvp => kvp.Identifier, kvp => kvp.Connector, connectorStringComparer);
         }

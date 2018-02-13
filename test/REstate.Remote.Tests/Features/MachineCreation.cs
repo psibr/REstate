@@ -26,6 +26,7 @@ I want to create Machines from Schematics on a remote server")]
                     .DefineNew()
                     .WithContext(Context)
                     .AddAsyncSteps(
+                        _ => _.Given_a_new_host(),
                         _ => _.Given_a_REstate_gRPC_Server_running(),
                         _ => _.Given_the_default_agent_is_gRPC_remote())
                     .Build());

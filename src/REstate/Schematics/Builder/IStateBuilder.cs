@@ -1,4 +1,5 @@
 ﻿using System;
+using REstate.Engine.Connectors;
 
 namespace REstate.Schematics.Builder
 {
@@ -18,5 +19,7 @@ namespace REstate.Schematics.Builder
         IStateBuilder<TState, TInput> WithReentrance(TInput input, Action<ITransitionBuilder<TState, TInput>> transition = null);
 
         IStateBuilder<TState, TInput> WithOnEntry(ConnectorKey connectorKey, Action<IEntryActionBuilder<TInput>> onEntry = null);
+
+        IStateBuilder<TState, TInput> WithOnEntry<TConnector>(Action<IEntryActionBuilder<TInput>> onEntry = null) where TConnector : IEntryConnector;
     }
 }
