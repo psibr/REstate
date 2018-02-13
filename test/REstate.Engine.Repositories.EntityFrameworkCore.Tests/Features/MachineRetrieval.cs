@@ -25,6 +25,7 @@ I want to retrieve previously created Machines stored using Entity Framework Cor
                     .DefineNew()
                     .WithContext(Context)
                     .AddAsyncSteps(
+                        _ => _.Given_a_new_host(),
                         _ => _.Given_EntityFrameworkCore_is_the_registered_repository())
                     .Build());
         }

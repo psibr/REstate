@@ -27,7 +27,6 @@ I want to create machines from schematics")]
             var schematicName = uniqueId;
 
             await Runner.WithContext(Context).RunScenarioAsync(
-                _ => _.Given_a_new_host(),
                 _ =>   Given_host_configuration_is_applied(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.When_a_Machine_is_created_from_a_Schematic(_.CurrentSchematic),
@@ -43,7 +42,6 @@ I want to create machines from schematics")]
             var schematicName = uniqueId;
 
             await Runner.WithContext(Context).RunScenarioAsync(
-                _ => _.Given_a_new_host(),
                 _ =>   Given_host_configuration_is_applied(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Schematic_is_stored(_.CurrentSchematic),
@@ -61,7 +59,6 @@ I want to create machines from schematics")]
             var machineId = uniqueId;
 
             await Runner.WithContext(Context).RunScenarioAsync(
-                _ => _.Given_a_new_host(),
                 _ =>   Given_host_configuration_is_applied(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.When_a_Machine_is_created_from_a_Schematic_with_a_predefined_MachineId(_.CurrentSchematic, machineId),
@@ -79,7 +76,6 @@ I want to create machines from schematics")]
             var machineId = uniqueId;
 
             await Runner.WithContext(Context).RunScenarioAsync(
-                _ => _.Given_a_new_host(),
                 _ =>   Given_host_configuration_is_applied(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Schematic_is_stored(_.CurrentSchematic),
@@ -97,7 +93,6 @@ I want to create machines from schematics")]
             var schematicName = uniqueId;
 
             await Runner.WithContext(Context).RunScenarioAsync(
-                _ => _.Given_a_new_host(),
                 _ =>   Given_host_configuration_is_applied(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.Given_a_Schematic_is_stored(_.CurrentSchematic),
@@ -115,7 +110,6 @@ I want to create machines from schematics")]
             var schematicName = uniqueId;
 
             await Runner.WithContext(Context).RunScenarioAsync(
-                _ => _.Given_a_new_host(),
                 _ =>   Given_host_configuration_is_applied(),
                 _ => _.Given_a_Schematic_with_an_initial_state_INITIALSTATE(schematicName, "Initial"),
                 _ => _.When_MACHINECOUNT_Machines_are_bulk_created_from_a_Schematic(_.CurrentSchematic, 5),

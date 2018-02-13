@@ -2,21 +2,23 @@ using System.Threading.Tasks;
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
-using REstate.Engine.Repositories.EntityFrameworkCore.Tests.Features.Context;
+using Ninject;
+using REstate.Tests.Features.Context;
 using REstate.Tests.Features.Templates;
 
 // ReSharper disable InconsistentNaming
 
-namespace REstate.Engine.Repositories.EntityFrameworkCore.Tests.Features
+namespace REstate.IoC.Ninject.Tests.Features
 {
     [FeatureDescription(@"
-In order to use familiar storage
+In order to support IoC using my perferred DI container
 As a developer
-I want to create Machines from Schematics stored using Entity Framework Core")]
+I want to create machines.")]
     [ScenarioCategory("Machine Creation")]
-    [ScenarioCategory("EntityFrameworkCore")]
+    [ScenarioCategory("IoC")]
+    [ScenarioCategory("Ninject")]
     public class MachineCreation
-        : MachineCreationScenarios<REstateEntityFrameworkCoreContext<string, string>>
+        : MachineCreationScenarios<REstateContext<string, string>>
     {
         protected override Task<CompositeStep> Given_host_configuration_is_applied()
         {
@@ -25,8 +27,7 @@ I want to create Machines from Schematics stored using Entity Framework Core")]
                     .DefineNew()
                     .WithContext(Context)
                     .AddAsyncSteps(
-                        _ => _.Given_a_new_host(),
-                        _ => _.Given_EntityFrameworkCore_is_the_registered_repository())
+                        _ => _.Given_a_new_host_with_custom_ComponentContainer(new NinjectComponentContainer(new StandardKernel())))
                     .Build());
         }
     }

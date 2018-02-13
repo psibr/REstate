@@ -138,13 +138,19 @@ namespace REstate.Engine
                         var entryConnector =
                             _connectorResolver.ResolveEntryConnector(schematicState.OnEntry.ConnectorKey);
 
-                        await entryConnector.OnEntryAsync(
-                            schematic: Schematic,
-                            machine: this,
-                            status: currentStatus,
-                            inputParameters: new InputParameters<TInput, TPayload>(input, payload),
-                            connectorSettings: schematicState.OnEntry.Settings,
-                            cancellationToken: cancellationToken).ConfigureAwait(false);
+                        InterceptorMachine interceptor;
+                        using (interceptor = new InterceptorMachine(this, currentStatus))
+                        {
+                            await entryConnector.OnEntryAsync(
+                                schematic: Schematic,
+                                machine: interceptor,
+                                status: currentStatus,
+                                inputParameters: new InputParameters<TInput, TPayload>(input, payload),
+                                connectorSettings: schematicState.OnEntry.Settings,
+                                cancellationToken: cancellationToken).ConfigureAwait(false);
+                        }
+
+                        currentStatus = interceptor.CurrentStatus;
                     }
                     catch
                     {
@@ -218,5 +224,107 @@ namespace REstate.Engine
 
         public override string ToString() =>
             $"{Schematic.SchematicName}/{MachineId}";
+
+        private class InterceptorMachine
+            : IStateMachine<TState, TInput>
+            , IDisposable
+        {
+            private bool _isDisposed;
+            private Status<TState> _currentStatus;
+
+            public InterceptorMachine(IStateMachine<TState, TInput> machine, Status<TState> currentStatus)
+            {
+                _isDisposed = false;
+                Machine = machine;
+                CurrentStatus = currentStatus;
+            }
+
+            public string MachineId => Machine.MachineId;
+
+            private IStateMachine<TState, TInput> Machine { get; }
+
+            public Status<TState> CurrentStatus
+            {
+                get => _currentStatus;
+                private set
+                {
+                    lock (this)
+                    {
+                        if(value.CommitNumber > _currentStatus.CommitNumber)
+                            _currentStatus = value;
+                    }
+                }
+            }
+
+            public Task<IReadOnlyDictionary<string, string>> GetMetadataAsync(
+                CancellationToken cancellationToken = default)
+                => Machine.GetMetadataAsync(cancellationToken);
+
+            public Task<ISchematic<TState, TInput>> GetSchematicAsync(
+                CancellationToken cancellationToken = default)
+                => Machine.GetSchematicAsync(cancellationToken);
+
+            public async Task<Status<TState>> SendAsync<TPayload>(
+                TInput input, 
+                TPayload payload, 
+                CancellationToken cancellationToken = default)
+            {
+                if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
+
+                var status = await Machine.SendAsync(input, payload, cancellationToken);
+
+                CurrentStatus = status;
+
+                return status;
+            }
+
+            public async Task<Status<TState>> SendAsync<TPayload>(
+                TInput input, 
+                TPayload payload, 
+                long lastCommitNumber, 
+                CancellationToken cancellationToken = default)
+            {
+                if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
+
+                var status = await Machine.SendAsync(input, payload, lastCommitNumber, cancellationToken);
+
+                CurrentStatus = status;
+
+                return status;
+            }
+
+            public async Task<Status<TState>> SendAsync(
+                TInput input, 
+                CancellationToken cancellationToken = default)
+            {
+                if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
+
+                var status = await Machine.SendAsync(input, cancellationToken);
+
+                CurrentStatus = status;
+
+                return status;
+            }
+
+            public async Task<Status<TState>> SendAsync(
+                TInput input, 
+                long lastCommitNumber, 
+                CancellationToken cancellationToken = default)
+            {
+                if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
+
+                var status = await Machine.SendAsync(input, lastCommitNumber, cancellationToken);
+
+                CurrentStatus = status;
+
+                return status;
+            }
+
+            /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+            public void Dispose()
+            {
+                _isDisposed = true;
+            }
+        }
     }
 }

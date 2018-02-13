@@ -20,13 +20,13 @@ namespace Client
 
             Log.Logger = logger;
 
-            REstateHost.Agent.Configuration
-                .RegisterComponent(new GrpcRemoteHostComponent(
-                    new GrpcHostOptions
-                    {
-                        Channel = new Channel("localhost", 12345, ChannelCredentials.Insecure),
-                        UseAsDefaultEngine = true
-                    }));
+            //REstateHost.Agent.Configuration
+            //    .RegisterComponent(new GrpcRemoteHostComponent(
+            //        new GrpcHostOptions
+            //        {
+            //            Channel = new Channel("localhost", 12345, ChannelCredentials.Insecure),
+            //            UseAsDefaultEngine = true
+            //        }));
 
             var stateEngine = REstateHost.Agent
                 .GetStateEngine<string, string>();

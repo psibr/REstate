@@ -2,22 +2,24 @@
 using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
-using REstate.Remote.Tests.Features.Context;
+using Ninject;
+using REstate.IoC.Ninject;
+using REstate.Tests.Features.Context;
 using REstate.Tests.Features.Templates;
 
 // ReSharper disable InconsistentNaming
 
-namespace REstate.Remote.Tests.Features
+namespace REstate.IoC.Ninject.Tests.Features
 {
     [FeatureDescription(@"
-In order to support cloud scaling
+In order to support IoC using my perferred DI container
 As a developer
-I want to delete Machines from a remote server")]
+I want to delete machines.")]
     [ScenarioCategory("Machine Deletion")]
-    [ScenarioCategory("Remote")]
-    [ScenarioCategory("gRPC")]
+    [ScenarioCategory("IoC")]
+    [ScenarioCategory("Ninject")]
     public class MachineDeletion
-        : MachineDeletionScenarios<REstateRemoteContext<string, string>>
+        : MachineDeletionScenarios<REstateContext<string, string>>
     {        
         protected override Task<CompositeStep> Given_host_configuration_is_applied()
         {
@@ -26,9 +28,7 @@ I want to delete Machines from a remote server")]
                     .DefineNew()
                     .WithContext(Context)
                     .AddAsyncSteps(
-                        _ => _.Given_a_new_host(),
-                        _ => _.Given_a_REstate_gRPC_Server_running(),
-                        _ => _.Given_the_default_agent_is_gRPC_remote())
+                        _ => _.Given_a_new_host_with_custom_ComponentContainer(new NinjectComponentContainer(new StandardKernel())))
                     .Build());
         }
     }

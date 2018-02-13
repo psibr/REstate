@@ -1,32 +1,29 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
-    <Version>2.1.0</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Ovan Crone</Authors>
     <Company>Psibernetic Solutions</Company>
-    <Product>REstate</Product>
-    <Description>Redis storage provider for REstate's engine.</Description>
+    <Description>Ninject adapter for REstate.</Description>
     <Copyright>Ovan Crone 2016</Copyright>
     <PackageLicenseUrl>https://github.com/psibr/REstate/blob/v6.0/LICENSE</PackageLicenseUrl>
+    <Version>3.0.0</Version>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
+    <LangVersion>latest</LangVersion>
     <PackageProjectUrl>https://github.com/psibr/REstate</PackageProjectUrl>
     <RepositoryUrl>https://github.com/psibr/REstate</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>REstate</PackageTags>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
     <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MessagePack" Version="1.7.3.2" />
-    <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
-    <PackageReference Include="System.Linq.Parallel" Version="4.3.0" />
+    <PackageReference Include="Ninject" Version="3.3.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\REstate\REstate.csproj" />
+    <ProjectReference Include="..\src\REstate\REstate.csproj" />
   </ItemGroup>
 
 </Project>

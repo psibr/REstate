@@ -10,6 +10,21 @@ namespace REstate.IoC
 {
     public static class RegistrarExtensions
     {
+        public static IConnectorRegistration RegisterConnector<TConnector>(this IRegistrar registrar, string registrationName = null)
+            where TConnector : IConnector
+        {
+            return registrar.RegisterConnector(typeof(TConnector), registrationName);
+        }
+
+        public static void RegisterConnector<TConnector>(
+            this IRegistrar registrar,
+            IConnectorConfiguration configuration, 
+            string registrationName = null) 
+            where TConnector : IConnector
+        {
+            registrar.RegisterConnector<TConnector>(registrationName).WithConfiguration(configuration);
+        }
+
         /// <summary>
         /// Registers an <see cref="IEntryConnector{TState,TInput}"/> or <see cref="IGuardianConnector{TState,TInput}"/>.
         /// </summary>
@@ -36,7 +51,7 @@ namespace REstate.IoC
         /// </remarks>
         public static IConnectorRegistration RegisterConnector(this IRegistrar registrar, Type connectorType, string registrationName = null)
         {
-            var registrationKey = registrationName ?? connectorType.AssemblyQualifiedName;
+            var registrationKey = registrationName ?? connectorType.FullName;
 
             var interfaces = connectorType
                 .GetInterfaces()
@@ -93,7 +108,7 @@ namespace REstate.IoC
 
         public static void RegisterEventListener(this IRegistrar registrar, IEventListener listener)
         {
-            registrar.Register(listener, listener.GetType().AssemblyQualifiedName);
+            registrar.Register(listener, listener.GetType().FullName);
         }
     }
 }
