@@ -12,6 +12,6 @@ namespace REstate.Schematics
 
         IDictionary<TInput, ITransition<TState, TInput>> Transitions { get; }
 
-        IEntryAction<TInput> OnEntry { get; }
+        IAction<TInput> Action { get; }
     }
 }

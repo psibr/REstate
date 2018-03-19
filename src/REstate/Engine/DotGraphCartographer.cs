@@ -11,7 +11,6 @@ namespace REstate.Engine
     public class DotGraphCartographer<TState, TInput>
         : ICartographer<TState, TInput>
     {
-
         private static readonly Lazy<DotGraphCartographer<TState, TInput>> InstanceLazy = new Lazy<DotGraphCartographer<TState,TInput>>();
         public static DotGraphCartographer<TState, TInput> Instance => InstanceLazy.Value;
 
@@ -22,7 +21,7 @@ namespace REstate.Engine
         public string WriteMap(IEnumerable<IState<TState, TInput>> states)
         {
             var lines = new List<string>();
-            var onEntryActionLines = new List<string>();
+            var actionLines = new List<string>();
 
             foreach (var state in states)
             {
@@ -34,30 +33,30 @@ namespace REstate.Engine
                             source.ToString(),
                             transition.Input.ToString(),
                             transition.ResultantState.ToString(),
-                            transition.Guard?.Description)));
+                            transition.Procondition?.Description)));
 
-                if (state.OnEntry != null)
+                if (state.Action != null)
                 {
-                    onEntryActionLines.Add($" {state.Value} -> \"{state.OnEntry.Description ?? state.OnEntry.ConnectorKey.Identifier}\"" +
-                                            " [label=\"On Entry\" style=dotted];");
+                    actionLines.Add($" {state.Value} -> \"{state.Action.Description ?? state.Action.ConnectorKey.Identifier}\"" +
+                                            " [label=\"executes\" style=dotted];");
                 }
             }
 
-            if (onEntryActionLines.Count > 0)
+            if (actionLines.Count > 0)
             {
                 lines.Add(" node [shape=box];");
 
-                lines.AddRange(onEntryActionLines);
+                lines.AddRange(actionLines);
             }
 
             return $"digraph {{\r\n{ string.Join("\r\n\t", lines) }\r\n}}";
         }
 
-        private static string GetTransitionRepresentation(string sourceState, string input, string destination, string guardDescription)
+        private static string GetTransitionRepresentation(string sourceState, string input, string destination, string preconditionDescription)
         {
-            return string.IsNullOrWhiteSpace(guardDescription)
+            return string.IsNullOrWhiteSpace(preconditionDescription)
                 ? $" \"{sourceState}\" -> \"{destination}\" [label=\"{input}\"];"
-                : $" \"{sourceState}\" -> \"{destination}\" [label=\"{input} ({guardDescription})\"];";
+                : $" \"{sourceState}\" -> \"{destination}\" [label=\"{input} ({preconditionDescription})\"];";
         }
     }
 }

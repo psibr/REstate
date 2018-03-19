@@ -2,7 +2,7 @@
 
 namespace REstate.Schematics
 {
-    public interface IGuard
+    public interface IPrecondition
     {
         ConnectorKey ConnectorKey { get; }
 

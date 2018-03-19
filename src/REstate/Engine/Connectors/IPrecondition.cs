@@ -5,16 +5,16 @@ using REstate.Schematics;
 
 namespace REstate.Engine.Connectors
 {
-    public interface IEntryConnector
+    public interface IPrecondition
         : IConnector
     {
         
     }
 
-    public interface IEntryConnector<TState, TInput>
-        : IEntryConnector
+    public interface IPrecondition<TState, TInput>
+        : IPrecondition
     {
-        Task OnEntryAsync<TPayload>(
+        Task<bool> ValidateAsync<TPayload>(
             ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status,

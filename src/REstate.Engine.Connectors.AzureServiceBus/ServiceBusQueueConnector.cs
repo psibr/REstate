@@ -25,7 +25,7 @@ namespace REstate.Engine.Connectors.AzureServiceBus
     /// Provides capability to place messages on Azure Service Bus Queues when entering a state.
     /// </summary>
     public class ServiceBusQueueConnector<TState, TInput>
-        : IEntryConnector<TState, TInput>
+        : IAction<TState, TInput>
     {
         private readonly IEnumerable<ServiceBusQueueConfiguration> _configurations;
 
@@ -34,7 +34,7 @@ namespace REstate.Engine.Connectors.AzureServiceBus
             _configurations = configurations;
         }
 
-        public async Task OnEntryAsync<TPayload>(
+        public async Task InvokeAsync<TPayload>(
             ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status, 

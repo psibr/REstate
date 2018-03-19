@@ -3,7 +3,7 @@
 namespace REstate.Engine
 {
     /// <summary>
-    /// Indicates a state change conflicted with another change, no update was made.
+    /// Indicates a state change conflicted with another change, and that no update was made.
     /// </summary>
     public class StateConflictException
         : Exception

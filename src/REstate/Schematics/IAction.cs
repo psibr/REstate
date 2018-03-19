@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace REstate.Schematics
 {
-    public interface IEntryAction<TInput>
+    public interface IAction<TInput>
     {
         ConnectorKey ConnectorKey { get; }
 

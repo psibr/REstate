@@ -21,18 +21,18 @@ namespace REstate.Schematics
                 ParentState = state.ParentState,
                 Description = state.Description,
                 Transitions = state.Transitions.Values.Select(Clone).ToArray(),
-                OnEntry = state.OnEntry?.Clone()
+                Action = state.Action?.Clone()
             };
 
-        public static EntryConnector<TInput> Clone<TInput>(this IEntryAction<TInput> entryAction) => 
-            new EntryConnector<TInput>
+        public static Action<TInput> Clone<TInput>(this IAction<TInput> action) => 
+            new Action<TInput>
             {
-                ConnectorKey = entryAction.ConnectorKey,
-                Description = entryAction.Description,
-                ExceptionInput = (entryAction.OnExceptionInput != null) 
-                    ? new ExceptionInput<TInput>(entryAction.OnExceptionInput.Input)
+                ConnectorKey = action.ConnectorKey,
+                Description = action.Description,
+                ExceptionInput = (action.OnExceptionInput != null) 
+                    ? new ExceptionInput<TInput>(action.OnExceptionInput.Input)
                     : null,
-                Configuration = new Dictionary<string, string>((IDictionary<string, string>) entryAction.Settings)
+                Configuration = new Dictionary<string, string>((IDictionary<string, string>) action.Settings)
             };
 
         public static Transition<TState, TInput> Clone<TState, TInput>(this ITransition<TState, TInput> transition) =>
@@ -40,14 +40,14 @@ namespace REstate.Schematics
             {
                 Input = transition.Input,
                 ResultantState = transition.ResultantState,
-                Guard = transition.Guard?.Clone()
+                Precondition = transition.Procondition?.Clone()
             };
 
-        public static GuardConnector Clone(this IGuard guard) =>
-            new GuardConnector
+        public static Precondition Clone(this IPrecondition precondition) =>
+            new Precondition
             {
-                ConnectorKey = guard.ConnectorKey,
-                Configuration = new Dictionary<string, string>((IDictionary<string, string>)guard.Settings)
+                ConnectorKey = precondition.ConnectorKey,
+                Configuration = new Dictionary<string, string>((IDictionary<string, string>)precondition.Settings)
             };
     }
 }

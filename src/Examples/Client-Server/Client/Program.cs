@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Grpc.Core;
 using REstate;
-using REstate.Engine.Connectors.Console;
 using REstate.Remote;
 using Serilog;
 
@@ -40,7 +39,7 @@ namespace Client
                 .WithState("Ready", state => state
                     .WithTransitionFrom("CreatedAndReady", "log")
                     .WithReentrance("log")
-                    .WithOnEntry("log info", onEntry => onEntry
+                    .WithAction("log info", action => action
                         .DescribedAs("Logs the payload as a message.")
                         .WithSetting("messageFormat", "{schematicName}({machineId}) entered {state} on {input}. Message: {payload}")
                         .OnFailureSend("logFailure")))
@@ -48,7 +47,7 @@ namespace Client
                 .WithState("LogFailure", state => state
                     .AsSubstateOf("Ready")
                     .DescribedAs("A message failed to log.")
-                    .WithOnEntry("log error", onEntry => onEntry
+                    .WithAction("log error", action => action
                         .DescribedAs("Logs the failure.")
                         .WithSetting("messageFormat", "Logging failed, message was: {payload}"))
                     .WithTransitionFrom("Ready", "logFailure"))

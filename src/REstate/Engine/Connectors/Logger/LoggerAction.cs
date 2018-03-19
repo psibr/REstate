@@ -9,21 +9,21 @@ using REstate.Schematics;
 
 namespace REstate.Engine.Connectors.Logger
 {
-    public class LoggerEntryConnector<TState, TInput>
-        : IEntryConnector<TState, TInput>
+    public class LoggingAction<TState, TInput>
+        : IAction<TState, TInput>
     {
         private readonly Regex _messageFormatTokensRegex = new Regex(@"(?<=\{).*?(?=\})", RegexOptions.Compiled);
 
-        private readonly IEnumerable<LoggerEntryConnectorConfiguration> _logConfigurations;
+        private readonly IEnumerable<LoggingActionConfiguration> _logConfigurations;
 
-        public LoggerEntryConnector(IEnumerable<LoggerEntryConnectorConfiguration> logConfigurations)
+        public LoggingAction(IEnumerable<LoggingActionConfiguration> logConfigurations)
         {
             _logConfigurations = logConfigurations;
         }
 
-        private static ILog Logger => LogProvider.For<LoggerEntryConnector<TState, TInput>>();
+        private static ILog Logger => LogProvider.For<LoggingAction<TState, TInput>>();
 
-        public Task OnEntryAsync<TPayload>(
+        public Task InvokeAsync<TPayload>(
             ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status,

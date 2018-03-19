@@ -6,36 +6,48 @@ using REstate.Schematics;
 
 namespace REstate.Engine.Connectors.Resolution
 {
+    /// <summary>
+    /// Implementations resolve connectors from a given<see cref="ConnectorKey"/>.
+    /// </summary>
     public interface IConnectorResolver<TState, TInput>
     {
-        IEntryConnector<TState, TInput> ResolveEntryConnector(ConnectorKey connectorKey);
+        /// <summary>
+        /// Resolves an Action Connector, given a <see cref="ConnectorKey"/>.
+        /// </summary>
+        IAction<TState, TInput> ResolveAction(ConnectorKey connectorKey);
 
-        IBulkEntryConnector<TState, TInput> ResolveBulkEntryConnector(ConnectorKey connectorKey);
+        /// <summary>
+        /// Resolves a BlukAction Connector, given a <see cref="ConnectorKey"/>.
+        /// </summary>
+        IBulkAction<TState, TInput> ResolveBulkAction(ConnectorKey connectorKey);
 
-        IGuardianConnector<TState, TInput> ResolveGuardianConnector(ConnectorKey connectorKey);
+        /// <summary>
+        /// Resolves a Precondition Connector, given a <see cref="ConnectorKey"/>.
+        /// </summary>
+        IPrecondition<TState, TInput> ResolvePrecondition(ConnectorKey connectorKey);
     }
 
     /// <summary>
-    /// The default entryConnector resoultion strategy that ignores versioning.
+    /// The default connector resoultion strategy that ignores versioning.
     /// </summary>
     public class DefaultConnectorResolver<TState, TInput>
         : IConnectorResolver<TState, TInput>
     {
-        protected readonly ILookup<string, IEntryConnector<TState, TInput>> EntryConnectors;
-        protected readonly ILookup<string, IBulkEntryConnector<TState, TInput>> BulkEntryConnectors;
-        protected readonly ILookup<string, IGuardianConnector<TState, TInput>> GuardianConnectors;
+        protected readonly ILookup<string, IAction<TState, TInput>> Actions;
+        protected readonly ILookup<string, IBulkAction<TState, TInput>> BulkActions;
+        protected readonly ILookup<string, IPrecondition<TState, TInput>> Preconditions;
 
         public DefaultConnectorResolver(
-            IEnumerable<IEntryConnector<TState, TInput>> entryConnectors,
-            IEnumerable<IGuardianConnector<TState, TInput>> guardianConnectors,
+            IEnumerable<IAction<TState, TInput>> actions,
+            IEnumerable<IPrecondition<TState, TInput>> preconditions,
             IEnumerable<ConnectorTypeToIdentifierMapping> connectorTypeToIdentifierMappings)
         {
             var connectorStringComparer = StringComparer.OrdinalIgnoreCase;
 
             var mappings = connectorTypeToIdentifierMappings.ToList();
 
-            var entryConnectorMappings = mappings
-                .Join(inner: entryConnectors.Where(connector => connector != null),
+            var actionMappings = mappings
+                .Join(inner: actions.Where(connector => connector != null),
                     outerKeySelector: mapping => 
                         mapping.ConnectorType,
                     innerKeySelector: connector => 
@@ -46,20 +58,20 @@ namespace REstate.Engine.Connectors.Resolution
                         (mapping.Identifier, Connector: connector))
                 .ToList();
 
-            EntryConnectors = entryConnectorMappings
+            Actions = actionMappings
                 .ToLookup(kvp => kvp.Identifier, kvp => kvp.Connector, connectorStringComparer);
 
-            BulkEntryConnectors = entryConnectorMappings
+            BulkActions = actionMappings
                 .Where(tuple => tuple.Connector.GetType()
                     .GetInterfaces()
                     .Where(i => i.IsConstructedGenericType)
                     .Select(i => i.GetGenericTypeDefinition())
-                    .Any(i => i == typeof(IBulkEntryConnector<,>)))
-                .Select(tuple => (tuple.Identifier, Connector: (IBulkEntryConnector<TState, TInput>)tuple.Connector))
+                    .Any(i => i == typeof(IBulkAction<,>)))
+                .Select(tuple => (tuple.Identifier, Connector: (IBulkAction<TState, TInput>)tuple.Connector))
                 .ToLookup(tuple => tuple.Identifier, tuple => tuple.Connector, connectorStringComparer);
 
-            GuardianConnectors = mappings
-                .Join(inner: guardianConnectors.Where(connector => connector != null),
+            Preconditions = mappings
+                .Join(inner: preconditions.Where(connector => connector != null),
                     outerKeySelector: mapping => mapping.ConnectorType,
                     innerKeySelector: connector => connector.GetType().IsConstructedGenericType 
                         ? connector.GetType().GetGenericTypeDefinition() 
@@ -68,64 +80,73 @@ namespace REstate.Engine.Connectors.Resolution
                 .ToLookup(kvp => kvp.Identifier, kvp => kvp.Connector, connectorStringComparer);
         }
 
-        public virtual IEntryConnector<TState, TInput> ResolveEntryConnector(ConnectorKey connectorKey)
+        /// <summary>
+        /// Resolves an Action Connector, given a <see cref="ConnectorKey"/>.
+        /// </summary>
+        public virtual IAction<TState, TInput> ResolveAction(ConnectorKey connectorKey)
         {
             if (connectorKey == null) throw new ArgumentNullException(nameof(connectorKey));
 
-            IEntryConnector<TState, TInput> entryConnector;
+            IAction<TState, TInput> action;
             try
             {
-                entryConnector = EntryConnectors[connectorKey.Identifier].SingleOrDefault();
+                action = Actions[connectorKey.Identifier].SingleOrDefault();
             }
             catch (InvalidOperationException)
             {
-                throw new ConnectorResolutionException($"Multiple EntryConnector versions exists with matching connectorKey: \"{connectorKey.Identifier}\".");
+                throw new ConnectorResolutionException($"Multiple Action versions exists with matching connectorKey: \"{connectorKey.Identifier}\".");
             }
 
-            if (entryConnector == null)
-                throw new ConnectorResolutionException($"No EntryConnector exists matching connectorKey: \"{connectorKey.Identifier}\".");
+            if (action == null)
+                throw new ConnectorResolutionException($"No Action exists matching connectorKey: \"{connectorKey.Identifier}\".");
 
-            return entryConnector;
+            return action;
         }
 
-        public virtual IBulkEntryConnector<TState, TInput> ResolveBulkEntryConnector(ConnectorKey connectorKey)
+        /// <summary>
+        /// Resolves a BlukAction Connector, given a <see cref="ConnectorKey"/>.
+        /// </summary>
+        public virtual IBulkAction<TState, TInput> ResolveBulkAction(ConnectorKey connectorKey)
         {
             if (connectorKey == null) throw new ArgumentNullException(nameof(connectorKey));
 
-            IBulkEntryConnector<TState, TInput> bulkEntryConnector;
+            IBulkAction<TState, TInput> bulkAction;
             try
             {
-                bulkEntryConnector = BulkEntryConnectors[connectorKey.Identifier].SingleOrDefault();
+                bulkAction = BulkActions[connectorKey.Identifier].SingleOrDefault();
             }
             catch (InvalidOperationException)
             {
-                throw new ConnectorResolutionException($"Multiple BulkEntryConnector versions exists with matching connectorKey: \"{connectorKey.Identifier}\".");
+                throw new ConnectorResolutionException($"Multiple BulkAction versions exists with matching connectorKey: \"{connectorKey.Identifier}\".");
             }
 
-            if (bulkEntryConnector == null)
-                throw new ConnectorResolutionException($"No BulkEntryConnector exists matching connectorKey: \"{connectorKey.Identifier}\".");
+            if (bulkAction == null)
+                throw new ConnectorResolutionException($"No BulkAction exists matching connectorKey: \"{connectorKey.Identifier}\".");
 
-            return bulkEntryConnector;
+            return bulkAction;
         }
 
-        public IGuardianConnector<TState, TInput> ResolveGuardianConnector(ConnectorKey connectorKey)
+        /// <summary>
+        /// Resolves a Precondition Connector, given a <see cref="ConnectorKey"/>.
+        /// </summary>
+        public IPrecondition<TState, TInput> ResolvePrecondition(ConnectorKey connectorKey)
         {
             if (connectorKey == null) throw new ArgumentNullException(nameof(connectorKey));
 
-            IGuardianConnector<TState, TInput> guardianConnector;
+            IPrecondition<TState, TInput> precondition;
             try
             {
-                guardianConnector = GuardianConnectors[connectorKey.Identifier].SingleOrDefault();
+                precondition = Preconditions[connectorKey.Identifier].SingleOrDefault();
             }
             catch (InvalidOperationException)
             {
-                throw new ConnectorResolutionException($"Multiple GuardianConnector versions exists with matching connectorKey: \"{connectorKey.Identifier}\".");
+                throw new ConnectorResolutionException($"Multiple Procondition versions exists with matching connectorKey: \"{connectorKey.Identifier}\".");
             }
 
-            if (guardianConnector == null)
-                throw new ConnectorResolutionException($"No GuardianConnector exists matching connectorKey: \"{connectorKey.Identifier}\".");
+            if (precondition == null)
+                throw new ConnectorResolutionException($"No Precondition exists matching connectorKey: \"{connectorKey.Identifier}\".");
 
-            return guardianConnector;
+            return precondition;
         }
     }
 }

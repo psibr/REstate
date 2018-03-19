@@ -1,25 +1,32 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using REstate.Schematics;
 
 namespace REstate.Engine.Connectors
 {
-    public interface IGuardianConnector
+    public interface IBulkAction
         : IConnector
     {
         
     }
 
-    public interface IGuardianConnector<TState, TInput>
-        : IGuardianConnector
+    public interface IBulkAction<TState, TInput>
+        : IBulkAction
     {
-        Task<bool> GuardAsync<TPayload>(
+        IBulkActionBatch<TState, TInput> CreateBatch();
+    }
+
+    public interface IBulkActionBatch<TState, TInput>
+    {
+        Task Stage<TPayload>(
             ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status,
             InputParameters<TInput, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default);
+
+        Task ExecuteAsync(CancellationToken cancellationToken = default);
     }
 }

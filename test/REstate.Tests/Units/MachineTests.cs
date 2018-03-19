@@ -35,22 +35,22 @@ namespace REstate.Tests.Units
         }
 
         [Fact]
-        public async Task Entry_connector_with_tail_return_final_state()
+        public async Task Action_with_tail_returns_final_state()
         {
             // Arrange
             var host = new REstateHost();
 
             host.Agent().Configuration
-                .RegisterConnector<ProcessorEntry>();
+                .RegisterConnector<ProcessAction>();
 
             var schematic = host.Agent()
                 .CreateSchematic<string, string>(
-                    schematicName: nameof(Entry_connector_with_tail_return_final_state))
+                    schematicName: nameof(Action_with_tail_returns_final_state))
                 .WithState("Idle", idle => idle
                     .AsInitialState())
                 .WithState("Processing", processing => processing
                     .WithTransitionFrom("Idle", "Process")
-                    .WithOnEntry<ProcessorEntry>())
+                    .WithAction<ProcessAction>())
                 .WithState("StillProcessing", stillProcessing => stillProcessing
                     .WithTransitionFrom("Processing", "Continue"))
                 .WithState("Complete", complete => complete
@@ -68,12 +68,12 @@ namespace REstate.Tests.Units
         }
 
         /// <summary>
-        /// An entry that tails 2 actions before returning.
+        /// An action that tails 2 actions before returning.
         /// </summary>
-        public class ProcessorEntry
-            : IEntryConnector<string, string>
+        public class ProcessAction
+            : IAction<string, string>
         {
-            public async Task OnEntryAsync<TPayload>(
+            public async Task InvokeAsync<TPayload>(
                 ISchematic<string, string> schematic,
                 IStateMachine<string, string> machine,
                 Status<string> status,

@@ -7,7 +7,7 @@ namespace REstate.Engine.Connectors
     public static class ConnectorIdentifierFinder
     {
         public static ConnectorKey FindConnectorKey<TState, TInput>(this ISchematic<TState, TInput> schematic, TState state) => 
-            schematic.States.Single(kvp => kvp.Key.Equals(state)).Value.OnEntry.ConnectorKey;
+            schematic.States.Single(kvp => kvp.Key.Equals(state)).Value.Action.ConnectorKey;
 
         public static TConfiguration FindConfiguration<TConfiguration, TState, TInput>(
             this IEnumerable<TConfiguration> configurations, 

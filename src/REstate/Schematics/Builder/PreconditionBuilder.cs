@@ -1,12 +1,19 @@
-﻿using System;
+﻿using REstate.Schematics.Builder.Providers;
+using System;
 using System.Collections.Generic;
 
-namespace REstate.Schematics.Builder.Implementation
+namespace REstate.Schematics.Builder
 {
-    internal class GuardBuilder 
-        : IGuardBuilder
+    public interface IPreconditionBuilder
+        : IPreconditionBuilderProvider<IPreconditionBuilder>
     {
-        public GuardBuilder(ConnectorKey connectorKey)
+
+    }
+
+    internal class PreconditionBuilder 
+        : IPreconditionBuilder
+    {
+        public PreconditionBuilder(ConnectorKey connectorKey)
         {
             if (connectorKey.Identifier == null)
                 throw new ArgumentNullException(nameof(connectorKey), "ConnectorKey.Identifier cannot be null.");
@@ -24,7 +31,7 @@ namespace REstate.Schematics.Builder.Implementation
 
         private readonly Dictionary<string, string> _settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        public IGuardBuilder DescribedAs(string description)
+        public IPreconditionBuilder DescribedAs(string description)
         {
             if (description == null)
                 throw new ArgumentNullException(nameof(description));
@@ -36,7 +43,7 @@ namespace REstate.Schematics.Builder.Implementation
             return this;
         }
 
-        public IGuardBuilder WithSetting(string key, string value)
+        public IPreconditionBuilder WithSetting(string key, string value)
         {
             try
             {
@@ -50,10 +57,10 @@ namespace REstate.Schematics.Builder.Implementation
             return this;
         }
 
-        public IGuardBuilder WithSetting(KeyValuePair<string, string> setting) =>
+        public IPreconditionBuilder WithSetting(KeyValuePair<string, string> setting) =>
             WithSetting(setting.Key, setting.Value);
 
-        public IGuardBuilder WithSetting((string, string) setting) =>
-            WithSetting(setting.Item1, setting.Item2);
+        public IPreconditionBuilder WithSetting((string key, string value) setting) =>
+            WithSetting(setting.key, setting.value);
     }
 }

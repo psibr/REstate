@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace REstate.Schematics
 {
-    public class GuardConnector
-        : IGuard
+    public class Action<TInput>
+        : IAction<TInput>
     {
         private IDictionary<string, string> _configuration;
 
@@ -22,8 +22,12 @@ namespace REstate.Schematics
 
         public string Description { get; set; }
 
-        IReadOnlyDictionary<string, string> IGuard.Settings =>
-            new ReadOnlyDictionary<string, string>(Configuration 
-                ?? new Dictionary<string, string>(0));
+        public ExceptionInput<TInput> ExceptionInput { get; set; }
+
+        IExceptionInput<TInput> IAction<TInput>.OnExceptionInput => ExceptionInput;
+
+        IReadOnlyDictionary<string, string> IAction<TInput>.Settings =>
+            new ReadOnlyDictionary<string, string>(
+                Configuration ?? new Dictionary<string, string>(0));
     }
 }

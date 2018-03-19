@@ -1,12 +1,9 @@
-﻿namespace REstate.Engine.Connectors
+﻿namespace REstate.Engine.Connectors.Logger
 {
-    /// <summary>
-    /// A configuration object that can be associated with a connector.
-    /// </summary>
-    public class ConnectorConfiguration
+    public class LoggingActionConfiguration
         : IConnectorConfiguration
     {
-        public ConnectorConfiguration(string identifier)
+        public LoggingActionConfiguration(string identifier)
         {
             Identifier = identifier;
         }
@@ -18,5 +15,7 @@
         /// log info
         /// </example>
         public string Identifier { get; }
+
+        public LogLevel LogLevel { get; set; } = LogLevel.Info;
     }
 }
