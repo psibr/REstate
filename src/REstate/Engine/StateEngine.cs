@@ -20,7 +20,7 @@ namespace REstate.Engine
         private readonly IConnectorResolver<TState, TInput> _connectorResolver;
         private readonly IReadOnlyCollection<IEventListener> _listeners;
 
-        private delegate Task OnInitialEntryFunc(
+        private delegate Task ActionDelegate(
             ISchematic<TState, TInput> schematic,
             IStateMachine<TState, TInput> machine,
             Status<TState> status,
@@ -112,24 +112,24 @@ namespace REstate.Engine
 
             NotifyOnMachineCreated(schematic, newMachineStatus);
 
-            await CallOnInitialEntryAction(schematic, newMachineStatus, machine, cancellationToken);
+            await InvokeAction(schematic, newMachineStatus, machine, cancellationToken);
 
             return machine;
         }
 
-        private async Task CallOnInitialEntryAction(
+        private async Task InvokeAction(
             ISchematic<TState, TInput> schematic,
             Status<TState> status,
             IStateMachine<TState, TInput> machine,
             CancellationToken cancellationToken)
         {
-            var initialAction = schematic.States[schematic.InitialState].OnEntry;
+            var initialAction = schematic.States[schematic.InitialState].Action;
 
             if (initialAction == null) return;
 
-            var connector = _connectorResolver.ResolveEntryConnector(initialAction.ConnectorKey);
+            var connector = _connectorResolver.ResolveAction(initialAction.ConnectorKey);
 
-            await connector.OnEntryAsync<object>(
+            await connector.InvokeAsync<object>(
                 schematic,
                 machine,
                 status,
@@ -192,7 +192,7 @@ namespace REstate.Engine
 
             NotifyOnMachineCreated(schematic, newMachineStatus);
 
-            await CallOnInitialEntryAction(schematic, newMachineStatus, machine, cancellationToken);
+            await InvokeAction(schematic, newMachineStatus, machine, cancellationToken);
 
             return machine;
         }
@@ -254,7 +254,7 @@ namespace REstate.Engine
 
             NotifyBulkOnMachineCreated(schematic, machineStatuses);
 
-            await BulkCallOnInitialEntryAction(schematic, machines, cancellationToken);
+            await CallBulkAction(schematic, machines, cancellationToken);
 
             return machines.Select(tuple => tuple.machine);
         }
@@ -310,42 +310,42 @@ namespace REstate.Engine
 
             NotifyBulkOnMachineCreated(schematic, machineStatuses);
 
-            await BulkCallOnInitialEntryAction(schematic, machines, cancellationToken);
+            await CallBulkAction(schematic, machines, cancellationToken);
 
             return machines.Select(tuple => tuple.machine);
         }
 
-        private async Task BulkCallOnInitialEntryAction(
+        private async Task CallBulkAction(
             ISchematic<TState, TInput> schematic,
             IEnumerable<(IStateMachine<TState, TInput> Machine, MachineStatus<TState, TInput> MachineStatus)> machines,
             CancellationToken cancellationToken)
         {
-            var initialAction = schematic.States[schematic.InitialState].OnEntry;
+            var initialAction = schematic.States[schematic.InitialState].Action;
 
             if (initialAction == null) return;
 
-            IBulkEntryConnectorBatch<TState, TInput> bulkEntryConnectorBatch = null;
-            OnInitialEntryFunc onInitialEntry;
+            IBulkActionBatch<TState, TInput> bulkActionBatch = null;
+            ActionDelegate stageOrExecute;
 
             try
             {
-                bulkEntryConnectorBatch = _connectorResolver
-                    .ResolveBulkEntryConnector(initialAction.ConnectorKey)
+                bulkActionBatch = _connectorResolver
+                    .ResolveBulkAction(initialAction.ConnectorKey)
                     .CreateBatch();
 
-                onInitialEntry = bulkEntryConnectorBatch.OnBulkEntryAsync;
+                stageOrExecute = bulkActionBatch.Stage;
             }
             catch (ConnectorResolutionException)
             {
                 // Bulk not supported, falling back to individual.
-                var entryConnector = _connectorResolver.ResolveEntryConnector(initialAction.ConnectorKey);
+                var action = _connectorResolver.ResolveAction(initialAction.ConnectorKey);
 
-                onInitialEntry = entryConnector.OnEntryAsync;
+                stageOrExecute = action.InvokeAsync;
             }
 
             foreach (var machine in machines)
             {
-                await onInitialEntry(
+                await stageOrExecute(
                     schematic,
                     machine.Machine,
                     machine.MachineStatus,
@@ -354,8 +354,8 @@ namespace REstate.Engine
                     cancellationToken);
             }
 
-            if (bulkEntryConnectorBatch != null)
-                await bulkEntryConnectorBatch.ExecuteBulkEntryAsync(cancellationToken);
+            if (bulkActionBatch != null)
+                await bulkActionBatch.ExecuteAsync(cancellationToken);
         }
 
         public async Task<IStateMachine<TState, TInput>> GetMachineAsync(

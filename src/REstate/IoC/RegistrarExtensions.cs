@@ -26,12 +26,12 @@ namespace REstate.IoC
         }
 
         /// <summary>
-        /// Registers an <see cref="IEntryConnector{TState,TInput}"/> or <see cref="IGuardianConnector{TState,TInput}"/>.
+        /// Registers an <see cref="IAction{TState,TInput}"/> or <see cref="IPrecondition{TState,TInput}"/>.
         /// </summary>
         /// <param name="registrar"></param>
         /// <param name="connectorType">
         /// The unbound generic type of the connector aka generic type definition. e.g. 
-        /// <c>typeof(LoggerEntryConnector&lt;,&gt;)</c>
+        /// <c>typeof(LoggingAction&lt;,&gt;)</c>
         /// </param>
         /// <param name="registrationName">
         /// The name to register the type as in the <see cref="IComponentContainer"/>.
@@ -61,23 +61,23 @@ namespace REstate.IoC
 
             var registered = false;
 
-            if (interfaces.Any(type => type == typeof(IEntryConnector<,>)))
+            if (interfaces.Any(type => type == typeof(IAction<,>)))
             {
-                registrar.Register(typeof(IEntryConnector<,>), connectorType, registrationKey);
+                registrar.Register(typeof(IAction<,>), connectorType, registrationKey);
 
                 registered = true;
             }
 
-            if (interfaces.Any(type => type == typeof(IGuardianConnector<,>)))
+            if (interfaces.Any(type => type == typeof(IPrecondition<,>)))
             {
-                registrar.Register(typeof(IGuardianConnector<,>), connectorType, registrationKey);
+                registrar.Register(typeof(IPrecondition<,>), connectorType, registrationKey);
 
                 registered = true;
             }
 
             if (!registered)
                 throw new ArgumentException(
-                    message: "Type must be either IEntryConnector<,> or IGuardianConnector<,> to be registered.",
+                    message: "Type must be either IAction<,> or IPrecondition<,> to be registered.",
                     paramName: nameof(connectorType));
 
             return new ConnectorRegistration(registrar, connectorType);

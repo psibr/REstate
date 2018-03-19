@@ -7,6 +7,6 @@ namespace REstate.Schematics
 
         TState ResultantState { get; }
 
-        IGuard Guard { get; }
+        IPrecondition Procondition { get; }
     }
 }

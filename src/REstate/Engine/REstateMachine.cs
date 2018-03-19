@@ -89,19 +89,19 @@ namespace REstate.Engine
                             $"No transition defined for status: '{currentStatus.State}' using input: '{input}'");
                     }
 
-                    if (transition.Guard != null)
+                    if (transition.Procondition != null)
                     {
-                        var guardConnector = _connectorResolver.ResolveGuardianConnector(transition.Guard.ConnectorKey);
+                        var precondition = _connectorResolver.ResolvePrecondition(transition.Procondition.ConnectorKey);
 
-                        if (!await guardConnector.GuardAsync(
+                        if (!await precondition.ValidateAsync(
                             schematic: Schematic,
                             machine: this,
                             status: currentStatus,
                             inputParameters: new InputParameters<TInput, TPayload>(input, payload),
-                            connectorSettings: transition.Guard.Settings,
+                            connectorSettings: transition.Procondition.Settings,
                             cancellationToken: cancellationToken).ConfigureAwait(false))
                         {
-                            throw new InvalidOperationException("Guard clause prevented transition.");
+                            throw new InvalidOperationException("Precondition prevented transition.");
                         }
                     }
                     
@@ -131,22 +131,22 @@ namespace REstate.Engine
 
                     NotifyOnTransition(input, payload, preActionState);
 
-                    if (schematicState.OnEntry == null) return currentStatus;
+                    if (schematicState.Action == null) return currentStatus;
 
                     try
                     {
-                        var entryConnector =
-                            _connectorResolver.ResolveEntryConnector(schematicState.OnEntry.ConnectorKey);
+                        var action =
+                            _connectorResolver.ResolveAction(schematicState.Action.ConnectorKey);
 
                         InterceptorMachine interceptor;
                         using (interceptor = new InterceptorMachine(this, currentStatus))
                         {
-                            await entryConnector.OnEntryAsync(
+                            await action.InvokeAsync(
                                 schematic: Schematic,
                                 machine: interceptor,
                                 status: currentStatus,
                                 inputParameters: new InputParameters<TInput, TPayload>(input, payload),
-                                connectorSettings: schematicState.OnEntry.Settings,
+                                connectorSettings: schematicState.Action.Settings,
                                 cancellationToken: cancellationToken).ConfigureAwait(false);
                         }
 
@@ -154,11 +154,11 @@ namespace REstate.Engine
                     }
                     catch
                     {
-                        if (schematicState.OnEntry.OnExceptionInput == null)
+                        if (schematicState.Action.OnExceptionInput == null)
                             throw;
 
                         currentStatus = await SendAsync(
-                            input: schematicState.OnEntry.OnExceptionInput.Input,
+                            input: schematicState.Action.OnExceptionInput.Input,
                             payload: payload,
                             lastCommitNumber: currentStatus.CommitNumber,
                             cancellationToken: cancellationToken).ConfigureAwait(false);

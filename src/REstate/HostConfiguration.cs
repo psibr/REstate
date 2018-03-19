@@ -55,7 +55,7 @@ namespace REstate
 
             Container.RegisterComponent(new InMemoryRepositoryComponent());
 
-            Container.RegisterComponent(new LoggerEntryConnectorComponent());
+            Container.RegisterComponent(new LoggingActionComponent());
 
             Container.RegisterEventListener(LoggingEventListener.Trace);
         }

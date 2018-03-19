@@ -11,8 +11,8 @@ namespace REstate.Schematics
         [Required]
         public TState ResultantState { get; set; }
 
-        public GuardConnector Guard { get; set; }
+        public Precondition Precondition { get; set; }
 
-        IGuard ITransition<TState, TInput>.Guard => Guard;
+        IPrecondition ITransition<TState, TInput>.Procondition => Precondition;
     }
 }

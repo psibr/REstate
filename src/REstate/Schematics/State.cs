@@ -13,13 +13,13 @@ namespace REstate.Schematics
         public string Description { get; set; }
 
         public Transition<TState, TInput>[] Transitions { get; set; }
-        public EntryConnector<TInput> OnEntry { get; set; }
+        public Action<TInput> Action { get; set; }
 
         IDictionary<TInput, ITransition<TState, TInput>> IState<TState, TInput>.Transitions =>
             Transitions.ToDictionary(
                 t => t.Input,
                 t => (ITransition<TState, TInput>)t);
 
-        IEntryAction<TInput> IState<TState, TInput>.OnEntry => OnEntry;
+        IAction<TInput> IState<TState, TInput>.Action => Action;
     }
 }

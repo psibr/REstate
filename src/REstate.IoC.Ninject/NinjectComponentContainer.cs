@@ -17,34 +17,28 @@ namespace REstate.IoC.Ninject
 
         public void Register<T>(T instance, string name = null) where T : class
         {
-            var binding = Kernel.Bind<T>().ToConstant(instance);
-
-            if(name is null)
-                return;
-
-            binding.Named(name);
+            if (name is null)
+                Kernel.Rebind<T>().ToConstant(instance);
+            else
+                Kernel.Bind<T>().ToConstant(instance).Named(name);
         }
 
         public void Register(Type registrationType, Type implementationType, string name = null)
         {
-            var binding = Kernel.Bind(registrationType).To(implementationType);
-
-            if(name is null)
-                return;
-
-            binding.Named(name);
+            if (name is null)
+                Kernel.Rebind(registrationType).To(implementationType);
+            else
+                Kernel.Bind(registrationType).To(implementationType).Named(name);
         }
 
         public void Register<T>(FactoryMethod<T> resolver, string name = null) where T : class
         {
             T Resolve(IContext context) => resolver(this);
 
-            var binding = Kernel.Bind<T>().ToMethod(Resolve);
-
-            if(name is null)
-                return;
-
-            binding.Named(name);
+            if (name is null)
+                Kernel.Rebind<T>().ToMethod(Resolve);
+            else
+                Kernel.Bind<T>().ToMethod(Resolve).Named(name);
         }
 
         public void RegisterComponent(IComponent component)
@@ -60,12 +54,10 @@ namespace REstate.IoC.Ninject
 
         void IRegistrar.Register<TBinding, TImplementation>(string name)
         {
-            var binding = Kernel.Bind<TBinding>().To<TImplementation>();
-
-            if(name is null)
-                return;
-
-            binding.Named(name);
+            if (name is null)
+                 Kernel.Rebind<TBinding>().To<TImplementation>();
+            else
+                Kernel.Bind<TBinding>().To<TImplementation>().Named(name);
         }
     }
 }

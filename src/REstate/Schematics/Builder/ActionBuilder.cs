@@ -1,12 +1,19 @@
+using REstate.Schematics.Builder.Providers;
 using System;
 using System.Collections.Generic;
 
-namespace REstate.Schematics.Builder.Implementation
+namespace REstate.Schematics.Builder
 {
-    internal class EntryActionBuilder<TInput> 
-        : IEntryActionBuilder<TInput>
+    public interface IActionBuilder<TInput>
+        : IActionBuilderProvider<TInput, IActionBuilder<TInput>>
     {
-        public EntryActionBuilder(ConnectorKey connectorKey)
+
+    }
+
+    internal class ActionBuilder<TInput> 
+        : IActionBuilder<TInput>
+    {
+        public ActionBuilder(ConnectorKey connectorKey)
         {
             if (connectorKey == null)
                 throw new ArgumentNullException(nameof(connectorKey));
@@ -26,7 +33,7 @@ namespace REstate.Schematics.Builder.Implementation
 
         private readonly Dictionary<string, string> _settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        public IEntryActionBuilder<TInput> DescribedAs(string description)
+        public IActionBuilder<TInput> DescribedAs(string description)
         {
             if (description == null)
                 throw new ArgumentNullException(nameof(description));
@@ -38,7 +45,7 @@ namespace REstate.Schematics.Builder.Implementation
             return this;
         }
 
-        public IEntryActionBuilder<TInput> WithSetting(string key, string value)
+        public IActionBuilder<TInput> WithSetting(string key, string value)
         {
             try
             {
@@ -52,13 +59,13 @@ namespace REstate.Schematics.Builder.Implementation
             return this;
         }
 
-        public IEntryActionBuilder<TInput> WithSetting(KeyValuePair<string, string> setting) => 
+        public IActionBuilder<TInput> WithSetting(KeyValuePair<string, string> setting) => 
             WithSetting(setting.Key, setting.Value);
 
-        public IEntryActionBuilder<TInput> WithSetting((string, string) setting) => 
+        public IActionBuilder<TInput> WithSetting((string, string) setting) => 
             WithSetting(setting.Item1, setting.Item2);
 
-        public IEntryActionBuilder<TInput> OnFailureSend(TInput input)
+        public IActionBuilder<TInput> OnFailureSend(TInput input)
         {
             OnExceptionInput = new ExceptionInput<TInput>(input);
 

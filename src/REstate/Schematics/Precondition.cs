@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace REstate.Schematics
 {
-    public class EntryConnector<TInput>
-        : IEntryAction<TInput>
+    public class Precondition
+        : IPrecondition
     {
         private IDictionary<string, string> _configuration;
 
@@ -22,12 +22,8 @@ namespace REstate.Schematics
 
         public string Description { get; set; }
 
-        public ExceptionInput<TInput> ExceptionInput { get; set; }
-
-        IExceptionInput<TInput> IEntryAction<TInput>.OnExceptionInput => ExceptionInput;
-
-        IReadOnlyDictionary<string, string> IEntryAction<TInput>.Settings =>
-            new ReadOnlyDictionary<string, string>(
-                Configuration ?? new Dictionary<string, string>(0));
+        IReadOnlyDictionary<string, string> IPrecondition.Settings =>
+            new ReadOnlyDictionary<string, string>(Configuration 
+                ?? new Dictionary<string, string>(0));
     }
 }

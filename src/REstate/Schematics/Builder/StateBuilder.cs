@@ -2,9 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using REstate.Engine.Connectors;
+using REstate.Schematics.Builder.Providers;
 
-namespace REstate.Schematics.Builder.Implementation
+namespace REstate.Schematics.Builder
 {
+    public interface IStateBuilder<TState, TInput>
+        : IStateBuilderProvider<TState, TInput, IStateBuilder<TState, TInput>>
+    {
+
+    }
+
     internal class StateBuilder<TState, TInput>
         : IStateBuilder<TState, TInput>
     {
@@ -23,7 +30,7 @@ namespace REstate.Schematics.Builder.Implementation
         public IDictionary<TInput, ITransition<TState, TInput>> Transitions { get; } 
             = new Dictionary<TInput, ITransition<TState, TInput>>();
 
-        public IEntryAction<TInput> OnEntry { get; private set; }
+        public IAction<TInput> Action { get; private set; }
 
         public IStateBuilder<TState, TInput> AsInitialState()
         {
@@ -57,8 +64,8 @@ namespace REstate.Schematics.Builder.Implementation
         }
 
         public IStateBuilder<TState, TInput> WithTransitionTo(
-            TState resultantState, TInput input, 
-            Action<ITransitionBuilder<TState, TInput>> transitionBuilderAction = null)
+            TState resultantState, TInput input,
+            System.Action<ITransitionBuilder<TState, TInput>> transitionBuilderAction = null)
         {
             _builder.WithTransition(Value, input, resultantState, transitionBuilderAction);
 
@@ -66,8 +73,8 @@ namespace REstate.Schematics.Builder.Implementation
         }
 
         public IStateBuilder<TState, TInput> WithTransitionFrom(
-            TState previousState, TInput input, 
-            Action<ITransitionBuilder<TState, TInput>> transitionBuilderAction = null)
+            TState previousState, TInput input,
+            System.Action<ITransitionBuilder<TState, TInput>> transitionBuilderAction = null)
         {
             _builder.WithTransition(previousState, input, Value, transitionBuilderAction);
 
@@ -75,35 +82,35 @@ namespace REstate.Schematics.Builder.Implementation
         }
 
         public IStateBuilder<TState, TInput> WithReentrance(
-            TInput input, 
-            Action<ITransitionBuilder<TState, TInput>> transition = null)
+            TInput input,
+            System.Action<ITransitionBuilder<TState, TInput>> transition = null)
         {
             _builder.WithTransition(Value, input, Value, transition);
 
             return this;
         }
 
-        public IStateBuilder<TState, TInput> WithOnEntry(
-            ConnectorKey connectorKey, 
-            Action<IEntryActionBuilder<TInput>> onEntry = null)
+        public IStateBuilder<TState, TInput> WithAction(
+            ConnectorKey connectorKey,
+            System.Action<IActionBuilder<TInput>> action = null)
         {
             if (connectorKey == null)
                 throw new ArgumentNullException(nameof(connectorKey));
             if (string.IsNullOrWhiteSpace(connectorKey.Identifier))
                 throw new ArgumentException("ConnectorKey must have a valid value", nameof(connectorKey));
 
-            var onEntryBuilder = new EntryActionBuilder<TInput>(connectorKey );
+            var actionBuilder = new ActionBuilder<TInput>(connectorKey );
 
-            onEntry?.Invoke(onEntryBuilder);
+            action?.Invoke(actionBuilder);
 
-            OnEntry = onEntryBuilder;
+            Action = actionBuilder;
 
             return this;
         }
 
-        public IStateBuilder<TState, TInput> WithOnEntry<TConnector>(
-            Action<IEntryActionBuilder<TInput>> onEntry = null)
-            where TConnector : IEntryConnector 
-            => WithOnEntry(typeof(TConnector).FullName, onEntry);
+        public IStateBuilder<TState, TInput> WithAction<TConnector>(
+            System.Action<IActionBuilder<TInput>> action = null)
+            where TConnector : IAction 
+            => WithAction(typeof(TConnector).FullName, action);
     }
 }

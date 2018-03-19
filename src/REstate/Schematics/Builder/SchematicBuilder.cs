@@ -1,9 +1,16 @@
-﻿using System;
+﻿using REstate.Schematics.Builder.Providers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace REstate.Schematics.Builder.Implementation
+namespace REstate.Schematics.Builder
 {
+    public interface ISchematicBuilder<TState, TInput>
+    : ISchematicBuilderProvider<TState, TInput, ISchematicBuilder<TState, TInput>>
+    {
+
+    }
+
     public class SchematicBuilder<TState, TInput>
         : ISchematicBuilder<TState, TInput>
     {
@@ -25,21 +32,21 @@ namespace REstate.Schematics.Builder.Implementation
 
         public int StateConflictRetryCount { get; private set; }
 
-        internal void SetInitialState(TState state)  
+        internal void SetInitialState(TState state)
         {
             InitialState = state;
             _hasInitialState = true;
         }
 
-        private readonly Dictionary<TState, IStateBuilder<TState, TInput>> _stateConfigurations 
+        private readonly Dictionary<TState, IStateBuilder<TState, TInput>> _stateConfigurations
             = new Dictionary<TState, IStateBuilder<TState, TInput>>();
 
-        public IReadOnlyDictionary<TState, IState<TState, TInput>> States => 
+        public IReadOnlyDictionary<TState, IState<TState, TInput>> States =>
             _stateConfigurations.ToDictionary(kvp => kvp.Key, kvp => (IState<TState, TInput>)kvp.Value);
 
         public ISchematicBuilder<TState, TInput> WithState(
-            TState state, 
-            Action<IStateBuilder<TState, TInput>> stateBuilderAction = null)
+            TState state,
+            System.Action<IStateBuilder<TState, TInput>> stateBuilderAction = null)
         {
             var stateConfiguration = new StateBuilder<TState, TInput>(this, state);
 
@@ -51,8 +58,8 @@ namespace REstate.Schematics.Builder.Implementation
         }
 
         public ISchematicBuilder<TState, TInput> WithStates(
-            ICollection<TState> states, 
-            Action<IStateBuilder<TState, TInput>> stateBuilderAction = null)
+            ICollection<TState> states,
+            System.Action<IStateBuilder<TState, TInput>> stateBuilderAction = null)
         {
             foreach (var state in states)
             {
@@ -84,10 +91,10 @@ namespace REstate.Schematics.Builder.Implementation
         }
 
         public ISchematicBuilder<TState, TInput> WithTransition(
-            TState sourceState, 
-            TInput input, 
-            TState resultantState, 
-            Action<ITransitionBuilder<TState, TInput>> transition = null)
+            TState sourceState,
+            TInput input,
+            TState resultantState,
+            System.Action<ITransitionBuilder<TState, TInput>> transition = null)
         {
             if (!_stateConfigurations.ContainsKey(resultantState))
                 throw new ArgumentException("Resultant stateBuilderAction was not defined.", nameof(resultantState));
@@ -123,13 +130,13 @@ namespace REstate.Schematics.Builder.Implementation
             var schematic = this as ISchematic<TState, TInput>;
 
             return new Schematic<TState, TInput>(
-                schematic.SchematicName, 
+                schematic.SchematicName,
                 schematic.InitialState,
                 schematic.StateConflictRetryCount,
                 schematic.States.Values
                     .Select(SchematicCloner.Clone)
                     .ToArray());
-            
+
         }
 
         public ISchematicBuilder<TState, TInput> WithStateConflictRetries()
@@ -139,7 +146,7 @@ namespace REstate.Schematics.Builder.Implementation
 
         public ISchematicBuilder<TState, TInput> WithStateConflictRetries(int retryCount)
         {
-            if(retryCount < -1)
+            if (retryCount < -1)
                 throw new ArgumentException("Values below -1 are not valid.", nameof(retryCount));
 
             StateConflictRetryCount = retryCount;
