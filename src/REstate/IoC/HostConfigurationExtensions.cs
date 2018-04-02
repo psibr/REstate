@@ -27,7 +27,7 @@ namespace REstate.IoC
 
             public void Register(IRegistrar registrar)
             {
-                registrar.RegisterConnector<TConnector>(_connectorConfiguration ?? new ConnectorConfiguration(typeof(TConnector).FullName), _registrationName);
+                registrar.RegisterConnector<TConnector>(_connectorConfiguration ?? new ConnectorConfiguration(typeof(TConnector).AssemblyQualifiedName), _registrationName);
 
             }
         }
