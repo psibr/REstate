@@ -21,5 +21,9 @@ namespace REstate.Schematics.Builder.Providers
         TThis WithAction(ConnectorKey connectorKey, System.Action<IActionBuilder<TInput>> action = null);
 
         TThis WithAction<TConnector>(System.Action<IActionBuilder<TInput>> action = null) where TConnector : IAction;
+
+        TThis WithPrecondition(ConnectorKey connectorKey, System.Action<IPreconditionBuilder> precondition = null);
+
+        TThis WithPrecondition<TConnector>(System.Action<IPreconditionBuilder> precondition = null) where TConnector : Engine.Connectors.IPrecondition;
     }
 }

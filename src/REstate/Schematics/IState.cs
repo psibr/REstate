@@ -13,5 +13,7 @@ namespace REstate.Schematics
         IDictionary<TInput, ITransition<TState, TInput>> Transitions { get; }
 
         IAction<TInput> Action { get; }
+
+        IPrecondition Precondition { get; }
     }
 }
