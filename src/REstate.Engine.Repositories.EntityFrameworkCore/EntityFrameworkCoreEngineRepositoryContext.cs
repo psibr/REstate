@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -151,7 +152,15 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
             DbContext.Machines.Add(record);
 
-            await DbContext.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await DbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch(DbUpdateException dbEx) 
+            when (dbEx.InnerException is SqlException sqlEx && sqlEx.Number == 2627)
+            {
+                throw new MachineAlreadyExistException(record.MachineId);
+            }
 
             return new MachineStatus<TState, TInput>
             {

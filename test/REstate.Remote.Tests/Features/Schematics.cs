@@ -3,7 +3,7 @@ using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
 using REstate.Remote.Tests.Features.Context;
-using REstate.Tests.Features.Templates;
+using REstate.Tests.Features;
 
 // ReSharper disable InconsistentNaming
 
@@ -17,7 +17,7 @@ I want to store and retrieve Schematics from a remote server")]
     [ScenarioCategory("Remote")]
     [ScenarioCategory("gRPC")]
     public class Schematics
-        : SchematicScenarios<REstateRemoteContext<string, string>>
+        : SchematicsScenarios<REstateRemoteContext<string, string>>
     {
         protected override Task<CompositeStep> Given_host_configuration_is_applied()
         {

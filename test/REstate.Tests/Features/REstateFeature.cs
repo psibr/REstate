@@ -7,7 +7,7 @@ using REstate.Tests.Features.Context;
 
 // ReSharper disable InconsistentNaming
 
-namespace REstate.Tests.Features.Templates
+namespace REstate.Tests.Features
 {
     public class REstateFeature<TContext>
         : FeatureFixture

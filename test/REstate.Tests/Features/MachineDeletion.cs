@@ -8,7 +8,7 @@ using REstate.Tests.Features.Context;
 
 // ReSharper disable InconsistentNaming
 
-namespace REstate.Tests.Features.Templates
+namespace REstate.Tests.Features
 {
     [FeatureDescription(@"
 In order to remove previous executions or stop machines
