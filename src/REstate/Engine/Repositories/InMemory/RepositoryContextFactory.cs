@@ -9,7 +9,7 @@ namespace REstate.Engine.Repositories.InMemory
     {
         private Lazy<IEngineRepositoryContext<TState, TInput>> repositoryContextLazy 
             = new Lazy<IEngineRepositoryContext<TState, TInput>>(() 
-                => new EngineRepositoryContext<TState, TInput>());
+                => new EngineRepositoryContext<TState, TInput>(), true);
 
         public Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(CancellationToken cancellationToken = default)
         {

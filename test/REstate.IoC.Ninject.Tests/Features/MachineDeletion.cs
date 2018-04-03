@@ -5,7 +5,7 @@ using LightBDD.Framework.Scenarios.Extended;
 using Ninject;
 using REstate.IoC.Ninject;
 using REstate.Tests.Features.Context;
-using REstate.Tests.Features.Templates;
+using REstate.Tests.Features;
 
 // ReSharper disable InconsistentNaming
 

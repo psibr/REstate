@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,10 +15,9 @@ namespace REstate.Engine.Repositories.InMemory
         : ISchematicRepository<TState, TInput>
         , IMachineRepository<TState, TInput>
     {
-        private IDictionary<string, Schematic<TState, TInput>> Schematics { get; } =
-            new Dictionary<string, Schematic<TState, TInput>>();
-        private IDictionary<string, (MachineStatus<TState, TInput> MachineStatus, Metadata Metadata)> Machines { get; } =
-            new Dictionary<string, (MachineStatus<TState, TInput>, Metadata)>();
+        private ConcurrentDictionary<string, Schematic<TState, TInput>> Schematics { get; } = new ConcurrentDictionary<string, Schematic<TState, TInput>>();
+        private ConcurrentDictionary<string, (MachineStatus<TState, TInput> MachineStatus, Metadata Metadata)> Machines { get; } =
+            new ConcurrentDictionary<string, (MachineStatus<TState, TInput>, Metadata)>();
 
         /// <summary>
         /// Retrieves a previously stored Schematic by name.
@@ -51,7 +52,7 @@ namespace REstate.Engine.Repositories.InMemory
             if (schematic == null) throw new ArgumentNullException(nameof(schematic));
             if (schematic.SchematicName == null) throw new ArgumentException("Schematic must have a name to be stored.", nameof(schematic));
 
-            Schematics.Add(schematic.SchematicName, schematic);
+            Schematics.AddOrUpdate(schematic.SchematicName, (key) => schematic, (key, old) => schematic);
 
             var storedSchematic = Schematics[schematic.SchematicName];
 
@@ -109,9 +110,10 @@ namespace REstate.Engine.Repositories.InMemory
                 Metadata = metadata
             };
 
-            Machines.Add(id, (record, metadata));
+            if(Machines.TryAdd(id, (record, metadata)))
+                return Task.FromResult(record);
 
-            return Task.FromResult(record);
+            throw new MachineAlreadyExistException(id);
         }
 
         public Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(
@@ -119,6 +121,10 @@ namespace REstate.Engine.Repositories.InMemory
             IEnumerable<Metadata> metadata,
             CancellationToken cancellationToken = new CancellationToken())
         {
+            var exceptions = new Queue<Exception>();
+
+            var aggregateException = new AggregateException(exceptions);
+
             List<(MachineStatus<TState, TInput> MachineStatus, IDictionary<string, string> Metadata)> machineRecords =
                 metadata.Select(meta =>
                     (new MachineStatus<TState, TInput>
@@ -134,8 +140,12 @@ namespace REstate.Engine.Repositories.InMemory
 
             foreach (var machineRecord in machineRecords)
             {
-                Machines.Add(machineRecord.MachineStatus.MachineId, machineRecord);
+                if (!Machines.TryAdd(machineRecord.MachineStatus.MachineId, machineRecord))
+                    exceptions.Enqueue(new MachineAlreadyExistException(machineRecord.MachineStatus.MachineId));
             }
+
+            if(exceptions.Count > 0)
+                throw aggregateException;
 
             return Task.FromResult<ICollection<MachineStatus<TState, TInput>>>(
                 machineRecords.Select(r => r.MachineStatus).ToList());
@@ -166,7 +176,7 @@ namespace REstate.Engine.Repositories.InMemory
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
 
-            Machines.Remove(machineId);
+            Machines.TryRemove(machineId, out var _);
 
 #if NET45
             return Task.FromResult(0);

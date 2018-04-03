@@ -136,7 +136,7 @@ namespace REstate.Engine.Repositories.Redis
 
             var recordBytes = MessagePackSerializer.Serialize(record);
 
-            await _restateDatabase.StringSetAsync($"{MachinesKeyPrefix}/{machineId}", recordBytes).ConfigureAwait(false);
+            await _restateDatabase.StringSetAsync($"{MachinesKeyPrefix}/{machineId}", recordBytes, null, When.NotExists).ConfigureAwait(false);
 
             return new MachineStatus<TState, TInput>
             {

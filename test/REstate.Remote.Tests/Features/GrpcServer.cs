@@ -4,7 +4,7 @@ using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
 using LightBDD.XUnit2;
 using REstate.Remote.Tests.Features.Context;
-using REstate.Tests.Features.Templates;
+using REstate.Tests.Features;
 using Xunit;
 
 namespace REstate.Remote.Tests.Features

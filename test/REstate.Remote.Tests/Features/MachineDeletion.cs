@@ -3,7 +3,7 @@ using LightBDD.Framework;
 using LightBDD.Framework.Scenarios.Contextual;
 using LightBDD.Framework.Scenarios.Extended;
 using REstate.Remote.Tests.Features.Context;
-using REstate.Tests.Features.Templates;
+using REstate.Tests.Features;
 
 // ReSharper disable InconsistentNaming
 
