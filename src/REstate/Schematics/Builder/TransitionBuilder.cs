@@ -25,11 +25,11 @@ namespace REstate.Schematics.Builder
             ConnectorKey connectorKey,
             System.Action<IPreconditionBuilder> guard = null)
         {
-            var guardBuilder = new PreconditionBuilder(connectorKey);
+            var preconditionBuilder = new PreconditionBuilder(connectorKey);
 
-            guard?.Invoke(guardBuilder);
+            guard?.Invoke(preconditionBuilder);
 
-            Procondition = guardBuilder;
+            Procondition = preconditionBuilder;
 
             return this;
         }

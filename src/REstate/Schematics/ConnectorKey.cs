@@ -3,20 +3,29 @@ using System.Collections.Generic;
 
 namespace REstate.Schematics
 {
-    public class ConnectorKey 
+    public class ConnectorKey
         : IEquatable<ConnectorKey>
     {
-        public ConnectorKey(string identifier)
-        {
-            Identifier = identifier;
-        }
+        private string _identifier;
 
-        public ConnectorKey()
+        public string Identifier
         {
-            
-        }
+            get => _identifier;
+            set
+            {
+                if (value is null)
+                    throw new ArgumentNullException(
+                        paramName: nameof(value),
+                        message: $"{nameof(ConnectorKey)} cannot have a null {nameof(Identifier)}.");
 
-        public string Identifier { get; }
+                if(string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException(
+                        message: $"{nameof(ConnectorKey)} must have a valid non-whitespace {nameof(Identifier)}.",
+                        paramName: nameof(value));
+
+                _identifier = value;
+            }
+        }
 
         public override string ToString() => Identifier;
 
@@ -27,8 +36,8 @@ namespace REstate.Schematics
 
         public bool Equals(ConnectorKey other)
         {
-            return other != null &&
-                   Identifier == other.Identifier;
+            return other != null 
+                   && Identifier == other.Identifier;
         }
 
         public override int GetHashCode()
@@ -48,7 +57,7 @@ namespace REstate.Schematics
 
         public static implicit operator ConnectorKey(string identifier)
         {
-            return new ConnectorKey(identifier);
+            return new ConnectorKey { Identifier = identifier };
         }
     }
 }

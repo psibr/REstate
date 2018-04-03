@@ -14,6 +14,7 @@ namespace REstate.Schematics
 
         public Transition<TState, TInput>[] Transitions { get; set; }
         public Action<TInput> Action { get; set; }
+        public Precondition Precondition { get; set; }
 
         IDictionary<TInput, ITransition<TState, TInput>> IState<TState, TInput>.Transitions =>
             Transitions.ToDictionary(
@@ -21,5 +22,7 @@ namespace REstate.Schematics
                 t => (ITransition<TState, TInput>)t);
 
         IAction<TInput> IState<TState, TInput>.Action => Action;
+
+        IPrecondition IState<TState, TInput>.Precondition => Precondition;
     }
 }

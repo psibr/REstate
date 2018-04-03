@@ -51,16 +51,6 @@ namespace Semaphore
                     }
                 }
             }
-
-            var typedSchematic = REstateHost.Agent
-                .CreateTypedSchematic<Input>("")
-                .WithState<object>()
-                .Build();
-        }
-
-        enum Input
-        {
-
         }
     }
 }

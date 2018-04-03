@@ -31,6 +31,7 @@ namespace REstate.Schematics.Builder
             = new Dictionary<TInput, ITransition<TState, TInput>>();
 
         public IAction<TInput> Action { get; private set; }
+        public IPrecondition Precondition { get; private set; }
 
         public IStateBuilder<TState, TInput> AsInitialState()
         {
@@ -99,7 +100,7 @@ namespace REstate.Schematics.Builder
             if (string.IsNullOrWhiteSpace(connectorKey.Identifier))
                 throw new ArgumentException("ConnectorKey must have a valid value", nameof(connectorKey));
 
-            var actionBuilder = new ActionBuilder<TInput>(connectorKey );
+            var actionBuilder = new ActionBuilder<TInput>(connectorKey);
 
             action?.Invoke(actionBuilder);
 
@@ -111,6 +112,27 @@ namespace REstate.Schematics.Builder
         public IStateBuilder<TState, TInput> WithAction<TConnector>(
             System.Action<IActionBuilder<TInput>> action = null)
             where TConnector : IAction 
-            => WithAction(typeof(TConnector).FullName, action);
+            => WithAction(typeof(TConnector).AssemblyQualifiedName, action);
+
+        public IStateBuilder<TState, TInput> WithPrecondition(ConnectorKey connectorKey, System.Action<IPreconditionBuilder> precondition = null)
+        {
+            if (connectorKey == null)
+                throw new ArgumentNullException(nameof(connectorKey));
+            if (string.IsNullOrWhiteSpace(connectorKey.Identifier))
+                throw new ArgumentException("ConnectorKey must have a valid value", nameof(connectorKey));
+
+            var preconditionBuilder = new PreconditionBuilder(connectorKey);
+
+            precondition?.Invoke(preconditionBuilder);
+
+            Precondition = preconditionBuilder;
+
+            return this;
+        }
+
+        public IStateBuilder<TState, TInput> WithPrecondition<TConnector>(
+            System.Action<IPreconditionBuilder> precondition = null) 
+            where TConnector : Engine.Connectors.IPrecondition
+            => WithPrecondition(typeof(TConnector).AssemblyQualifiedName, precondition);
     }
 }
