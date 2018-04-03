@@ -16,7 +16,7 @@ namespace REstate.Tests.Features.Context
         public List<IStateMachine<TState, TInput>> BulkCreatedMachines { get; set; }
 
         #region GIVEN
-        public async Task Given_a_Machine_exists_with_MachineId_MACHINEID(Schematic<TState, TInput> schematic, string machineId)
+        public async Task Given_a_Machine_exists_with_MachineId_MACHINEID(ISchematic<TState, TInput> schematic, string machineId)
         {
             CurrentMachine = await CurrentHost.Agent()
                 .GetStateEngine<TState, TInput>()
@@ -25,7 +25,7 @@ namespace REstate.Tests.Features.Context
         #endregion
 
         #region WHEN
-        public async Task When_a_Machine_is_created_from_a_Schematic(Schematic<TState, TInput> schematic)
+        public async Task When_a_Machine_is_created_from_a_Schematic(ISchematic<TState, TInput> schematic)
         {
             try
             {
@@ -83,7 +83,7 @@ namespace REstate.Tests.Features.Context
         }
 
         public async Task When_a_Machine_is_created_from_a_Schematic_with_a_predefined_MachineId(
-            Schematic<TState, TInput> schematic, string machineId)
+            ISchematic<TState, TInput> schematic, string machineId)
         {
             try
             {
