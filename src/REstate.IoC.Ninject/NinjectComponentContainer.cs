@@ -14,21 +14,21 @@ namespace REstate.IoC.Ninject
         }
 
         protected IKernel Kernel { get; }
-
+        
         public void Register<T>(T instance, string name = null) where T : class
         {
             if (name is null)
-                Kernel.Rebind<T>().ToConstant(instance);
+                Kernel.Rebind<T>().ToConstant(instance).InSingletonScope();
             else
-                Kernel.Bind<T>().ToConstant(instance).Named(name);
+                Kernel.Bind<T>().ToConstant(instance).InSingletonScope().Named(name);
         }
 
         public void Register(Type registrationType, Type implementationType, string name = null)
         {
             if (name is null)
-                Kernel.Rebind(registrationType).To(implementationType);
+                Kernel.Rebind(registrationType).To(implementationType).InSingletonScope();
             else
-                Kernel.Bind(registrationType).To(implementationType).Named(name);
+                Kernel.Bind(registrationType).To(implementationType).InSingletonScope().Named(name);
         }
 
         public void Register<T>(FactoryMethod<T> resolver, string name = null) where T : class
@@ -36,9 +36,9 @@ namespace REstate.IoC.Ninject
             T Resolve(IContext context) => resolver(this);
 
             if (name is null)
-                Kernel.Rebind<T>().ToMethod(Resolve);
+                Kernel.Rebind<T>().ToMethod(Resolve).InSingletonScope();
             else
-                Kernel.Bind<T>().ToMethod(Resolve).Named(name);
+                Kernel.Bind<T>().ToMethod(Resolve).InSingletonScope().Named(name);
         }
 
         public void RegisterComponent(IComponent component)
@@ -55,9 +55,9 @@ namespace REstate.IoC.Ninject
         void IRegistrar.Register<TBinding, TImplementation>(string name)
         {
             if (name is null)
-                 Kernel.Rebind<TBinding>().To<TImplementation>();
+                 Kernel.Rebind<TBinding>().To<TImplementation>().InSingletonScope();
             else
-                Kernel.Bind<TBinding>().To<TImplementation>().Named(name);
+                Kernel.Bind<TBinding>().To<TImplementation>().InSingletonScope().Named(name);
         }
     }
 }

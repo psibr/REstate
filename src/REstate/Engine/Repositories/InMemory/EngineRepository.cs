@@ -13,9 +13,9 @@ namespace REstate.Engine.Repositories.InMemory
         : ISchematicRepository<TState, TInput>
         , IMachineRepository<TState, TInput>
     {
-        private static IDictionary<string, Schematic<TState, TInput>> Schematics { get; } =
+        private IDictionary<string, Schematic<TState, TInput>> Schematics { get; } =
             new Dictionary<string, Schematic<TState, TInput>>();
-        private static IDictionary<string, (MachineStatus<TState, TInput> MachineStatus, Metadata Metadata)> Machines { get; } =
+        private IDictionary<string, (MachineStatus<TState, TInput> MachineStatus, Metadata Metadata)> Machines { get; } =
             new Dictionary<string, (MachineStatus<TState, TInput>, Metadata)>();
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace REstate.Engine.Repositories.InMemory
             CancellationToken cancellationToken = default)
         {
             if (schematic == null) throw new ArgumentNullException(nameof(schematic));
-            if(schematic.SchematicName == null) throw new ArgumentException("Schematic must have a name to be stored.", nameof(schematic));
+            if (schematic.SchematicName == null) throw new ArgumentException("Schematic must have a name to be stored.", nameof(schematic));
 
             Schematics.Add(schematic.SchematicName, schematic);
 

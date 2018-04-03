@@ -149,7 +149,7 @@ namespace REstate.Engine
             string machineId,
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default)
-            => CreateMachineAsync(schematic.Clone(), metadata, cancellationToken);
+            => CreateMachineAsync(schematic.Clone(), machineId, metadata, cancellationToken);
 
         public Task<IStateMachine<TState, TInput>> CreateMachineAsync(
             string schematicName,
