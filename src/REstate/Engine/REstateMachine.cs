@@ -85,8 +85,7 @@ namespace REstate.Engine
 
                     if (!schematicState.Transitions.TryGetValue(input, out var transition))
                     {
-                        throw new InvalidOperationException(
-                            $"No transition defined for status: '{currentStatus.State}' using input: '{input}'");
+                        throw new TransitionNotDefinedException<TState, TInput>(currentStatus, input);
                     }
 
                     if (transition.Procondition != null)
@@ -101,7 +100,9 @@ namespace REstate.Engine
                             connectorSettings: transition.Procondition.Settings,
                             cancellationToken: cancellationToken).ConfigureAwait(false))
                         {
-                            throw new InvalidOperationException("Precondition prevented transition.");
+                            throw new TransitionFailedPreconditionException<TState, TInput, TPayload>(currentStatus, 
+                                transition,
+                                new InputParameters<TInput, TPayload>(input, payload));
                         }
                     }
                     
