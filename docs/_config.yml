@@ -1,3 +1,5 @@
 theme: jekyll-theme-minimal
 logo: assets/images/logo.svg
 discord_image: assets/images/DiscordBlack.svg
+plugins:
+  - jekyll-sitemap
