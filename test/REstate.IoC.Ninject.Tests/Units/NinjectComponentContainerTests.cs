@@ -70,7 +70,7 @@ namespace REstate.IoC.Ninject.Tests.Units
     public class TestCartographer<TState, TInput>
         : ICartographer<TState, TInput>
     {
-        public string WriteMap(IEnumerable<IState<TState, TInput>> states)
+        public string WriteMap(ISchematic<TState, TInput> schematic)
         {
             return "";
         }

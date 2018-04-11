@@ -23,7 +23,7 @@ namespace REstate.Tests.Units
 
             // Assert
             Assert.NotNull(toString);
-            Assert.Equal(DotGraphCartographer<string, string>.Instance.WriteMap(schematic.States), toString);
+            Assert.Equal(DotGraphCartographer<string, string>.Instance.WriteMap(schematic), toString);
         }
     }
 }
