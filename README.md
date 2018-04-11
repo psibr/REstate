@@ -32,7 +32,7 @@ var schematic = REstateHost.Agent
     .WithState("Ready", state => state
         .WithTransitionFrom("Created", "log")
         .WithReentrance("log")
-        .WithOnEntry("log info", onEntry => onEntry
+        .WithAction("log info", onEntry => onEntry
             .DescribedAs("Logs the payload as a message.")
             .WithSetting(
                 key: "messageFormat", 
@@ -57,7 +57,7 @@ States:
   Transitions:
   - Input: log
     ResultantState: Ready
-  OnEntry:
+  Action:
     ConnectorKey:
       Identifier: log info
     Configuration:
