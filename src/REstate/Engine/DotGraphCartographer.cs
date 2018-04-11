@@ -12,18 +12,24 @@ namespace REstate.Engine
         : ICartographer<TState, TInput>
     {
         private static readonly Lazy<DotGraphCartographer<TState, TInput>> InstanceLazy = new Lazy<DotGraphCartographer<TState,TInput>>();
+     
+        /// <summary>
+        /// A static instance of this cartographer so that it can be used for .ToString functionality.
+        /// <para />
+        /// Perfer resolving <see cref="ICartographer{TState,TInput}"/> from Container when feasible.
+        /// </summary>
         public static DotGraphCartographer<TState, TInput> Instance => InstanceLazy.Value;
 
         /// <summary>
         /// Produces a DOT GraphViz graph.
         /// </summary>
         /// <returns>DOT GraphViz text.</returns>
-        public string WriteMap(IEnumerable<IState<TState, TInput>> states)
+        public string WriteMap(ISchematic<TState, TInput> schematic)
         {
             var lines = new List<string>();
             var actionLines = new List<string>();
 
-            foreach (var state in states)
+            foreach (var state in schematic.States.Values)
             {
                 var source = state.Value;
 

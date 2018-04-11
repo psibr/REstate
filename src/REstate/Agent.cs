@@ -21,6 +21,6 @@ namespace REstate
         public string GetStateMap<TState, TInput>(Schematic<TState, TInput> schematic) =>
             ((HostConfiguration)Configuration).Container
                 .Resolve<ICartographer<TState, TInput>>()
-                .WriteMap(schematic.States);
+                .WriteMap(schematic);
     }
 }
