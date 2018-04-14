@@ -6,6 +6,11 @@ namespace REstate
     public interface IAgent
     {
         IHostConfiguration Configuration { get; }
+
+        TStateEngine GetStateEngine<TState, TInput, TStateEngine>()
+            where TStateEngine : class, IStateEngine<TState, TInput>;
+
+        IStateEngine<TState, TInput> GetStateEngine<TState, TInput>();
     }
 
     internal class Agent 
@@ -22,5 +27,14 @@ namespace REstate
             ((HostConfiguration)Configuration).Container
                 .Resolve<ICartographer<TState, TInput>>()
                 .WriteMap(schematic);
+
+        public IStateEngine<TState, TInput> GetStateEngine<TState, TInput>() =>
+            ((HostConfiguration)Configuration).Container
+                .Resolve<IStateEngine<TState, TInput>>();
+
+        public TStateEngine GetStateEngine<TState, TInput, TStateEngine>()
+            where TStateEngine : class, IStateEngine<TState, TInput> =>
+            ((HostConfiguration)Configuration).Container
+                .Resolve<TStateEngine>();
     }
 }
