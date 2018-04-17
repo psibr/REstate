@@ -18,8 +18,14 @@
     <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Ninject" Version="3.3.4" />
+  <!-- Packages that are specific to .NET Standard 2.0 -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="Ninject" Version="[3.3.0,)" />
+  </ItemGroup>
+
+  <!-- Packages that are specific to .NET 4.5 -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <PackageReference Include="Ninject" Version="[3.2.0,)" />
   </ItemGroup>
 
   <ItemGroup>

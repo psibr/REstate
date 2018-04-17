@@ -36,6 +36,8 @@ namespace REstate.Remote
 
             if(_options.UseAsDefaultEngine)
                 registrar.Register(typeof(IStateEngine<,>), typeof(GrpcStateEngine<,>));
+
+            registrar.Register((contianer) => contianer.Resolve<IAgent>().AsRemote());
         }
     }
 }

@@ -34,11 +34,12 @@ namespace REstate.Schematics
                 c => c.Value,
                 c => (IState<TState, TInput>)c);
 
+        [Required]
         public State<TState, TInput>[] States { get; set; }
 
         /// <summary>Returns a string that represents the current object.</summary>
         /// <returns>A string that represents the current object.</returns>
         public override string ToString() => 
-            DotGraphCartographer<TState, TInput>.Instance.WriteMap(States);
+            DotGraphCartographer<TState, TInput>.Instance.WriteMap(this);
     }
 }
