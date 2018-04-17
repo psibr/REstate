@@ -4,7 +4,7 @@ title: Blog
 permalink: /blog/
 ---
 
-<div class="home">
+<div>
 	<h1 class="page-heading">All tags</h1>
 
 	<p class="post-meta" style="text-align: justify;">
@@ -12,4 +12,13 @@ permalink: /blog/
 	{% assign tags = site_tags | split:',' | sort %}
 	{% include tagcloud.html %}
 	</p>
+</div>
+<div>
+	<ul>
+    {% for post in site.posts %}
+		<li>
+			<a href="{{ post.url }}">{{ post.title }}</a> {{ post.date | date: "%B %d, %Y" }}
+		</li>
+	{% endfor %}
+	</ul>
 </div>
