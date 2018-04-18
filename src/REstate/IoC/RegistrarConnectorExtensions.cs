@@ -4,22 +4,70 @@ using System.Reflection;
 using REstate.Engine;
 using REstate.Engine.Connectors;
 using REstate.Engine.Connectors.Resolution;
-using REstate.Engine.EventListeners;
 
 namespace REstate.IoC
 {
-    public static class RegistrarExtensions
+    /// <summary>
+    /// Methods to simplify the complexity of registering <see cref="IConnector"/>s.
+    /// </summary>
+    public static class RegistrarConnectorExtensions
     {
-        public static IConnectorRegistration RegisterConnector<TConnector>(this IRegistrar registrar, string registrationName = null)
+        /// <summary>
+        /// Registers an <see cref="IAction{TState,TInput}"/> or <see cref="IPrecondition{TState,TInput}"/> 
+        /// using the AssemblyQualifiedName of the <see cref="Type"/> as the Identifier and resolvable by the 
+        /// same value in a <see cref="Schematics.ConnectorKey"/>.
+        /// </summary>
+        /// <typeparam name="TConnector">
+        /// The type of the connector, to use unbound generics, see the overload accepting a <see cref="Type"/> parameter.
+        /// </typeparam>
+        /// <param name="registrar"></param>
+        /// <param name="registrationName">
+        /// The name to register the type as in the <see cref="IComponentContainer"/>.
+        /// <para />
+        /// Multiple registrations with the same name will override each other.
+        /// <para />
+        /// The default is the assembly qualified name of the type.
+        /// </param>
+        /// <remarks>
+        /// Connectors are available for use by a <see cref="IStateMachine{TState,TInput}"/> when a <see cref="Schematics.ConnectorKey"/> 
+        /// in it's <see cref="Schematics.ISchematic{TState,TInput}"/> matches a <see cref="IConnectorConfiguration"/>,
+        /// that has been registered in a <see cref="IConnectorRegistration"/>'s <c>WithConfiguration</c> method.
+        /// </remarks>
+        public static IConnectorRegistration RegisterConnector<TConnector>(
+            this IRegistrar registrar,
+            string registrationName = null)
             where TConnector : IConnector
         {
             return registrar.RegisterConnector(typeof(TConnector), registrationName);
         }
 
+        /// <summary>
+        /// Registers an <see cref="IAction{TState,TInput}"/> or <see cref="IPrecondition{TState,TInput}"/>.
+        /// </summary>
+        /// <typeparam name="TConnector">
+        /// The type of the connector, to use unbound generics, see the overload accepting a <see cref="Type"/> parameter.
+        /// </typeparam>
+        /// <param name="registrar"></param>
+        /// <param name="configuration">
+        /// A configuration object that includes an Identifier 
+        /// that can be resolved using a <see cref="Schematics.ConnectorKey"/> in a <see cref="Schematics.ISchematic{TState,TInput}"/>.
+        /// </param>
+        /// <param name="registrationName">
+        /// The name to register the type as in the <see cref="IComponentContainer"/>.
+        /// <para />
+        /// Multiple registrations with the same name will override each other.
+        /// <para />
+        /// The default is the assembly qualified name of the type.
+        /// </param>
+        /// <remarks>
+        /// Connectors are available for use by a <see cref="IStateMachine{TState,TInput}"/> when a <see cref="Schematics.ConnectorKey"/> 
+        /// in it's <see cref="Schematics.ISchematic{TState,TInput}"/> matches a <see cref="IConnectorConfiguration"/>,
+        /// that has been registered in a <see cref="IConnectorRegistration"/>'s <c>WithConfiguration</c> method.
+        /// </remarks>
         public static void RegisterConnector<TConnector>(
             this IRegistrar registrar,
-            IConnectorConfiguration configuration, 
-            string registrationName = null) 
+            IConnectorConfiguration configuration,
+            string registrationName = null)
             where TConnector : IConnector
         {
             registrar.RegisterConnector<TConnector>(registrationName).WithConfiguration(configuration);
@@ -49,7 +97,10 @@ namespace REstate.IoC
         /// in it's <see cref="Schematics.ISchematic{TState,TInput}"/> matches a <see cref="IConnectorConfiguration"/>,
         /// that has been registered in a <see cref="IConnectorRegistration"/>'s <c>WithConfiguration</c> method.
         /// </remarks>
-        public static IConnectorRegistration RegisterConnector(this IRegistrar registrar, Type connectorType, string registrationName = null)
+        public static IConnectorRegistration RegisterConnector(
+            this IRegistrar registrar,
+            Type connectorType,
+            string registrationName = null)
         {
             var registrationKey = registrationName ?? connectorType.FullName;
 
@@ -83,6 +134,7 @@ namespace REstate.IoC
             return new ConnectorRegistration(registrar, connectorType);
         }
 
+        /// <inheritdoc cref="IConnectorRegistration"/>
         private class ConnectorRegistration
             : IConnectorRegistration
         {
@@ -99,16 +151,16 @@ namespace REstate.IoC
             public IConnectorRegistration WithConfiguration<TConfiguration>(TConfiguration configuration)
                 where TConfiguration : class, IConnectorConfiguration
             {
+                // Register the configuration object, using it's identifier as the key.
                 _registrar.Register(configuration, configuration.Identifier);
-                _registrar.Register(new ConnectorTypeToIdentifierMapping(ConnectorType, configuration.Identifier), configuration.Identifier);
+
+                // Create a mapping (used by resolvers to choose which connector to load), 
+                // and register it under the same Identifer.
+                _registrar.Register(new ConnectorTypeToIdentifierMapping(ConnectorType, configuration.Identifier),
+                    configuration.Identifier);
 
                 return this;
             }
-        }
-
-        public static void RegisterEventListener(this IRegistrar registrar, IEventListener listener)
-        {
-            registrar.Register(listener, listener.GetType().FullName);
         }
     }
 }
