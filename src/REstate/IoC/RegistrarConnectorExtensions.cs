@@ -30,7 +30,7 @@ namespace REstate.IoC
         /// </param>
         /// <remarks>
         /// Connectors are available for use by a <see cref="IStateMachine{TState,TInput}"/> when a <see cref="Schematics.ConnectorKey"/> 
-        /// in it's <see cref="Schematics.ISchematic{TState,TInput}"/> matches a <see cref="IConnectorConfiguration"/>,
+        /// in its <see cref="Schematics.ISchematic{TState,TInput}"/> matches a <see cref="IConnectorConfiguration"/>,
         /// that has been registered in a <see cref="IConnectorRegistration"/>'s <c>WithConfiguration</c> method.
         /// </remarks>
         public static IConnectorRegistration RegisterConnector<TConnector>(
@@ -61,7 +61,7 @@ namespace REstate.IoC
         /// </param>
         /// <remarks>
         /// Connectors are available for use by a <see cref="IStateMachine{TState,TInput}"/> when a <see cref="Schematics.ConnectorKey"/> 
-        /// in it's <see cref="Schematics.ISchematic{TState,TInput}"/> matches a <see cref="IConnectorConfiguration"/>,
+        /// in its <see cref="Schematics.ISchematic{TState,TInput}"/> matches a <see cref="IConnectorConfiguration"/>,
         /// that has been registered in a <see cref="IConnectorRegistration"/>'s <c>WithConfiguration</c> method.
         /// </remarks>
         public static void RegisterConnector<TConnector>(
@@ -94,7 +94,7 @@ namespace REstate.IoC
         /// </returns>
         /// <remarks>
         /// Connectors are available for use by a <see cref="IStateMachine{TState,TInput}"/> when a <see cref="Schematics.ConnectorKey"/> 
-        /// in it's <see cref="Schematics.ISchematic{TState,TInput}"/> matches a <see cref="IConnectorConfiguration"/>,
+        /// in its <see cref="Schematics.ISchematic{TState,TInput}"/> matches a <see cref="IConnectorConfiguration"/>,
         /// that has been registered in a <see cref="IConnectorRegistration"/>'s <c>WithConfiguration</c> method.
         /// </remarks>
         public static IConnectorRegistration RegisterConnector(
@@ -151,7 +151,7 @@ namespace REstate.IoC
             public IConnectorRegistration WithConfiguration<TConfiguration>(TConfiguration configuration)
                 where TConfiguration : class, IConnectorConfiguration
             {
-                // Register the configuration object, using it's identifier as the key.
+                // Register the configuration object, using its identifier as the key.
                 _registrar.Register(configuration, configuration.Identifier);
 
                 // Create a mapping (used by resolvers to choose which connector to load), 
