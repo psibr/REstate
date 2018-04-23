@@ -24,7 +24,7 @@ namespace REstate.IoC
         /// <param name="registrationName">
         /// The name to register the type as in the <see cref="IComponentContainer"/>.
         /// <para />
-        /// Multiple registrations with the same name will override each other.
+        /// Registration names should ALWAYS be unique, overriding is NOT supported for safety/clarity reasons.
         /// <para />
         /// The default is the assembly qualified name of the type.
         /// </param>
@@ -55,7 +55,7 @@ namespace REstate.IoC
         /// <param name="registrationName">
         /// The name to register the type as in the <see cref="IComponentContainer"/>.
         /// <para />
-        /// Multiple registrations with the same name will override each other.
+        /// Registration names should ALWAYS be unique, overriding is NOT supported for safety/clarity reasons.
         /// <para />
         /// The default is the assembly qualified name of the type.
         /// </param>
@@ -84,7 +84,7 @@ namespace REstate.IoC
         /// <param name="registrationName">
         /// The name to register the type as in the <see cref="IComponentContainer"/>.
         /// <para />
-        /// Multiple registrations with the same name will override each other.
+        /// Registration names should ALWAYS be unique, overriding is NOT supported for safety/clarity reasons.
         /// <para />
         /// The default is the assembly qualified name of the type.
         /// </param>
