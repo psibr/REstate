@@ -2,36 +2,22 @@
 
 namespace REstate.Engine
 {
-    public class TransitionNotDefinedException<TState, TInput>
+    public class TransitionNotDefinedException
         : Exception
     {
-        public Status<TState> CurrentStatus { get; }
-        public TInput Input { get; }
+        public TransitionNotDefinedException(string state, string input)
+            : base($"No transition defined for state {state} with input {input}.")
+        {
+        }
 
-        public TransitionNotDefinedException(Status<TState> currentStatus,
-            TInput input)
-            : this(currentStatus,
-                  input,
-                $"No transition defined for status: '{currentStatus.State}' using input: '{input}'")
-        { }
+        public TransitionNotDefinedException(string message)
+            : base(message)
+        {
+        }
 
-        public TransitionNotDefinedException(Status<TState> currentStatus,
-            TInput input,
-            string message)
-            : this(currentStatus,
-                  input,
-                  message,
-                  default)
-        { }
-
-        public TransitionNotDefinedException(Status<TState> currentStatus,
-            TInput input,
-            string message,
-            Exception innerException)
+        public TransitionNotDefinedException(string message, Exception innerException)
             : base(message, innerException)
         {
-            CurrentStatus = currentStatus;
-            Input = input;
         }
     }
 }

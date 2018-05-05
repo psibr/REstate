@@ -85,24 +85,22 @@ namespace REstate.Engine
 
                     if (!schematicState.Transitions.TryGetValue(input, out var transition))
                     {
-                        throw new TransitionNotDefinedException<TState, TInput>(currentStatus, input);
+                        throw new TransitionNotDefinedException(currentStatus.State.ToString(), input.ToString());
                     }
 
-                    if (transition.Procondition != null)
+                    if (transition.Precondition != null)
                     {
-                        var precondition = _connectorResolver.ResolvePrecondition(transition.Procondition.ConnectorKey);
+                        var precondition = _connectorResolver.ResolvePrecondition(transition.Precondition.ConnectorKey);
 
                         if (!await precondition.ValidateAsync(
                             schematic: Schematic,
                             machine: this,
                             status: currentStatus,
                             inputParameters: new InputParameters<TInput, TPayload>(input, payload),
-                            connectorSettings: transition.Procondition.Settings,
+                            connectorSettings: transition.Precondition.Settings,
                             cancellationToken: cancellationToken).ConfigureAwait(false))
                         {
-                            throw new TransitionFailedPreconditionException<TState, TInput, TPayload>(currentStatus, 
-                                transition,
-                                new InputParameters<TInput, TPayload>(input, payload));
+                            throw new TransitionFailedPreconditionException(currentStatus.State.ToString(), input.ToString(), transition.ResultantState.ToString());
                         }
                     }
                     
@@ -209,7 +207,7 @@ namespace REstate.Engine
             return false;
         }
 
-        protected async Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default)
+        public async Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default)
         {
             Status<TState> currentStatus;
 
@@ -264,6 +262,10 @@ namespace REstate.Engine
             public Task<ISchematic<TState, TInput>> GetSchematicAsync(
                 CancellationToken cancellationToken = default)
                 => Machine.GetSchematicAsync(cancellationToken);
+
+            public Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default) 
+                => Machine.GetCurrentStateAsync(cancellationToken);
+            
 
             public async Task<Status<TState>> SendAsync<TPayload>(
                 TInput input, 

@@ -40,7 +40,7 @@ namespace REstate.Schematics
             {
                 Input = transition.Input,
                 ResultantState = transition.ResultantState,
-                Precondition = transition.Procondition?.Clone()
+                Precondition = transition.Precondition?.Clone()
             };
 
         public static Precondition Clone(this IPrecondition precondition) =>

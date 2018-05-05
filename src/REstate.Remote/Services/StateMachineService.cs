@@ -18,6 +18,7 @@ namespace REstate.Remote.Services
     using MethodKey = ValueTuple<string, Type, Type, Type>;
 
     // non generic delegates for generic method calls
+    using GetCurrentStateAsyncDelegate = Func<string, CancellationToken, Task<GetCurrentStateResponse>>;
     using SendAsyncDelegate = Func<string, object, long?, CancellationToken, Task<SendResponse>>;
     using SendWithPayloadAsyncDelegate = Func<string, object, object, long?, CancellationToken, Task<SendResponse>>;
     using StoreSchematicAsyncDelegate = Func<object, CancellationToken, Task<StoreSchematicResponse>>;
@@ -61,6 +62,39 @@ namespace REstate.Remote.Services
         {
             DelegateCache = delegateCache;
             LocalAdapter = localAdapter;
+        }
+
+        public async UnaryResult<GetCurrentStateResponse> GetCurrentStateAsync(GetCurrentStateRequest request)
+        {
+            (var stateType, var inputType) = GetGenericTupleFromHeaders();
+
+            var getCurrentStateAsync = (GetCurrentStateAsyncDelegate)DelegateCache
+                .GetOrAdd(
+                    key: (nameof(GetCurrentStateAsync), stateType, inputType, NoPayloadType),
+                    valueFactory: tuple =>
+                    {
+                        var machineIdParameter = Expression.Parameter(typeof(string), "machineId");
+                        var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
+
+                        return Expression.Lambda<GetCurrentStateAsyncDelegate>(
+                                Expression.Call(
+                                    instance: Expression.Constant(LocalAdapter, LocalAdapter.GetType()),
+                                    methodName: nameof(GetCurrentStateAsync),
+                                    typeArguments: new[] { stateType, inputType },
+                                    arguments: new Expression[]
+                                    {
+                                        machineIdParameter,
+                                        cancellationTokenParameter
+                                    }),
+                                false,
+                                machineIdParameter,
+                                cancellationTokenParameter)
+                            .Compile();
+                    });
+
+            return await getCurrentStateAsync(
+                request.MachineId,
+                GetCallCancellationToken());
         }
 
         public async UnaryResult<SendResponse> SendAsync(SendRequest request)

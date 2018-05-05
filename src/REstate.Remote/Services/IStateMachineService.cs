@@ -19,6 +19,8 @@ namespace REstate.Remote.Services
 
         UnaryResult<GetSchematicResponse> GetSchematicAsync(GetSchematicRequest request);
 
+        UnaryResult<GetCurrentStateResponse> GetCurrentStateAsync(GetCurrentStateRequest request);
+
         UnaryResult<Nil> DeleteMachineAsync(DeleteMachineRequest request);
 
         UnaryResult<CreateMachineResponse> CreateMachineFromStoreAsync(CreateMachineFromStoreRequest request);

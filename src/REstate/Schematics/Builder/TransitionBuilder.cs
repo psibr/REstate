@@ -19,7 +19,7 @@ namespace REstate.Schematics.Builder
 
         public TInput Input { get; }
         public TState ResultantState { get; }
-        public IPrecondition Procondition { get; private set; }
+        public IPrecondition Precondition { get; private set; }
 
         public ITransitionBuilder<TState, TInput> WithPrecondition(
             ConnectorKey connectorKey,
@@ -29,7 +29,7 @@ namespace REstate.Schematics.Builder
 
             guard?.Invoke(preconditionBuilder);
 
-            Procondition = preconditionBuilder;
+            Precondition = preconditionBuilder;
 
             return this;
         }

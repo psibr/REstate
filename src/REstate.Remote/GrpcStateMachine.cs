@@ -85,8 +85,14 @@ namespace REstate.Remote
             }
             catch (RpcException exception)
             {
+                if (exception.Status.StatusCode == StatusCode.OutOfRange)
+                    throw new TransitionNotDefinedException(exception.Status.Detail, exception);
+                if (exception.Status.StatusCode == StatusCode.FailedPrecondition)
+                    throw new TransitionFailedPreconditionException(exception.Status.Detail, exception);
                 if (exception.Status.StatusCode == StatusCode.AlreadyExists)
                     throw new StateConflictException(exception.Status.Detail, exception);
+                if (exception.Status.StatusCode == StatusCode.NotFound)
+                    throw new MachineDoesNotExistException(MachineId, exception.Status.Detail, exception);
 
                 throw;
             }
@@ -120,6 +126,8 @@ namespace REstate.Remote
             {
                 if (exception.Status.StatusCode == StatusCode.AlreadyExists)
                     throw new StateConflictException(exception.Status.Detail, exception);
+                if (exception.Status.StatusCode == StatusCode.NotFound)
+                    throw new MachineDoesNotExistException(MachineId, exception.Status.Detail, exception);
 
                 throw;
             }
@@ -149,8 +157,14 @@ namespace REstate.Remote
             }
             catch (RpcException exception)
             {
+                if (exception.Status.StatusCode == StatusCode.OutOfRange)
+                    throw new TransitionNotDefinedException(exception.Status.Detail, exception);
+                if (exception.Status.StatusCode == StatusCode.FailedPrecondition)
+                    throw new TransitionFailedPreconditionException(exception.Status.Detail, exception);
                 if (exception.Status.StatusCode == StatusCode.AlreadyExists)
                     throw new StateConflictException(exception.Status.Detail, exception);
+                if (exception.Status.StatusCode == StatusCode.NotFound)
+                    throw new MachineDoesNotExistException(MachineId, exception.Status.Detail, exception);
 
                 throw;
             }
@@ -183,6 +197,38 @@ namespace REstate.Remote
             {
                 if (exception.Status.StatusCode == StatusCode.AlreadyExists)
                     throw new StateConflictException(exception.Status.Detail, exception);
+                if (exception.Status.StatusCode == StatusCode.NotFound)
+                    throw new MachineDoesNotExistException(MachineId, exception.Status.Detail, exception);
+
+                throw;
+            }
+
+            return new Status<TState>(
+                MachineId,
+                MessagePackSerializer.Deserialize<TState>(
+                    response.StateBytes,
+                    ContractlessStandardResolver.Instance),
+                response.UpdatedTime,
+                response.CommitNumber);
+        }
+
+        public async Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default)
+        {
+            GetCurrentStateResponse response;
+
+            try
+            {
+                response = await _stateMachineService
+                    .WithCancellationToken(cancellationToken)
+                    .GetCurrentStateAsync(new GetCurrentStateRequest
+                    {
+                        MachineId = MachineId
+                    });
+            }
+            catch (RpcException exception)
+            {
+                if (exception.Status.StatusCode == StatusCode.NotFound)
+                    throw new MachineDoesNotExistException(MachineId, exception.Status.Detail, exception);
 
                 throw;
             }

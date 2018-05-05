@@ -16,6 +16,9 @@ namespace REstate.Engine
         Task<IReadOnlyDictionary<string, string>> GetMetadataAsync(
             CancellationToken cancellationToken = default);
 
+        Task<Status<TState>> GetCurrentStateAsync(
+            CancellationToken cancellationToken = default);
+
         Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
