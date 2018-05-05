@@ -39,7 +39,7 @@ namespace REstate.Engine
                             source.ToString(),
                             transition.Input.ToString(),
                             transition.ResultantState.ToString(),
-                            transition.Procondition?.Description)));
+                            transition.Precondition?.Description)));
 
                 if (state.Action != null)
                 {
