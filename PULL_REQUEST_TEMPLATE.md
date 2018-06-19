@@ -13,7 +13,6 @@ Requirements
 
 <!-- Explain why this functionality should be in REstate as opposed to a community package 
 ### Why Should This Be In Core?
-
 -->
 
 <!-- What benefits will be realized by the code change? 
@@ -24,6 +23,6 @@ Requirements
 ### Possible Drawbacks
  -->
 
-### Applicable Issues
+### Related Issues
 
 <!-- Enter any applicable issue numbers here -->
