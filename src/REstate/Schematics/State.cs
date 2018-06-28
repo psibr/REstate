@@ -16,10 +16,18 @@ namespace REstate.Schematics
         public Action<TInput> Action { get; set; }
         public Precondition Precondition { get; set; }
 
-        IDictionary<TInput, ITransition<TState, TInput>> IState<TState, TInput>.Transitions =>
-            Transitions.ToDictionary(
-                t => t.Input,
-                t => (ITransition<TState, TInput>)t);
+        IDictionary<TInput, ITransition<TState, TInput>> IState<TState, TInput>.Transitions
+        {
+            get
+            {
+                if (Transitions == null)
+                    return new Dictionary<TInput, ITransition<TState, TInput>>(0);
+
+                return Transitions.ToDictionary(
+                    t => t.Input,
+                    t => (ITransition<TState, TInput>)t);
+            }
+        }
 
         IAction<TInput> IState<TState, TInput>.Action => Action;
 
