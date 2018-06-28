@@ -90,7 +90,8 @@ namespace REstate.Engine
 
                     if (transition.Precondition != null)
                     {
-                        var precondition = _connectorResolver.ResolvePrecondition(transition.Precondition.ConnectorKey);
+                        var precondition = _connectorResolver
+                            .ResolvePrecondition(transition.Precondition.ConnectorKey);
 
                         if (!await precondition.ValidateAsync(
                             schematic: Schematic,
@@ -100,10 +101,27 @@ namespace REstate.Engine
                             connectorSettings: transition.Precondition.Settings,
                             cancellationToken: cancellationToken).ConfigureAwait(false))
                         {
+                            throw new InvalidOperationException("Precondition prevented transition.");
+                        }
+                    }
+
+                    if (schematicState.Precondition != null)
+                    {
+                        var precondition = _connectorResolver
+                            .ResolvePrecondition(schematicState.Precondition.ConnectorKey);
+
+                        if (!await precondition.ValidateAsync(
+                            schematic: Schematic,
+                            machine: this,
+                            status: currentStatus,
+                            inputParameters: new InputParameters<TInput, TPayload>(input, payload),
+                            connectorSettings: schematicState.Precondition.Settings,
+                            cancellationToken: cancellationToken).ConfigureAwait(false))
+                        {
                             throw new TransitionFailedPreconditionException(currentStatus.State.ToString(), input.ToString(), transition.ResultantState.ToString());
                         }
                     }
-                    
+
                     try
                     {
                         currentStatus = await dataContext.Machines.SetMachineStateAsync(

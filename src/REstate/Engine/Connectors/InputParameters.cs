@@ -1,6 +1,7 @@
 namespace REstate.Engine.Connectors
 {
-    public class InputParameters<TInput, TPayload>
+    public class InputParameters<TInput, TPayload> 
+        : IInputParameters<TInput, TPayload>
     {
         public InputParameters(TInput input, TPayload payload)
         {

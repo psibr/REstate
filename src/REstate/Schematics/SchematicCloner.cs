@@ -21,7 +21,8 @@ namespace REstate.Schematics
                 ParentState = state.ParentState,
                 Description = state.Description,
                 Transitions = state.Transitions.Values.Select(Clone).ToArray(),
-                Action = state.Action?.Clone()
+                Action = state.Action?.Clone(),
+                Precondition = state.Precondition?.Clone()
             };
 
         public static Action<TInput> Clone<TInput>(this IAction<TInput> action) => 
