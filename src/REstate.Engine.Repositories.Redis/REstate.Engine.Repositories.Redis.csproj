@@ -5,7 +5,7 @@
     <Version>2.1.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Ovan Crone</Authors>
-    <Company>Psibernetic Solutions</Company>
+    <Company>PSIBR LLC</Company>
     <Product>REstate</Product>
     <Description>Redis storage provider for REstate's engine.</Description>
     <Copyright>Ovan Crone 2016</Copyright>

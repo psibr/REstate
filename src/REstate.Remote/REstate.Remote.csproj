@@ -10,9 +10,9 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>REstate</PackageTags>
     <Authors>Ovan Crone</Authors>
-    <Company>Psibernetic Solutions</Company>
+    <Company>PSIBR LLC</Company>
     <Product>REstate</Product>
-    <Description>Provides gRPC/HTTP2 interconnect support for REstate's engine in either client or server configuration.</Description>
+    <Description>Provides gRPC HTTP/2 interconnect support for REstate's engine in either client or server configuration.</Description>
     <Copyright>Ovan Crone 2016</Copyright>
     <PackageLicenseUrl>https://github.com/psibr/REstate/blob/v6.0/LICENSE</PackageLicenseUrl>
     <LangVersion>latest</LangVersion>

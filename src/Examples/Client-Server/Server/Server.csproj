@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\REstate.Engine.Connectors.AzureServiceBus\REstate.Engine.Connectors.AzureServiceBus.csproj" />
     <ProjectReference Include="..\..\..\REstate.Engine.Repositories.Redis\REstate.Engine.Repositories.Redis.csproj" />
     <ProjectReference Include="..\..\..\REstate.Remote\REstate.Remote.csproj" />
     <ProjectReference Include="..\..\..\REstate\REstate.csproj" />

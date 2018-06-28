@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Authors>Ovan Crone</Authors>
-    <Company>Psibernetic Solutions</Company>
+    <Company>PSIBR LLC</Company>
     <Description>Ninject adapter for REstate.</Description>
     <Copyright>Ovan Crone 2016</Copyright>
     <PackageLicenseUrl>https://github.com/psibr/REstate/blob/v6.0/LICENSE</PackageLicenseUrl>

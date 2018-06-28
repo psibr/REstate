@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Authors>Ovan Crone</Authors>
-    <Company>Psibernetic Solutions</Company>
+    <Company>PSIBR LLC</Company>
     <Description>Create state-machines for complicated flows, in a serializable and pluggable system.</Description>
     <Copyright>Ovan Crone 2016</Copyright>
     <PackageLicenseUrl>https://github.com/psibr/REstate/blob/master/LICENSE</PackageLicenseUrl>
