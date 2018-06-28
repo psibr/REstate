@@ -14,6 +14,8 @@ namespace REstate
         void RegisterComponent(IComponent component);
 
         void RegisterComponent<TComponent>() where TComponent : IComponent, new();
+
+        void Register(Action<IRegistrar> registrationAction);
     }
 
     internal class HostConfiguration
@@ -35,6 +37,11 @@ namespace REstate
             where TComponent : IComponent, new()
         {
             Container.RegisterComponent(new TComponent());
+        }
+
+        public void Register(Action<IRegistrar> registrationAction)
+        {
+            registrationAction(Container);
         }
 
         /// <summary>
