@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Authors>Ovan Crone</Authors>
     <Company>Psibernetic Solutions</Company>
     <Description>Concurrency primitives such as Semaphores and mutexes build on REstate Machines.</Description>
