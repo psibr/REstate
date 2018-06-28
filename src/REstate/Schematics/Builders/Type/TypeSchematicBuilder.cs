@@ -2,13 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace REstate.Schematics.TypedBuilder
+namespace REstate.Schematics.Builders
 {
-    class TypedSchematicBuilder<TInput> : ITypedSchematicBuilder<TInput>
+    internal class TypeSchematicBuilder<TInput>
+        : ITypeSchematicBuilder<TInput>
     {
-        public ICreationContext<TInput> StartsIn<TState>()
+        public TypeSchematicBuilder(IAgent agent)
         {
-            var ctx = new CreationContext<TInput>();
+            Agent = agent;
+        }
+
+        internal IAgent Agent { get; }
+
+        public ICreationContext<TInput> StartsIn<TState>()
+            where TState : IStateDefinition, new()
+        {
+            var ctx = new CreationContext<TInput>(Agent);
 
             ctx.StartsIn<TState>();
 
@@ -16,7 +25,8 @@ namespace REstate.Schematics.TypedBuilder
         }
     }
 
-    class CreationContext<TInput> : ICreationContext<TInput>
+    internal class CreationContext<TInput>
+        : ICreationContext<TInput>
     {
         internal Dictionary<Type, State<TypeState, TInput>> states = new Dictionary<Type, State<TypeState, TInput>>();
 
@@ -24,7 +34,15 @@ namespace REstate.Schematics.TypedBuilder
 
         internal Schematic<TypeState, TInput> schematic = new Schematic<TypeState, TInput>();
 
+        internal IAgent Agent { get; }
+
+        public CreationContext(IAgent agent)
+        {
+            Agent = agent;
+        }
+
         internal void StartsIn<TState>()
+            where TState : IStateDefinition, new()
         {
             TypeState typeState = typeof(TState);
 
@@ -33,9 +51,19 @@ namespace REstate.Schematics.TypedBuilder
                 throw new ArgumentException($"State {typeState.AssemblyQualifiedName} does not accept valid input for this machine.");
             }
 
+            Agent.Configuration.RegisterComponent<TState>();
+
             var state = new State<TypeState, TInput>
             {
-                Value = typeof(TState)
+                Value = typeof(TState),
+                Action = new Action<TInput>
+                {
+                    ConnectorKey = typeof(TState).FullName
+                },
+                Precondition = new Precondition
+                {
+                    ConnectorKey = typeof(TState).FullName
+                }
             };
 
             states.Add(typeof(TState), state);
@@ -53,6 +81,7 @@ namespace REstate.Schematics.TypedBuilder
         }
 
         public IForStateContext<TState, TInput> For<TState>()
+            where TState : IStateDefinition, new()
         {
             if (!states.TryGetValue(typeof(TState), out var state))
             {
@@ -63,9 +92,19 @@ namespace REstate.Schematics.TypedBuilder
                     throw new ArgumentException($"State {typeState.AssemblyQualifiedName} does not accept valid input for this machine.");
                 }
 
+                Agent.Configuration.RegisterComponent<TState>();
+
                 state = new State<TypeState, TInput>
                 {
-                    Value = typeof(TState)
+                    Value = typeof(TState),
+                    Action = new Action<TInput>
+                    {
+                        ConnectorKey = typeof(TState).FullName
+                    },
+                    Precondition = new Precondition
+                    {
+                        ConnectorKey = typeof(TState).FullName
+                    }
                 };
 
                 states.Add(typeof(TState), state);
@@ -75,7 +114,9 @@ namespace REstate.Schematics.TypedBuilder
         }
     }
 
-    class ForStateContext<TState, TInput> : IForStateContext<TState, TInput>
+    internal class ForStateContext<TState, TInput>
+        : IForStateContext<TState, TInput>
+        where TState : IStateDefinition, new()
     {
         internal CreationContext<TInput> creationContext;
 
@@ -87,7 +128,9 @@ namespace REstate.Schematics.TypedBuilder
         }
     }
 
-    class OnContext<TState, TInput> : IOnContext<TState, TInput>
+    internal class OnContext<TState, TInput>
+        : IOnContext<TState, TInput>
+        where TState : IStateDefinition, new()
     {
         internal CreationContext<TInput> creationContext;
 
@@ -95,9 +138,10 @@ namespace REstate.Schematics.TypedBuilder
 
         internal TInput input;
 
-        public ICreationContext<TInput> MoveTo<TNewState>()
+        public ICreationContext<TInput> MoveTo<TNewState>() 
+            where TNewState : IStateDefinition, new()
         {
-            if (!creationContext.states.TryGetValue(typeof(TNewState), out var state))
+            if (!creationContext.states.TryGetValue(typeof(TNewState), out var newState))
             {
                 TypeState newTypeState = typeof(TNewState);
 
@@ -106,29 +150,40 @@ namespace REstate.Schematics.TypedBuilder
                     throw new ArgumentException($"State {newTypeState.AssemblyQualifiedName} does not accept valid input for this machine.");
                 }
 
-                state = new State<TypeState, TInput>
+                creationContext.Agent.Configuration.RegisterComponent<TNewState>();
+
+                newState = new State<TypeState, TInput>
                 {
-                    Value = typeof(TNewState)
+                    Value = typeof(TNewState),
+                    Action = new Action<TInput>
+                    {
+                        ConnectorKey = typeof(TNewState).FullName
+                    },
+                    Precondition = new Precondition
+                    {
+                        ConnectorKey = typeof(TNewState).FullName
+                    }
                 };
 
-                creationContext.states.Add(typeof(TNewState), state);
+                creationContext.states.Add(typeof(TNewState), newState);
             }
 
-            state.Transitions = state.Transitions.Concat(new[] 
-            {
-                new Transition<TypeState, TInput>
+            state.Transitions = (state.Transitions ?? new Transition<TypeState, TInput>[0])
+                .Concat(new[]
                 {
-                    Input = input,
-                    ResultantState = typeof(TNewState)
-                }
-            }).ToArray();
+                    new Transition<TypeState, TInput>
+                    {
+                        Input = input,
+                        ResultantState = typeof(TNewState)
+                    }
+                }).ToArray();
 
             return creationContext;
         }
 
-        public IWhenContext<TState, TInput> When<TPreconddition>()
+        public IWhenContext<TState, TInput> When<TPrecondition>()
         {
-            TypeState preconditionTypeState = typeof(TPreconddition);
+            TypeState preconditionTypeState = typeof(TPrecondition);
 
             if (!preconditionTypeState.IsPrecondition())
             {
@@ -142,13 +197,15 @@ namespace REstate.Schematics.TypedBuilder
                 input = input,
                 precondition = new Precondition
                 {
-                    ConnectorKey = preconditionTypeState.AssemblyQualifiedName
+                    ConnectorKey = typeof(TPrecondition).FullName
                 }
             };
         }
     }
 
-    class WhenContext<TState, TInput> : IWhenContext<TState, TInput>
+    internal class WhenContext<TState, TInput>
+        : IWhenContext<TState, TInput>
+        where TState : IStateDefinition, new()
     {
         internal CreationContext<TInput> creationContext;
 
@@ -159,8 +216,9 @@ namespace REstate.Schematics.TypedBuilder
         internal Precondition precondition;
 
         public ICreationContext<TInput> MoveTo<TNewState>()
+            where TNewState : IStateDefinition, new()
         {
-            if (!creationContext.states.TryGetValue(typeof(TNewState), out var state))
+            if (!creationContext.states.TryGetValue(typeof(TNewState), out var newState))
             {
                 TypeState newTypeState = typeof(TNewState);
 
@@ -169,16 +227,26 @@ namespace REstate.Schematics.TypedBuilder
                     throw new ArgumentException($"State {newTypeState.AssemblyQualifiedName} does not accept valid input for this machine.");
                 }
 
-                state = new State<TypeState, TInput>
+                creationContext.Agent.Configuration.RegisterComponent<TNewState>();
+
+                newState = new State<TypeState, TInput>
                 {
-                    Value = typeof(TNewState)
+                    Value = typeof(TNewState),
+                    Action = new Action<TInput>
+                    {
+                        ConnectorKey = typeof(TNewState).FullName
+                    },
+                    Precondition = new Precondition
+                    {
+                        ConnectorKey = typeof(TNewState).FullName
+                    }
                 };
 
-                creationContext.states.Add(typeof(TNewState), state);
+                creationContext.states.Add(typeof(TNewState), newState);
             }
 
-            state.Transitions = state.Transitions.Concat(
-                new[]
+            state.Transitions = (state.Transitions ?? new Transition<TypeState, TInput>[0])
+                .Concat(new[]
                 {
                     new Transition<TypeState, TInput>
                     {

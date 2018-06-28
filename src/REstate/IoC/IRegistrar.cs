@@ -10,7 +10,7 @@ namespace REstate.IoC
     /// <param name="container">The DI container where dependencies can be resolved.</param>
     /// <returns>An instance of the requested type.</returns>
     public delegate T FactoryMethod<out T>(IComponentContainer container) 
-        where T : class ;
+        where T : class;
 
     /// <summary>
     /// Registration functionality for IoC.

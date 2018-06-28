@@ -89,22 +89,40 @@ namespace REstate.Engine
                             $"No transition defined for status: '{currentStatus.State}' using input: '{input}'");
                     }
 
-                    if (transition.Procondition != null)
+                    if (transition.Precondition != null)
                     {
-                        var precondition = _connectorResolver.ResolvePrecondition(transition.Procondition.ConnectorKey);
+                        var precondition = _connectorResolver
+                            .ResolvePrecondition(transition.Precondition.ConnectorKey);
 
                         if (!await precondition.ValidateAsync(
                             schematic: Schematic,
                             machine: this,
                             status: currentStatus,
                             inputParameters: new InputParameters<TInput, TPayload>(input, payload),
-                            connectorSettings: transition.Procondition.Settings,
+                            connectorSettings: transition.Precondition.Settings,
                             cancellationToken: cancellationToken).ConfigureAwait(false))
                         {
                             throw new InvalidOperationException("Precondition prevented transition.");
                         }
                     }
-                    
+
+                    if (schematicState.Precondition != null)
+                    {
+                        var precondition = _connectorResolver
+                            .ResolvePrecondition(schematicState.Precondition.ConnectorKey);
+
+                        if (!await precondition.ValidateAsync(
+                            schematic: Schematic,
+                            machine: this,
+                            status: currentStatus,
+                            inputParameters: new InputParameters<TInput, TPayload>(input, payload),
+                            connectorSettings: schematicState.Precondition.Settings,
+                            cancellationToken: cancellationToken).ConfigureAwait(false))
+                        {
+                            throw new InvalidOperationException("Precondition prevented transition.");
+                        }
+                    }
+
                     try
                     {
                         currentStatus = await dataContext.Machines.SetMachineStateAsync(

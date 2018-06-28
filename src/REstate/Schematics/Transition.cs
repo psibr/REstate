@@ -13,6 +13,6 @@ namespace REstate.Schematics
 
         public Precondition Precondition { get; set; }
 
-        IPrecondition ITransition<TState, TInput>.Procondition => Precondition;
+        IPrecondition ITransition<TState, TInput>.Precondition => Precondition;
     }
 }

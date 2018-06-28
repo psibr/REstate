@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Linq.Expressions;
-using REstate.Engine;
 using REstate.IoC;
 using REstate.IoC.BoDi;
-using REstate.Logging;
-using REstate.Schematics;
 
 namespace REstate
 {
@@ -38,7 +34,6 @@ namespace REstate
             TryUseContainer(this, new BoDiComponentContainer(new ObjectContainer()));
 
             return new Agent(HostConfiguration);
-
         }
 
         Lazy<IAgent> IHasAgentLazy.AgentLazy { get; set; }
