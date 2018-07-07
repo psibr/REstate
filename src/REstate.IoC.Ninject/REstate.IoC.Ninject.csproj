@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Authors>Ovan Crone</Authors>
-    <Company>Psibernetic Solutions</Company>
+    <Company>PSIBR LLC</Company>
     <Description>Ninject adapter for REstate.</Description>
     <Copyright>Ovan Crone 2016</Copyright>
     <PackageLicenseUrl>https://github.com/psibr/REstate/blob/v6.0/LICENSE</PackageLicenseUrl>

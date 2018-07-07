@@ -17,7 +17,7 @@ namespace REstate.Concurrency.Primitives
 
         public async Task<IDisposable> EnterAsync(CancellationToken cancellationToken = default)
         {
-            var criticalSection =  new CriticalSection(SemaphoreMachine, cancellationToken);
+            var criticalSection = new CriticalSection(SemaphoreMachine, cancellationToken);
 
             await criticalSection.EnterAsync();
 
