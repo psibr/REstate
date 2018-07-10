@@ -1,6 +1,5 @@
 ﻿using REstate.Engine;
 using REstate.Engine.Connectors;
-using REstate.IoC;
 using REstate.Schematics;
 using System;
 using System.Collections.Generic;
@@ -28,20 +27,19 @@ namespace REstate
     {
     }
 
-    public interface IStateDefinition 
-        : IComponent
+    public interface IStateDefinition
     {
     }
 
-    public abstract class StateDefinition<TInput>
-        : IStateDefinition<TInput>
+    public class StateDefinition : IStateDefinition
     {
-        public virtual void Register(IRegistrar registrar)
-        {
-            registrar.RegisterConnector(GetType())
-                .WithConfiguration(new ConnectorConfiguration(GetType().FullName));
-        }
 
+    }
+
+    public abstract class StateDefinition<TInput>
+        : StateDefinition
+        , IStateDefinition<TInput>
+    {
         public virtual Task InvokeAsync<TPayload>(
             ISchematic<TypeState, TInput> schematic,
             IStateMachine<TypeState, TInput> machine,
