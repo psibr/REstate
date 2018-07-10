@@ -27,8 +27,8 @@ namespace REstate.Remote
             _stateMachineService = stateMachineService
                 .WithHeaders(new Metadata
                 {
-                    { "Status-Type", typeof(TState).AssemblyQualifiedName },
-                    { "Input-Type", typeof(TInput).AssemblyQualifiedName }
+                    { "Status-Type", TypeState.FromType(typeof(TState)).FullName },
+                    { "Input-Type", TypeState.FromType(typeof(TInput)).FullName }
                 });
 
             _listeners = listeners.ToList();

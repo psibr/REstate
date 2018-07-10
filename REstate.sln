@@ -55,6 +55,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.IoC.Ninject.Tests",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.IoC.Ninject", "src\REstate.IoC.Ninject\REstate.IoC.Ninject.csproj", "{D2075ADE-A17E-4ED1-941F-41C319AE85B2}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Connectors.Remote", "src\REstate.Connectors.Remote\REstate.Connectors.Remote.csproj", "{6EE5167E-059A-4581-BE34-29CD6FBACEA6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -117,6 +119,10 @@ Global
 		{D2075ADE-A17E-4ED1-941F-41C319AE85B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2075ADE-A17E-4ED1-941F-41C319AE85B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2075ADE-A17E-4ED1-941F-41C319AE85B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EE5167E-059A-4581-BE34-29CD6FBACEA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EE5167E-059A-4581-BE34-29CD6FBACEA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EE5167E-059A-4581-BE34-29CD6FBACEA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EE5167E-059A-4581-BE34-29CD6FBACEA6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -138,6 +144,7 @@ Global
 		{EE8E30B1-F341-4924-8B26-401DA680D213} = {85E6545C-48B6-40EB-A6C7-827E16255AA6}
 		{57415F9E-37A5-439E-ADF2-8CE40AB5B267} = {88B4B54C-3DA1-40D2-8DCB-0181DD035955}
 		{D2075ADE-A17E-4ED1-941F-41C319AE85B2} = {90E8D167-048D-467B-81D5-1007247226A3}
+		{6EE5167E-059A-4581-BE34-29CD6FBACEA6} = {90E8D167-048D-467B-81D5-1007247226A3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0C35B35D-40C1-4521-BF0A-C5A6D7BFF4CD}

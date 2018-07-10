@@ -112,7 +112,7 @@ namespace REstate.Schematics.Builder
         public IStateBuilder<TState, TInput> WithAction<TConnector>(
             System.Action<IActionBuilder<TInput>> action = null)
             where TConnector : IAction 
-            => WithAction(typeof(TConnector).AssemblyQualifiedName, action);
+            => WithAction(TypeState.FromType(typeof(TConnector)).StateName, action);
 
         public IStateBuilder<TState, TInput> WithPrecondition(ConnectorKey connectorKey, System.Action<IPreconditionBuilder> precondition = null)
         {
@@ -133,6 +133,6 @@ namespace REstate.Schematics.Builder
         public IStateBuilder<TState, TInput> WithPrecondition<TConnector>(
             System.Action<IPreconditionBuilder> precondition = null) 
             where TConnector : Engine.Connectors.IPrecondition
-            => WithPrecondition(typeof(TConnector).AssemblyQualifiedName, precondition);
+            => WithPrecondition(TypeState.FromType(typeof(TConnector)).StateName, precondition);
     }
 }

@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Reflection;
 using REstate.Engine.Connectors;
 
 namespace REstate
 {
-
     /// <summary>
     /// Represents a Type as used as a State in a Schematic or Machine.
     /// </summary>
     public class TypeState : IEquatable<TypeState>
     {
-        private string _connectorKey;
+        private string _stateName;
         private string _assemblyQualifiedName;
         private string _fullName;
         private Lazy<Type> _underlyingType;
@@ -19,7 +19,7 @@ namespace REstate
         public string AssemblyQualifiedName
         {
             get => _assemblyQualifiedName;
-            set
+            private set
             {
                 _assemblyQualifiedName = value;
 
@@ -42,23 +42,32 @@ namespace REstate
 
                 return _fullName;
             }
-            set => _fullName = value;
+            private set => _fullName = value;
         }
 
-        public string ConnectorKey
+        public string Name { get; private set; }
+
+        public string StateName
         {
             get
             {
-                // If no ConnectorKey use FullName.
-                if (_connectorKey == null)
+                if (_stateName == null)
                 {
-                    return FullName;
+                    // Check for a ConnectorKeyAttribute on the type
+                    var stateNameAttribute = _underlyingType.Value.GetCustomAttribute<StateNameAttribute>();
+
+                    if (!string.IsNullOrWhiteSpace(stateNameAttribute?.Name))
+                        _stateName = stateNameAttribute.Name;
+                    else // If no StateName use name.
+                        _stateName = Name;
                 }
 
-                return _connectorKey;
+                return _stateName;
             }
-            set => _connectorKey = value;
+            private set => _stateName = value;
         }
+
+        public string ConnectorKey => FullName;
 
         public bool AcceptsInputOf<TInput>() =>
             (!IsActionable()
@@ -83,7 +92,7 @@ namespace REstate
 
         public bool Equals(TypeState other)
         {
-            return FullName.Equals(other.FullName, StringComparison.Ordinal);
+            return StateName.Equals(other.StateName, StringComparison.Ordinal);
         }
 
         private string GetFullNameFrom(string assemblyQualifiedName)
@@ -103,7 +112,7 @@ namespace REstate
 
         public override int GetHashCode()
         {
-            return FullName.GetHashCode();
+            return StateName.GetHashCode();
         }
 
         public static implicit operator TypeState(Type type)
@@ -114,7 +123,7 @@ namespace REstate
 
         public override string ToString()
         {
-            return AssemblyQualifiedName;
+            return StateName;
         }
 
         public static TypeState FromType(Type type)
@@ -122,7 +131,8 @@ namespace REstate
             return new TypeState
             {
                 AssemblyQualifiedName = type.AssemblyQualifiedName,
-                FullName = $"{type.FullName}, {type.Assembly.GetName().Name}"
+                FullName = $"{type.FullName}, {type.Assembly.GetName().Name}",
+                Name = type.Name
             };
         }
     }
