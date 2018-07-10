@@ -21,6 +21,7 @@ namespace REstate.Tests.Units
                 .StartsIn<Unprovisioned>()
                 .For<Unprovisioned>().On("Reserve").MoveTo<Provisioning>()
                 .For<Provisioning>().On("Provisioned").MoveTo<Provisioned>()
+                .For<Provisioned>().On("Reserve").MoveTo<Provisioned>()
                 .For<Provisioned>().On("Release").When<IfSomeCase>().MoveTo<Provisioned>()
                 .For<Provisioned>().On("Deprovision").MoveTo<Deprovisioning>()
                 .For<Deprovisioning>().On("Deprovisioned").MoveTo<Deprovisioned>()
