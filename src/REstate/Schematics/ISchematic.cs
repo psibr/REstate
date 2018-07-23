@@ -9,4 +9,9 @@ namespace REstate.Schematics
         int StateConflictRetryCount { get; }
         IReadOnlyDictionary<TState, IState<TState, TInput>> States { get; }
     }
+
+    public interface ITypeSchematic : ISchematic<TypeState, TypeState>
+    {
+
+    }
 }
