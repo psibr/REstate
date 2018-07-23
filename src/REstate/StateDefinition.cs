@@ -8,23 +8,25 @@ using System.Threading.Tasks;
 
 namespace REstate
 {
-    public interface IStateDefinition<TInput, in TPayload>
-        : IStateDefinition<TInput>
+    public interface IStateDefinition<in TPayload>
+        : IAction<TypeState, TypeState>
+        , IPrecondition<TypeState, TypeState>
     {
         Task InvokeAsync(
-            ISchematic<TypeState, TInput> schematic,
-            IStateMachine<TypeState, TInput> machine,
+            ISchematic<TypeState, TypeState> schematic,
+            IStateMachine<TypeState, TypeState> machine,
             Status<TypeState> status,
-            IInputParameters<TInput, TPayload> inputParameters,
+            IInputParameters<TypeState, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default);
-    }
 
-    public interface IStateDefinition<TInput>
-        : IStateDefinition
-        , IAction<TypeState, TInput>
-        , IPrecondition<TypeState, TInput>
-    {
+        Task<bool> ValidateAsync(
+            ISchematic<TypeState, TypeState> schematic,
+            IStateMachine<TypeState, TypeState> machine,
+            Status<TypeState> status,
+            IInputParameters<TypeState, TPayload> inputParameters,
+            IReadOnlyDictionary<string, string> connectorSettings,
+            CancellationToken cancellationToken = default);
     }
 
     public interface IStateDefinition
@@ -36,42 +38,15 @@ namespace REstate
 
     }
 
-    public abstract class StateDefinition<TInput>
+    public abstract class StateDefinition<TPayload>
         : StateDefinition
-        , IStateDefinition<TInput>
+        , IStateDefinition<TPayload>
     {
-        public virtual Task InvokeAsync<TPayload>(
-            ISchematic<TypeState, TInput> schematic,
-            IStateMachine<TypeState, TInput> machine,
+        public Task InvokeAsync<TRuntimePayload>(
+            ISchematic<TypeState, TypeState> schematic,
+            IStateMachine<TypeState, TypeState> machine,
             Status<TypeState> status,
-            InputParameters<TInput, TPayload> inputParameters,
-            IReadOnlyDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.CompletedTask;
-        }
-
-        public virtual Task<bool> ValidateAsync<TPayload>(
-            ISchematic<TypeState, TInput> schematic,
-            IStateMachine<TypeState, TInput> machine,
-            Status<TypeState> status,
-            InputParameters<TInput, TPayload> inputParameters,
-            IReadOnlyDictionary<string, string> connectorSettings,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(true);
-        }
-    }
-
-    public abstract class StateDefinition<TInput, TPayload>
-        : StateDefinition<TInput>
-        , IStateDefinition<TInput, TPayload>
-    {
-        public override Task InvokeAsync<TRuntimePayload>(
-            ISchematic<TypeState, TInput> schematic,
-            IStateMachine<TypeState, TInput> machine,
-            Status<TypeState> status,
-            InputParameters<TInput, TRuntimePayload> inputParameters,
+            InputParameters<TypeState, TRuntimePayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default)
         {
@@ -82,31 +57,53 @@ namespace REstate
                 schematic,
                 machine,
                 status,
-                new InputParameters<TInput, TPayload>(inputParameters.Input, payload),
+                (IInputParameters<TypeState, TPayload>)new InputParameters<TypeState, TPayload>(inputParameters.Input, payload),
                 connectorSettings,
                 cancellationToken);
         }
 
         public virtual Task InvokeAsync(
-            ISchematic<TypeState, TInput> schematic,
-            IStateMachine<TypeState, TInput> machine,
+            ISchematic<TypeState, TypeState> schematic,
+            IStateMachine<TypeState, TypeState> machine,
             Status<TypeState> status,
-            IInputParameters<TInput, TPayload> inputParameters,
+            IInputParameters<TypeState, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }
 
-        public override Task<bool> ValidateAsync<TRuntimePayload>(
-            ISchematic<TypeState, TInput> schematic,
-            IStateMachine<TypeState, TInput> machine,
+        public virtual Task<bool> ValidateAsync(
+            ISchematic<TypeState, TypeState> schematic,
+            IStateMachine<TypeState, TypeState> machine,
             Status<TypeState> status,
-            InputParameters<TInput, TRuntimePayload> inputParameters,
+            IInputParameters<TypeState, TPayload> inputParameters,
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(inputParameters.Payload is TPayload);
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> ValidateAsync<TRuntimePayload>(
+            ISchematic<TypeState, TypeState> schematic,
+            IStateMachine<TypeState, TypeState> machine,
+            Status<TypeState> status,
+            InputParameters<TypeState, TRuntimePayload> inputParameters,
+            IReadOnlyDictionary<string, string> connectorSettings,
+            CancellationToken cancellationToken = default)
+        {
+            if(inputParameters.Payload is TPayload payload)
+            {
+                return ValidateAsync(
+                    schematic,
+                    machine,
+                    status,
+                    (IInputParameters<TypeState, TPayload>)new InputParameters<TypeState, TPayload>(inputParameters.Input, payload),
+                    connectorSettings,
+                    cancellationToken);
+            }
+
+            return Task.FromResult(false);
         }
     }
 }

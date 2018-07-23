@@ -104,18 +104,18 @@ namespace REstate.Engine
                             throw new InvalidOperationException("Precondition prevented transition.");
                         }
                     }
-
-                    if (schematicState.Precondition != null)
+                    var resultantState = Schematic.States[transition.ResultantState];
+                    if (resultantState.Precondition != null)
                     {
                         var precondition = _connectorResolver
-                            .ResolvePrecondition(schematicState.Precondition.ConnectorKey);
+                            .ResolvePrecondition(resultantState.Precondition.ConnectorKey);
 
                         if (!await precondition.ValidateAsync(
                             schematic: Schematic,
                             machine: this,
                             status: currentStatus,
                             inputParameters: new InputParameters<TInput, TPayload>(input, payload),
-                            connectorSettings: schematicState.Precondition.Settings,
+                            connectorSettings: resultantState.Precondition.Settings,
                             cancellationToken: cancellationToken).ConfigureAwait(false))
                         {
                             throw new TransitionFailedPreconditionException(currentStatus.State.ToString(), input.ToString(), transition.ResultantState.ToString());

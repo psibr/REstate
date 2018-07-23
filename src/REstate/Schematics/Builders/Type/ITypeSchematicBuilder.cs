@@ -1,35 +1,35 @@
 ﻿namespace REstate.Schematics.Builders
 {
-    public interface ITypeSchematicBuilder<TInput>
+    public interface ITypeSchematicBuilder
     {
 
-        ICreationContext<TInput> StartsIn<TState>() where TState : IStateDefinition;
+        ICreationContext StartsIn<TState>() where TState : IStateDefinition;
     }
 
-    public interface ICreationContext<TInput>
+    public interface ICreationContext
     {
-        IForStateContext<TState, TInput> For<TState>() where TState : IStateDefinition;
+        IForStateContext<TState> For<TState>() where TState : IStateDefinition;
 
-        Schematic<TypeState, TInput> BuildAs(string schematicName);
+        Schematic<TypeState, TypeState> BuildAs(string schematicName);
     }
 
-    public interface IForStateContext<TState, TInput>
+    public interface IForStateContext<TState>
          where TState : IStateDefinition
     {
-        IOnContext<TState, TInput> On(TInput input);
+        IOnContext<TState, TRequest> On<TRequest>();
     }
 
-    public interface IOnContext<TState, TInput>
+    public interface IOnContext<TState, TRequest>
          where TState : IStateDefinition
     {
-        ICreationContext<TInput> MoveTo<TNewState>() where TNewState : IStateDefinition;
+        ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition;
 
-        IWhenContext<TState, TInput> When<TPrecondition>();
+        IWhenContext<TState> When<TPrecondition>();
     }
 
-    public interface IWhenContext<TState, TInput>
+    public interface IWhenContext<TState>
          where TState : IStateDefinition
     {
-        ICreationContext<TInput> MoveTo<TNewState>() where TNewState : IStateDefinition;
+        ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition;
     }
 }

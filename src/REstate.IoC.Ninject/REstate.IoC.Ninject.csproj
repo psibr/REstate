@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <!-- Packages that are specific to .NET 4.5 -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
     <PackageReference Include="Ninject" Version="[3.2.0,)" />
   </ItemGroup>
 
