@@ -1,11 +1,9 @@
-﻿using REstate.Engine;
-using REstate.Engine.Connectors;
-using REstate.Schematics;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using REstate.Natural;
 
 namespace REstate.Tests.Units
 {
@@ -17,29 +15,28 @@ namespace REstate.Tests.Units
         }
 
         public class Provisioning
-            : StateDefinition<ReserveRequest>
+            : StateDefinition<ReserveSignal>
         {
             public override async Task InvokeAsync(
-                ISchematic<TypeState, TypeState> schematic,
-                IStateMachine<TypeState, TypeState> machine,
-                Status<TypeState> status,
-                IInputParameters<TypeState, ReserveRequest> inputParameters,
-                IReadOnlyDictionary<string, string> connectorSettings,
+                ConnectorContext context,
+                ReserveSignal reserveSignal,
                 CancellationToken cancellationToken = default)
             {
-                await machine.SendAsync(typeof(ProvisioningCompleteRequest), new ProvisioningCompleteRequest { Reservation = inputParameters.Payload });
+                await context.Machine.SignalAsync(
+                    new ProvisioningCompleteSignal
+                    {
+                        Reservation = reserveSignal
+                    },
+                    cancellationToken);
             }
         }
 
         public class Provisioned
-            : StateDefinition<IProvisionedRequest>
+            : StateDefinition<IProvisionedSignal>
         {
             public override Task InvokeAsync(
-                ISchematic<TypeState, TypeState> schematic,
-                IStateMachine<TypeState, TypeState> machine,
-                Status<TypeState> status,
-                IInputParameters<TypeState, IProvisionedRequest> inputParameters,
-                IReadOnlyDictionary<string, string> connectorSettings,
+                ConnectorContext context,
+                IProvisionedSignal provisionedSignal,
                 CancellationToken cancellationToken = default)
             {
                 return Task.CompletedTask;
@@ -47,7 +44,7 @@ namespace REstate.Tests.Units
         }
 
         public class Deprovisioning
-            : StateDefinition<DeprovisionRequest>
+            : StateDefinition<DeprovisionSignal>
         {
             public Deprovisioning(IAgent agent)
             {
@@ -57,14 +54,13 @@ namespace REstate.Tests.Units
             public IAgent Agent { get; }
 
             public override async Task InvokeAsync(
-                ISchematic<TypeState, TypeState> schematic,
-                IStateMachine<TypeState, TypeState> machine,
-                Status<TypeState> status,
-                IInputParameters<TypeState, DeprovisionRequest> inputParameters,
-                IReadOnlyDictionary<string, string> connectorSettings,
+                ConnectorContext context,
+                DeprovisionSignal deprovisionSignal,
                 CancellationToken cancellationToken = default)
             {
-                await Agent.GetStateEngine<TypeState, TypeState>().DeleteMachineAsync(machine.MachineId);
+                await Agent
+                    .GetStateEngine<TypeState, TypeState>()
+                    .DeleteMachineAsync(context.Machine.MachineId, cancellationToken);
             }
         }
     }

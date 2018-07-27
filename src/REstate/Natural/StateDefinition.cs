@@ -6,26 +6,21 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace REstate
+namespace REstate.Natural
 {
-    public interface IStateDefinition<in TPayload>
+
+    public interface IStateDefinition<in TSignal>
         : IAction<TypeState, TypeState>
         , IPrecondition<TypeState, TypeState>
     {
         Task InvokeAsync(
-            ISchematic<TypeState, TypeState> schematic,
-            IStateMachine<TypeState, TypeState> machine,
-            Status<TypeState> status,
-            IInputParameters<TypeState, TPayload> inputParameters,
-            IReadOnlyDictionary<string, string> connectorSettings,
+            ConnectorContext context,
+            TSignal signal,
             CancellationToken cancellationToken = default);
 
         Task<bool> ValidateAsync(
-            ISchematic<TypeState, TypeState> schematic,
-            IStateMachine<TypeState, TypeState> machine,
-            Status<TypeState> status,
-            IInputParameters<TypeState, TPayload> inputParameters,
-            IReadOnlyDictionary<string, string> connectorSettings,
+            ConnectorContext context,
+            TSignal signal,
             CancellationToken cancellationToken = default);
     }
 
@@ -38,9 +33,9 @@ namespace REstate
 
     }
 
-    public abstract class StateDefinition<TPayload>
+    public abstract class StateDefinition<TSignal>
         : StateDefinition
-        , IStateDefinition<TPayload>
+        , IStateDefinition<TSignal>
     {
         public Task InvokeAsync<TRuntimePayload>(
             ISchematic<TypeState, TypeState> schematic,
@@ -50,35 +45,35 @@ namespace REstate
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default)
         {
-            if (!(inputParameters.Payload is TPayload payload))
-                throw new ArgumentException("Payload type mismatch", nameof(inputParameters.Payload));
+            if (!(inputParameters.Payload is TSignal signal))
+                throw new ArgumentException(
+                    $"Type mismatch for converting to signal: " +
+                    $"{typeof(TSignal)} from {typeof(TRuntimePayload)}",
+                    nameof(inputParameters.Payload));
 
             return InvokeAsync(
-                schematic,
-                machine,
-                status,
-                (IInputParameters<TypeState, TPayload>)new InputParameters<TypeState, TPayload>(inputParameters.Input, payload),
-                connectorSettings,
+                new ConnectorContext
+                {
+                    Schematic = new NaturalSchematic(schematic),
+                    Machine = new NaturalStateMachine(machine),
+                    Status = status,
+                    Settings = connectorSettings
+                },
+                signal,
                 cancellationToken);
         }
 
         public virtual Task InvokeAsync(
-            ISchematic<TypeState, TypeState> schematic,
-            IStateMachine<TypeState, TypeState> machine,
-            Status<TypeState> status,
-            IInputParameters<TypeState, TPayload> inputParameters,
-            IReadOnlyDictionary<string, string> connectorSettings,
+            ConnectorContext context,
+            TSignal signal,
             CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }
 
         public virtual Task<bool> ValidateAsync(
-            ISchematic<TypeState, TypeState> schematic,
-            IStateMachine<TypeState, TypeState> machine,
-            Status<TypeState> status,
-            IInputParameters<TypeState, TPayload> inputParameters,
-            IReadOnlyDictionary<string, string> connectorSettings,
+            ConnectorContext context,
+            TSignal signal,
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult(true);
@@ -92,14 +87,17 @@ namespace REstate
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default)
         {
-            if(inputParameters.Payload is TPayload payload)
+            if(inputParameters.Payload is TSignal signal)
             {
                 return ValidateAsync(
-                    schematic,
-                    machine,
-                    status,
-                    (IInputParameters<TypeState, TPayload>)new InputParameters<TypeState, TPayload>(inputParameters.Input, payload),
-                    connectorSettings,
+                    new ConnectorContext
+                    {
+                        Schematic = new NaturalSchematic(schematic),
+                        Machine = new NaturalStateMachine(machine),
+                        Status = status,
+                        Settings = connectorSettings
+                    },
+                    signal,
                     cancellationToken);
             }
 
