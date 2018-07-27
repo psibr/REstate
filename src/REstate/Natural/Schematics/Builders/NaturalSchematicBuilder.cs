@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using REstate.Engine.Connectors;
 using REstate.IoC;
+using REstate.Schematics;
 
-namespace REstate.Schematics.Builders
+namespace REstate.Natural.Schematics.Builders
 {
-    internal class TypeSchematicBuilder
-        : ITypeSchematicBuilder
+    internal class NaturalSchematicBuilder
+        : INaturalSchematicBuilder
     {
-        public TypeSchematicBuilder(IAgent agent)
+        public NaturalSchematicBuilder(IAgent agent)
         {
             Agent = agent;
         }
@@ -65,7 +66,7 @@ namespace REstate.Schematics.Builders
                         .WithConfiguration(new ConnectorConfiguration(typeState.ConnectorKey)));
 
                 if (typeState.IsActionable())
-                    state.Action = new Action<TypeState>
+                    state.Action = new REstate.Schematics.Action<TypeState>
                     {
                         ConnectorKey = typeState.ConnectorKey
                     };
@@ -82,13 +83,13 @@ namespace REstate.Schematics.Builders
             schematic.InitialState = typeState;
         }
 
-        public Schematic<TypeState, TypeState> BuildAs(string schematicName)
+        public INaturalSchematic BuildAs(string schematicName)
         {
             schematic.SchematicName = schematicName;
 
             schematic.States = states.Values.ToArray();
 
-            return schematic.Clone();
+            return new NaturalSchematic(schematic);
         }
 
         public IForStateContext<TState> For<TState>()
@@ -115,7 +116,7 @@ namespace REstate.Schematics.Builders
                             .WithConfiguration(new ConnectorConfiguration(typeState.ConnectorKey)));
 
                     if (typeState.IsActionable())
-                        state.Action = new Action<TypeState>
+                        state.Action = new REstate.Schematics.Action<TypeState>
                         {
                             ConnectorKey = typeState.ConnectorKey
                         };
@@ -182,7 +183,7 @@ namespace REstate.Schematics.Builders
                             .WithConfiguration(new ConnectorConfiguration(newTypeState.ConnectorKey)));
 
                     if (newTypeState.IsActionable())
-                        newState.Action = new Action<TypeState>
+                        newState.Action = new REstate.Schematics.Action<TypeState>
                         {
                             ConnectorKey = newTypeState.ConnectorKey
                         };
@@ -272,7 +273,7 @@ namespace REstate.Schematics.Builders
                             .WithConfiguration(new ConnectorConfiguration(newTypeState.ConnectorKey)));
 
                     if (newTypeState.IsActionable())
-                        newState.Action = new Action<TypeState>
+                        newState.Action = new REstate.Schematics.Action<TypeState>
                         {
                             ConnectorKey = newTypeState.ConnectorKey
                         };

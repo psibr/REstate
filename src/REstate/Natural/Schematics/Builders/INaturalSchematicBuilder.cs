@@ -1,6 +1,6 @@
-﻿namespace REstate.Schematics.Builders
+﻿namespace REstate.Natural.Schematics.Builders
 {
-    public interface ITypeSchematicBuilder
+    public interface INaturalSchematicBuilder
     {
 
         ICreationContext StartsIn<TState>() where TState : IStateDefinition;
@@ -10,7 +10,7 @@
     {
         IForStateContext<TState> For<TState>() where TState : IStateDefinition;
 
-        Schematic<TypeState, TypeState> BuildAs(string schematicName);
+        INaturalSchematic BuildAs(string schematicName);
     }
 
     public interface IForStateContext<TState>

@@ -11,7 +11,7 @@ namespace REstate.Tests.Units
 {
     public partial class ProvisioningSystem
     {
-        public class SomethingIsValid
+        public class NoReservationsRemain
             : IPrecondition<TypeState, TypeState>
         {
             public Task<bool> ValidateAsync<TPayload>(
