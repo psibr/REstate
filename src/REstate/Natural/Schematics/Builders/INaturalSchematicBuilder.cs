@@ -16,20 +16,22 @@
     public interface IForStateContext<TState>
          where TState : IStateDefinition
     {
-        IOnContext<TState, TRequest> On<TRequest>();
+        IOnContext<TState, TSignal> On<TSignal>();
     }
 
-    public interface IOnContext<TState, TRequest>
+    public interface IOnContext<TState, out TSignal>
          where TState : IStateDefinition
     {
-        ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition;
+        //ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition;
 
-        IWhenContext<TState> When<TPrecondition>();
+        ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition<TSignal>;
+
+        IWhenContext<TState, TSignal> When<TPrecondition>();
     }
 
-    public interface IWhenContext<TState>
+    public interface IWhenContext<TState, out TSignal>
          where TState : IStateDefinition
     {
-        ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition;
+        ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition<TSignal>;
     }
 }
