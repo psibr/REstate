@@ -25,7 +25,7 @@ namespace REstate.Natural
             CancellationToken cancellationToken = default);
     }
 
-    public interface IStateDefinition 
+    public interface IStateDefinition
     {
     }
 
@@ -45,11 +45,18 @@ namespace REstate.Natural
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default)
         {
-            if (!(inputParameters.Payload is TSignal signal))
-                throw new ArgumentException(
-                    $"Type mismatch for converting to signal: " +
-                    $"{typeof(TSignal)} from {typeof(TRuntimePayload)}",
-                    nameof(inputParameters.Payload));
+            TSignal signal = default;
+
+            if (inputParameters != null)
+            {
+                if (!(inputParameters.Payload is TSignal castedSignal))
+                    throw new ArgumentException(
+                        $"Type mismatch for converting to signal: " +
+                        $"{typeof(TSignal)} from {typeof(TRuntimePayload)}",
+                        nameof(inputParameters.Payload));
+
+                signal = castedSignal;
+            }
 
             return InvokeAsync(
                 new ConnectorContext
@@ -87,21 +94,29 @@ namespace REstate.Natural
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default)
         {
-            if(inputParameters.Payload is TSignal signal)
+            TSignal signal = default;
+
+            if (inputParameters != null)
             {
-                return ValidateAsync(
-                    new ConnectorContext
-                    {
-                        Schematic = new NaturalSchematic(schematic),
-                        Machine = new NaturalStateMachine(machine),
-                        Status = status,
-                        Settings = connectorSettings
-                    },
-                    signal,
-                    cancellationToken);
+                if (!(inputParameters.Payload is TSignal castedSignal))
+                    throw new ArgumentException(
+                        $"Type mismatch for converting to signal: " +
+                        $"{typeof(TSignal)} from {typeof(TRuntimePayload)}",
+                        nameof(inputParameters.Payload));
+
+                signal = castedSignal;
             }
 
-            return Task.FromResult(false);
+            return ValidateAsync(
+                new ConnectorContext
+                {
+                    Schematic = new NaturalSchematic(schematic),
+                    Machine = new NaturalStateMachine(machine),
+                    Status = status,
+                    Settings = connectorSettings
+                },
+                signal,
+                cancellationToken);
         }
-    }
+}
 }
