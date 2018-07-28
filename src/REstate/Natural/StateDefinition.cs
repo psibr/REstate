@@ -10,7 +10,8 @@ namespace REstate.Natural
 {
 
     public interface IStateDefinition<in TSignal>
-        : IAction<TypeState, TypeState>
+        : IStateDefinition
+        , IAction<TypeState, TypeState>
         , IPrecondition<TypeState, TypeState>
     {
         Task InvokeAsync(
@@ -24,18 +25,17 @@ namespace REstate.Natural
             CancellationToken cancellationToken = default);
     }
 
-    public interface IStateDefinition
+    public interface IStateDefinition 
     {
     }
 
-    public class StateDefinition : IStateDefinition
+    public class StateDefinition : StateDefinition<object>
     {
 
     }
 
     public abstract class StateDefinition<TSignal>
-        : StateDefinition
-        , IStateDefinition<TSignal>
+        : IStateDefinition<TSignal>
     {
         public Task InvokeAsync<TRuntimePayload>(
             ISchematic<TypeState, TypeState> schematic,

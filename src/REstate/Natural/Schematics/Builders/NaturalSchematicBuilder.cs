@@ -149,8 +149,8 @@ namespace REstate.Natural.Schematics.Builders
         }
     }
 
-    internal class OnContext<TState, TRequest>
-        : IOnContext<TState, TRequest>
+    internal class OnContext<TState, TSignal>
+        : IOnContext<TState, TSignal>
         where TState : IStateDefinition
     {
         internal CreationContext creationContext;
@@ -160,7 +160,7 @@ namespace REstate.Natural.Schematics.Builders
         internal TypeState input;
 
         public ICreationContext MoveTo<TNewState>()
-            where TNewState : IStateDefinition
+            where TNewState : IStateDefinition<TSignal>
         {
             TypeState newTypeState = typeof(TNewState);
 
@@ -211,7 +211,7 @@ namespace REstate.Natural.Schematics.Builders
             return creationContext;
         }
 
-        public IWhenContext<TState> When<TPrecondition>()
+        public IWhenContext<TState, TSignal> When<TPrecondition>()
         {
             TypeState preconditionTypeState = typeof(TPrecondition);
 
@@ -224,7 +224,7 @@ namespace REstate.Natural.Schematics.Builders
                 registrar.RegisterConnector(preconditionTypeState)
                     .WithConfiguration(new ConnectorConfiguration(preconditionTypeState.ConnectorKey)));
 
-            return new WhenContext<TState>
+            return new WhenContext<TState, TSignal>
             {
                 creationContext = creationContext,
                 state = state,
@@ -237,8 +237,8 @@ namespace REstate.Natural.Schematics.Builders
         }
     }
 
-    internal class WhenContext<TState>
-        : IWhenContext<TState>
+    internal class WhenContext<TState, TSignal>
+        : IWhenContext<TState, TSignal>
         where TState : IStateDefinition
     {
         internal CreationContext creationContext;
@@ -250,7 +250,7 @@ namespace REstate.Natural.Schematics.Builders
         internal Precondition precondition;
 
         public ICreationContext MoveTo<TNewState>()
-            where TNewState : IStateDefinition
+            where TNewState : IStateDefinition<TSignal>
         {
             TypeState newTypeState = typeof(TNewState);
 
