@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using REstate.Engine;
 using REstate.Natural;
-using REstate.Schematics;
+using REstate.Natural.Schematics.Builders;
 
 namespace REstate
 {
@@ -12,10 +11,10 @@ namespace REstate
         public static INaturalSchematic ConstructSchematic<TNaturalSchematicFactory>(this IAgent agent)
             where TNaturalSchematicFactory : INaturalSchematicFactory, new()
         {
-            return new TNaturalSchematicFactory().BuildSchematic(agent);
+            return new TNaturalSchematicFactory().BuildSchematic(new NaturalSchematicBuilder(agent));
         }
 
-        public static async Task<INaturalStateMachine> CreateNaturalMachineAsync<TNaturalSchematicFactory>(
+        public static async Task<INaturalStateMachine> CreateMachineAsync<TNaturalSchematicFactory>(
             this IAgent agent,
             string machineId,
             IDictionary<string, string> metadata = null,
@@ -34,7 +33,7 @@ namespace REstate
             return new NaturalStateMachine(machine);
         }
 
-        public static async Task<INaturalStateMachine> CreateNaturalMachineAsync<TNaturalSchematicFactory>(
+        public static async Task<INaturalStateMachine> CreateMachineAsync<TNaturalSchematicFactory>(
             this IAgent agent,
             IDictionary<string, string> metadata = null,
             CancellationToken cancellationToken = default)

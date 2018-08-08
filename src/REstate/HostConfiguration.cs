@@ -51,7 +51,7 @@ namespace REstate
         {
             Logger.DebugFormat("Registering default components into container of runtime type: {containerType}.", Container.GetType());
 
-            Container.Register(typeof(IConnectorResolver<,>), typeof(DefaultConnectorResolver<,>));
+            Container.Register(typeof(IConnectorResolver<,>), typeof(DefaultConnectorResolver<,>));            
 
             Container.Register(typeof(IStateMachineFactory<,>), typeof(REstateMachineFactory<,>));
 

@@ -1,11 +1,12 @@
-﻿using REstate.Engine;
+﻿using REstate;
+using REstate.Engine;
 using REstate.Engine.Connectors;
 using REstate.Schematics;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace REstate.Tests.Units
+namespace NaturalSchematicExamples
 {
     public partial class ProvisioningSystem
     {

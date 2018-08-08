@@ -101,7 +101,7 @@ namespace REstate.Remote.Services
         {
             (var stateType, var inputType) = GetGenericTupleFromHeaders();
 
-            var input = MessagePackSerializer.NonGeneric.Deserialize(
+            var input = LZ4MessagePackSerializer.NonGeneric.Deserialize(
                 inputType,
                 request.InputBytes,
                 ContractlessStandardResolver.Instance);
@@ -147,12 +147,12 @@ namespace REstate.Remote.Services
         {
             (var stateType, var inputType) = GetGenericTupleFromHeaders();
 
-            var input = MessagePackSerializer.NonGeneric.Deserialize(
+            var input = LZ4MessagePackSerializer.NonGeneric.Deserialize(
                 inputType,
                 request.InputBytes,
                 ContractlessStandardResolver.Instance);
 
-            var payload = MessagePackSerializer.Typeless.Deserialize(request.PayloadBytes);
+            var payload = LZ4MessagePackSerializer.Typeless.Deserialize(request.PayloadBytes);
 
             var payloadType = payload.GetType();
             var sendWithPayloadAsync = (SendWithPayloadAsyncDelegate)DelegateCache
@@ -204,7 +204,7 @@ namespace REstate.Remote.Services
 
             var schematicType = typeof(Schematic<,>).MakeGenericType(genericTypes);
 
-            var schematic = MessagePackSerializer.NonGeneric.Deserialize(
+            var schematic = LZ4MessagePackSerializer.NonGeneric.Deserialize(
                 schematicType,
                 request.SchematicBytes,
                 ContractlessStandardResolver.Instance);
@@ -363,7 +363,7 @@ namespace REstate.Remote.Services
 
             var schematicType = typeof(Schematic<,>).MakeGenericType(genericTypes);
 
-            var schematic = MessagePackSerializer.NonGeneric.Deserialize(
+            var schematic = LZ4MessagePackSerializer.NonGeneric.Deserialize(
                 schematicType,
                 request.SchematicBytes,
                 ContractlessStandardResolver.Instance);
@@ -453,7 +453,7 @@ namespace REstate.Remote.Services
 
             var schematicType = typeof(Schematic<,>).MakeGenericType(genericTypes);
 
-            var schematic = MessagePackSerializer.NonGeneric.Deserialize(
+            var schematic = LZ4MessagePackSerializer.NonGeneric.Deserialize(
                 schematicType,
                 request.SchematicBytes,
                 ContractlessStandardResolver.Instance);

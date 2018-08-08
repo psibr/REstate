@@ -102,7 +102,7 @@ namespace REstate.IoC
             Type connectorType,
             string registrationName = null)
         {
-            var registrationKey = registrationName ?? connectorType.FullName;
+            var registrationKey = registrationName ?? TypeState.FromType(connectorType).GetConnectorKey();
 
             var interfaces = connectorType
                 .GetInterfaces()

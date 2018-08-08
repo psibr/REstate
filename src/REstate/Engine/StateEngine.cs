@@ -17,7 +17,6 @@ namespace REstate.Engine
     {
         private readonly IStateMachineFactory<TState, TInput> _stateMachineFactory;
         private readonly IRepositoryContextFactory<TState, TInput> _repositoryContextFactory;
-        private readonly IConnectorResolver<TState, TInput> _connectorResolver;
         private readonly IReadOnlyCollection<IEventListener> _listeners;
 
         private delegate Task ActionDelegate(
@@ -36,9 +35,11 @@ namespace REstate.Engine
         {
             _stateMachineFactory = stateMachineFactory;
             _repositoryContextFactory = repositoryContextFactory;
-            _connectorResolver = connectorResolver;
+            ConnectorResolver = connectorResolver;
             _listeners = listeners.ToList();
         }
+
+        internal IConnectorResolver<TState, TInput> ConnectorResolver { get; }
 
         public async Task<ISchematic<TState, TInput>> GetSchematicAsync(
             string schematicName,
@@ -127,7 +128,7 @@ namespace REstate.Engine
 
             if (initialAction == null) return;
 
-            var connector = _connectorResolver.ResolveAction(initialAction.ConnectorKey);
+            var connector = ConnectorResolver.ResolveAction(initialAction.ConnectorKey);
 
             await connector.InvokeAsync<object>(
                 schematic,
@@ -329,7 +330,7 @@ namespace REstate.Engine
 
             try
             {
-                bulkActionBatch = _connectorResolver
+                bulkActionBatch = ConnectorResolver
                     .ResolveBulkAction(initialAction.ConnectorKey)
                     .CreateBatch();
 
@@ -338,7 +339,7 @@ namespace REstate.Engine
             catch (ConnectorResolutionException)
             {
                 // Bulk not supported, falling back to individual.
-                var action = _connectorResolver.ResolveAction(initialAction.ConnectorKey);
+                var action = ConnectorResolver.ResolveAction(initialAction.ConnectorKey);
 
                 stageOrExecute = action.InvokeAsync;
             }
