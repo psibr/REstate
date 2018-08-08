@@ -33,7 +33,7 @@ I want to be able to store and retrieve Schematics")]
             await Runner.WithContext(Context).RunScenarioAsync(
                 _ =>   Given_host_configuration_is_applied(),
                 _ => _.Given_a_Schematic_with_an_action_is_stored(uniqueId, state, connectorKey),
-                _ => _.When_a_Schematic_with_an_action_is_retrieved(uniqueId),
+                _ => _.When_a_Schematic_is_retrieved(uniqueId),
                 _ => _.Then_the_connector_key_should_have_a_valid_identifier(state, connectorKey));
         }
     }
