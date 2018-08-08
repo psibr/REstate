@@ -45,7 +45,7 @@ namespace REstate.Tests.Features.Context
         #endregion
 
         #region WHEN
-        public async Task When_a_Schematic_with_an_action_is_retrieved(string schematicName)
+        public async Task When_a_Schematic_is_retrieved(string schematicName)
         {
             CurrentSchematic = await CurrentHost.Agent()
                 .GetStateEngine<TState, TInput>()

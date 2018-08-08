@@ -8,10 +8,20 @@ namespace REstate
 {
     public static class NaturalFactoryAgentExtensions
     {
+        public static INaturalStateEngine GetNaturalStateEngine(this IAgent agent)
+        {
+            return new NaturalStateEngine(agent.GetStateEngine<TypeState, TypeState>());
+        }
+
         public static INaturalSchematic ConstructSchematic<TNaturalSchematicFactory>(this IAgent agent)
             where TNaturalSchematicFactory : INaturalSchematicFactory, new()
         {
             return new TNaturalSchematicFactory().BuildSchematic(new NaturalSchematicBuilder(agent));
+        }
+
+        public static INaturalSchematic ConstructSchematic(this IAgent agent, INaturalSchematicFactory naturalSchematicFactory)
+        {
+            return naturalSchematicFactory.BuildSchematic(new NaturalSchematicBuilder(agent));
         }
 
         public static async Task<INaturalStateMachine> CreateMachineAsync<TNaturalSchematicFactory>(
@@ -23,14 +33,15 @@ namespace REstate
         {
             var schematic = agent.ConstructSchematic<TNaturalSchematicFactory>();
 
-            var machine = await agent.GetStateEngine<TypeState, TypeState>()
+            var machine = await agent
+                .GetNaturalStateEngine()
                 .CreateMachineAsync(
                     schematic,
                     machineId,
                     metadata,
                     cancellationToken).ConfigureAwait(false);
 
-            return new NaturalStateMachine(machine);
+            return machine;
         }
 
         public static async Task<INaturalStateMachine> CreateMachineAsync<TNaturalSchematicFactory>(
@@ -41,13 +52,14 @@ namespace REstate
         {
             var schematic = agent.ConstructSchematic<TNaturalSchematicFactory>();
 
-            var machine = await agent.GetStateEngine<TypeState, TypeState>()
+            var machine = await agent
+                .GetNaturalStateEngine()
                 .CreateMachineAsync(
                     schematic,
                     metadata,
                     cancellationToken).ConfigureAwait(false);
 
-            return new NaturalStateMachine(machine);
+            return machine;
         }
     }
 }
