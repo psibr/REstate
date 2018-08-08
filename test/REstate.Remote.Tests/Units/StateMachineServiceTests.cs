@@ -61,7 +61,7 @@ namespace REstate.Remote.Tests.Units
             // Arrange
             var machineId = "some value";
             var input = "some input";
-            var inputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance);
+            var inputBytes = LZ4MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance);
             var stateBytes = new byte[50];
             var commitNumber = 0L;
             var updatedCommitNumber = commitNumber + 1;
@@ -105,8 +105,8 @@ namespace REstate.Remote.Tests.Units
             var machineId = "some machine";
             var input = "some input";
             var payload = "some payload";
-            var inputBytes = MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance);
-            var payloadBytes = MessagePackSerializer.Typeless.Serialize(payload);
+            var inputBytes = LZ4MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance);
+            var payloadBytes = LZ4MessagePackSerializer.Typeless.Serialize(payload);
             var commitNumber = 0L;
             var stateBytes = new byte[50];
             var updatedCommitNumber = commitNumber + 1;
@@ -150,7 +150,7 @@ namespace REstate.Remote.Tests.Units
         {
             // Arrange
             var schematic = new Schematic<string, string> { SchematicName = "schematic name" };
-            var schematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
+            var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
 
             _localAdapterMock
                 .Setup(_ => _.StoreSchematicAsync(
@@ -279,7 +279,7 @@ namespace REstate.Remote.Tests.Units
                 InitialState = "initial state",
                 States = new State<string, string>[] { new State<string, string> { Value = "initial state" } }
             };
-            var schematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
+            var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
             var key = "key";
             var value = "value";
             var metadata = new Dictionary<string, string> { { key, value } };
@@ -368,7 +368,7 @@ namespace REstate.Remote.Tests.Units
                 InitialState = "initial state",
                 States = new[] { new State<string, string> { Value = "initial state" } }
             };
-            var schematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
+            var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
             var metadataEnumerable = new List<Dictionary<string, string>>();
             var firstKey = "first key";
             var firstValue = "first value";
@@ -419,7 +419,7 @@ namespace REstate.Remote.Tests.Units
             // Arrange
             var schematicName = "schematic name";
             var schematic = new Schematic<string, string> { SchematicName = "schematic name" };
-            var schematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
+            var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
 
             _localAdapterMock
                 .Setup(_ => _.GetSchematicAsync<string, string>(

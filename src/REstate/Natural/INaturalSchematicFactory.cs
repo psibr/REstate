@@ -1,7 +1,9 @@
-﻿namespace REstate.Natural
+﻿using REstate.Natural.Schematics.Builders;
+
+namespace REstate.Natural
 {
     public interface INaturalSchematicFactory
     {
-        INaturalSchematic BuildSchematic(IAgent agent);
+        INaturalSchematic BuildSchematic(INaturalSchematicBuilder builder);
     }
 }

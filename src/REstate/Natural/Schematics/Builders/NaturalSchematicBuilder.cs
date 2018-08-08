@@ -49,11 +49,6 @@ namespace REstate.Natural.Schematics.Builders
         {
             TypeState typeState = typeof(TState);
 
-            if (!typeState.AcceptsInputOf<TypeState>())
-            {
-                throw new ArgumentException($"State {typeState.AssemblyQualifiedName} does not accept valid input for this machine.");
-            }
-
             var state = new State<TypeState, TypeState>
             {
                 Value = typeState
@@ -63,18 +58,18 @@ namespace REstate.Natural.Schematics.Builders
             {
                 Agent.Configuration.Register(registrar =>
                     registrar.RegisterConnector(typeState)
-                        .WithConfiguration(new ConnectorConfiguration(typeState.ConnectorKey)));
+                        .WithConfiguration(new ConnectorConfiguration(typeState.GetConnectorKey())));
 
                 if (typeState.IsActionable())
                     state.Action = new REstate.Schematics.Action<TypeState>
                     {
-                        ConnectorKey = typeState.ConnectorKey
+                        ConnectorKey = typeState.GetConnectorKey()
                     };
 
                 if (typeState.IsPrecondition())
                     state.Precondition = new Precondition
                     {
-                        ConnectorKey = typeState.ConnectorKey
+                        ConnectorKey = typeState.GetConnectorKey()
                     };
             }
 
@@ -99,11 +94,6 @@ namespace REstate.Natural.Schematics.Builders
 
             if (!states.TryGetValue(typeState, out var state))
             {
-                if (!typeState.AcceptsInputOf<TypeState>())
-                {
-                    throw new ArgumentException($"State {typeState.AssemblyQualifiedName} does not accept valid input for this machine.");
-                }
-
                 state = new State<TypeState, TypeState>
                 {
                     Value = typeof(TState)
@@ -113,18 +103,18 @@ namespace REstate.Natural.Schematics.Builders
                 {
                     Agent.Configuration.Register(registrar =>
                         registrar.RegisterConnector(typeState)
-                            .WithConfiguration(new ConnectorConfiguration(typeState.ConnectorKey)));
+                            .WithConfiguration(new ConnectorConfiguration(typeState.GetConnectorKey())));
 
                     if (typeState.IsActionable())
                         state.Action = new REstate.Schematics.Action<TypeState>
                         {
-                            ConnectorKey = typeState.ConnectorKey
+                            ConnectorKey = typeState.GetConnectorKey()
                         };
 
                     if (typeState.IsPrecondition())
                         state.Precondition = new Precondition
                         {
-                            ConnectorKey = typeState.ConnectorKey
+                            ConnectorKey = typeState.GetConnectorKey(),
                         };
                 }
 
@@ -143,9 +133,9 @@ namespace REstate.Natural.Schematics.Builders
 
         internal State<TypeState, TypeState> state;
 
-        public IOnContext<TState, TRequest> On<TRequest>()
+        public IOnContext<TState, TSignal> On<TSignal>()
         {
-            return new OnContext<TState, TRequest> { creationContext = creationContext, state = state, input = typeof(TRequest) };
+            return new OnContext<TState, TSignal> { creationContext = creationContext, state = state, input = typeof(TSignal) };
         }
     }
 
@@ -165,12 +155,7 @@ namespace REstate.Natural.Schematics.Builders
             TypeState newTypeState = typeof(TNewState);
 
             if (!creationContext.states.TryGetValue(newTypeState, out var newState))
-            {
-                if (!newTypeState.AcceptsInputOf<TypeState>())
-                {
-                    throw new ArgumentException($"State {newTypeState.AssemblyQualifiedName} does not accept valid input for this machine.");
-                }
-
+            { 
                 newState = new State<TypeState, TypeState>
                 {
                     Value = newTypeState
@@ -180,18 +165,18 @@ namespace REstate.Natural.Schematics.Builders
                 {
                     creationContext.Agent.Configuration.Register(registrar =>
                         registrar.RegisterConnector(newTypeState)
-                            .WithConfiguration(new ConnectorConfiguration(newTypeState.ConnectorKey)));
+                            .WithConfiguration(new ConnectorConfiguration(newTypeState.GetConnectorKey())));
 
                     if (newTypeState.IsActionable())
                         newState.Action = new REstate.Schematics.Action<TypeState>
                         {
-                            ConnectorKey = newTypeState.ConnectorKey
+                            ConnectorKey = newTypeState.GetConnectorKey()
                         };
 
                     if (newTypeState.IsPrecondition())
                         newState.Precondition = new Precondition
                         {
-                            ConnectorKey = newTypeState.ConnectorKey
+                            ConnectorKey = newTypeState.GetConnectorKey()
                         };
                 }
 
@@ -222,7 +207,7 @@ namespace REstate.Natural.Schematics.Builders
 
             creationContext.Agent.Configuration.Register(registrar =>
                 registrar.RegisterConnector(preconditionTypeState)
-                    .WithConfiguration(new ConnectorConfiguration(preconditionTypeState.ConnectorKey)));
+                    .WithConfiguration(new ConnectorConfiguration(preconditionTypeState.GetConnectorKey())));
 
             return new WhenContext<TState, TSignal>
             {
@@ -231,7 +216,7 @@ namespace REstate.Natural.Schematics.Builders
                 input = input,
                 precondition = new Precondition
                 {
-                    ConnectorKey = preconditionTypeState.ConnectorKey
+                    ConnectorKey = preconditionTypeState.GetConnectorKey()
                 }
             };
         }
@@ -256,11 +241,6 @@ namespace REstate.Natural.Schematics.Builders
 
             if (!creationContext.states.TryGetValue(newTypeState, out var newState))
             {
-                if (!newTypeState.AcceptsInputOf<TypeState>())
-                {
-                    throw new ArgumentException($"State {newTypeState.AssemblyQualifiedName} does not accept valid input for this machine.");
-                }
-
                 newState = new State<TypeState, TypeState>
                 {
                     Value = newTypeState
@@ -270,18 +250,18 @@ namespace REstate.Natural.Schematics.Builders
                 {
                     creationContext.Agent.Configuration.Register(registrar =>
                         registrar.RegisterConnector(newTypeState)
-                            .WithConfiguration(new ConnectorConfiguration(newTypeState.ConnectorKey)));
+                            .WithConfiguration(new ConnectorConfiguration(newTypeState.GetConnectorKey())));
 
                     if (newTypeState.IsActionable())
                         newState.Action = new REstate.Schematics.Action<TypeState>
                         {
-                            ConnectorKey = newTypeState.ConnectorKey
+                            ConnectorKey = newTypeState.GetConnectorKey()
                         };
 
                     if (newTypeState.IsPrecondition())
                         newState.Precondition = new Precondition
                         {
-                            ConnectorKey = newTypeState.ConnectorKey
+                            ConnectorKey = newTypeState.GetConnectorKey()
                         };
                 }
 

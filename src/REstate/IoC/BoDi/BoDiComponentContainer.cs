@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using REstate.Engine.Connectors;
 using REstate.Logging;
 
 namespace REstate.IoC.BoDi
@@ -30,7 +31,16 @@ namespace REstate.IoC.BoDi
 
         public void Register(Type registrationType, Type implementationType, string name = null)
         {
-            _container.RegisterTypeAs(implementationType, registrationType, name);
+            try
+            {
+                _container.RegisterTypeAs(implementationType, registrationType, name);
+            }
+            catch(AlreadyResolvedException)
+            {
+                // Known case for unsure connector registration paths.
+                if (!(registrationType == typeof(IPrecondition<,>) || registrationType == typeof(IAction<,>)))
+                    throw;                
+            }
         }
 
         public void Register<T>(FactoryMethod<T> resolver, string name = null) 

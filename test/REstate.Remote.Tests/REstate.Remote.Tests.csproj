@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\NaturalSchematicExamples\NaturalSchematicExamples.csproj" />
     <ProjectReference Include="..\..\src\REstate.Remote\REstate.Remote.csproj" />
     <ProjectReference Include="..\..\src\REstate\REstate.csproj" />
     <ProjectReference Include="..\REstate.Tests\REstate.Tests.csproj" />

@@ -28,7 +28,7 @@ namespace REstate.IoC
             public void Register(IRegistrar registrar)
             {
                 registrar.RegisterConnector<TConnector>(
-                    _connectorConfiguration ?? new ConnectorConfiguration(TypeState.FromType(typeof(TConnector)).StateName), _registrationName);
+                    _connectorConfiguration ?? new ConnectorConfiguration(TypeState.FromType(typeof(TConnector)).GetConnectorKey()), _registrationName);
 
             }
         }

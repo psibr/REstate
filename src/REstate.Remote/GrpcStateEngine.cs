@@ -27,8 +27,8 @@ namespace REstate.Remote
             _stateMachineService = stateMachineService
                 .WithHeaders(new Metadata
                 {
-                    { "Status-Type", TypeState.FromType(typeof(TState)).FullName },
-                    { "Input-Type", TypeState.FromType(typeof(TInput)).FullName }
+                    { "Status-Type", TypeState.FromType(typeof(TState)).GetFullName() },
+                    { "Input-Type", TypeState.FromType(typeof(TInput)).GetFullName() }
                 });
 
             _listeners = listeners.ToList();
@@ -63,7 +63,7 @@ namespace REstate.Remote
                 .WithCancellationToken(cancellationToken)
                 .CreateMachineFromSchematicAsync(new CreateMachineFromSchematicRequest
                 {
-                    SchematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance),
+                    SchematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance),
                     Metadata = metadata,
                     MachineId = machineId
                 });
@@ -110,7 +110,7 @@ namespace REstate.Remote
                 .WithCancellationToken(cancellationToken)
                 .BulkCreateMachineFromSchematicAsync(new BulkCreateMachineFromSchematicRequest
                 {
-                    SchematicBytes = MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance),
+                    SchematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance),
                     Metadata = metadata
                 });
 
@@ -179,7 +179,7 @@ namespace REstate.Remote
                     SchematicName = schematicName
                 });
 
-            return MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
+            return LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
                 response.SchematicBytes,
                 ContractlessStandardResolver.Instance);
         }
@@ -192,12 +192,12 @@ namespace REstate.Remote
                 .WithCancellationToken(cancellationToken)
                 .StoreSchematicAsync(new StoreSchematicRequest
                 {
-                    SchematicBytes = MessagePackSerializer.Serialize(
+                    SchematicBytes = LZ4MessagePackSerializer.Serialize(
                         schematic,
                         ContractlessStandardResolver.Instance)
                 });
 
-            return MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
+            return LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
                 response.SchematicBytes,
                 ContractlessStandardResolver.Instance);
         }

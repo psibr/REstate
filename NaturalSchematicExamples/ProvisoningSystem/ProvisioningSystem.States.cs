@@ -1,8 +1,9 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using REstate;
 using REstate.Natural;
 
-namespace REstate.Tests.Units
+namespace NaturalSchematicExamples
 {
     public partial class ProvisioningSystem
     {
@@ -14,6 +15,7 @@ namespace REstate.Tests.Units
         public class Provisioning
             : StateDefinition<ReserveSignal>
         {
+            [Description("Provision necessary resource and forwards the Reservation")]
             public override async Task InvokeAsync(
                 ConnectorContext context,
                 ReserveSignal reserveSignal,
@@ -31,6 +33,7 @@ namespace REstate.Tests.Units
         public class Provisioned
             : StateDefinition<IProvisionedSignal>
         {
+            [Description("Handle Reservation/Release as a counter")]
             public override Task InvokeAsync(
                 ConnectorContext context,
                 IProvisionedSignal provisionedSignal,
@@ -50,6 +53,7 @@ namespace REstate.Tests.Units
 
             public IAgent Agent { get; }
 
+            [Description("Deprovision all resources allocated")]
             public override async Task InvokeAsync(
                 ConnectorContext context,
                 DeprovisionSignal deprovisionSignal,

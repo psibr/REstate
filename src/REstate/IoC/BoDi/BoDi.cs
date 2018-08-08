@@ -644,7 +644,7 @@ namespace REstate.IoC.BoDi
         private void AssertNotResolved(RegistrationKey interfaceType)
         {
             if (resolvedObjects.ContainsKey(interfaceType))
-                throw new ObjectContainerException("An object has been resolved for this interface already.", null);
+                throw new AlreadyResolvedException("An object has been resolved for this interface already.", null);
         }
 
         private void ClearRegistrations(RegistrationKey registrationKey)
@@ -867,6 +867,18 @@ namespace REstate.IoC.BoDi
             objectPool.Clear();
             registrations.Clear();
             resolvedObjects.Clear();
+        }
+    }
+
+    internal class AlreadyResolvedException : ObjectContainerException
+    {
+        public AlreadyResolvedException(string message, Type[] resolutionPath) : base(message, resolutionPath)
+        {
+        }
+
+        protected AlreadyResolvedException(SerializationInfo info, StreamingContext context) 
+            : base(info, context)
+        {
         }
     }
 }

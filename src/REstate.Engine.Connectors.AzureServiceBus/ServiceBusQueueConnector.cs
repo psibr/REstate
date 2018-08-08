@@ -78,7 +78,7 @@ namespace REstate.Engine.Connectors.AzureServiceBus
                 Payload = inputParameters.Payload
             };
 
-            return MessagePackSerializer.Serialize(message, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+            return LZ4MessagePackSerializer.Serialize(message, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
         }
     }
 }

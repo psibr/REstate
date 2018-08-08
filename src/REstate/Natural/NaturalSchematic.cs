@@ -23,5 +23,10 @@ namespace REstate.Natural
         public int StateConflictRetryCount => _schematic.StateConflictRetryCount;
 
         public IReadOnlyDictionary<TypeState, IState<TypeState, TypeState>> States => _schematic.States;
+
+        public override string ToString()
+        {
+            return _schematic.ToString();
+        }
     }
 }

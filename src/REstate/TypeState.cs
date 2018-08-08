@@ -9,6 +9,7 @@ namespace REstate
     /// </summary>
     public class TypeState : IEquatable<TypeState>
     {
+        private string _name;
         private string _stateName;
         private string _assemblyQualifiedName;
         private string _fullName;
@@ -19,7 +20,7 @@ namespace REstate
         public string AssemblyQualifiedName
         {
             get => _assemblyQualifiedName;
-            private set
+            set
             {
                 _assemblyQualifiedName = value;
 
@@ -29,51 +30,44 @@ namespace REstate
             }
         }
 
-        public string FullName
+        public string GetFullName()
         {
-            get
+            if (_fullName == null)
             {
-                // If for some reason full name wasn't set at construction,
-                // we know how to get to it anyway.
-                if(_fullName == null)
-                {
-                    return GetFullNameFrom(AssemblyQualifiedName);
-                }
-
-                return _fullName;
+                _fullName = GetFullNameFrom(AssemblyQualifiedName);
             }
-            private set => _fullName = value;
+
+            return _fullName;
         }
 
-        public string Name { get; private set; }
-
-        public string StateName
+        public string GetName()
         {
-            get
+            if (_name == null)
             {
-                if (_stateName == null)
-                {
-                    // Check for a ConnectorKeyAttribute on the type
-                    var stateNameAttribute = _underlyingType.Value.GetCustomAttribute<StateNameAttribute>();
-
-                    if (!string.IsNullOrWhiteSpace(stateNameAttribute?.Name))
-                        _stateName = stateNameAttribute.Name;
-                    else // If no StateName use name.
-                        _stateName = Name;
-                }
-
-                return _stateName;
+                _name = GetNameFrom(AssemblyQualifiedName);
             }
-            private set => _stateName = value;
+
+            return _name;
         }
 
-        public string ConnectorKey => FullName;
+        public string GetStateName()
+        {
+            if (_stateName == null)
+            {
+                // Check for a StateNameAttribute on the type
+                var stateNameAttribute = _underlyingType
+                    .Value.GetCustomAttribute<StateNameAttribute>();
 
-        public bool AcceptsInputOf<TInput>() =>
-            (!IsActionable()
-                || typeof(IAction<TypeState, TInput>).IsAssignableFrom(_underlyingType.Value))
-            && (!IsPrecondition()
-                || typeof(IPrecondition).IsAssignableFrom(_underlyingType.Value));
+                if (!string.IsNullOrWhiteSpace(stateNameAttribute?.Name))
+                    _stateName = stateNameAttribute.Name;
+                else // If no StateName use name.
+                    _stateName = GetName();
+            }
+
+            return _stateName;
+        }
+
+        public string GetConnectorKey() => GetFullName();
 
         public bool IsActionable() => _isActionable.Value;
 
@@ -82,7 +76,7 @@ namespace REstate
         public Type ToType() => _underlyingType.Value;
 
         private Type GetUnderlyingType()
-            => Type.GetType(FullName);
+            => Type.GetType(GetFullName());
 
         private bool CheckIsActionable()
             => typeof(IAction).IsAssignableFrom(_underlyingType.Value);
@@ -90,14 +84,27 @@ namespace REstate
         private bool CheckIsPrecondition()
             => typeof(IPrecondition).IsAssignableFrom(_underlyingType.Value);
 
-        public bool Equals(TypeState other)
-        {
-            return StateName.Equals(other.StateName, StringComparison.Ordinal);
-        }
-
         private string GetFullNameFrom(string assemblyQualifiedName)
         {
             return assemblyQualifiedName.Substring(0, assemblyQualifiedName.IndexOf(',', assemblyQualifiedName.IndexOf(',') + 1));
+        }
+
+        private string GetNameFrom(string assemblyQualifiedName)
+        {
+            var nameEndIndex = assemblyQualifiedName.IndexOf(',');
+
+            var noAssemblyName = assemblyQualifiedName.Substring(0, nameEndIndex);
+
+            var lastPeriodIndex = noAssemblyName.LastIndexOf('.');
+
+            var name = noAssemblyName.Substring(lastPeriodIndex + 1, noAssemblyName.Length - lastPeriodIndex - 1);
+
+            return name;
+        }
+
+        public bool Equals(TypeState other)
+        {
+            return GetFullName().Equals(other.GetFullName(), StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
@@ -112,7 +119,7 @@ namespace REstate
 
         public override int GetHashCode()
         {
-            return StateName.GetHashCode();
+            return GetFullName().GetHashCode();
         }
 
         public static implicit operator TypeState(Type type)
@@ -123,7 +130,7 @@ namespace REstate
 
         public override string ToString()
         {
-            return StateName;
+            return GetStateName();
         }
 
         public static TypeState FromType(Type type)
@@ -131,8 +138,7 @@ namespace REstate
             return new TypeState
             {
                 AssemblyQualifiedName = type.AssemblyQualifiedName,
-                FullName = $"{type.FullName}, {type.Assembly.GetName().Name}",
-                Name = type.Name
+                _name = type.Name
             };
         }
     }

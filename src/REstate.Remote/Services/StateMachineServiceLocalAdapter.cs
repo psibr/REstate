@@ -33,7 +33,7 @@ namespace REstate.Remote.Services
                 {
                     MachineId = machineId,
                     CommitNumber = status.CommitNumber,
-                    StateBytes = MessagePackSerializer.Serialize(status.State, ContractlessStandardResolver.Instance),
+                    StateBytes = LZ4MessagePackSerializer.Serialize(status.State, ContractlessStandardResolver.Instance),
                     UpdatedTime = status.UpdatedTime
                 };
             }
@@ -81,7 +81,7 @@ namespace REstate.Remote.Services
                 {
                     MachineId = machineId,
                     CommitNumber = newStatus.CommitNumber,
-                    StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
+                    StateBytes = LZ4MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
                     UpdatedTime = newStatus.UpdatedTime
                 };
             }
@@ -130,7 +130,7 @@ namespace REstate.Remote.Services
                 {
                     MachineId = machineId,
                     CommitNumber = newStatus.CommitNumber,
-                    StateBytes = MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
+                    StateBytes = LZ4MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
                     UpdatedTime = newStatus.UpdatedTime
                 };
             }
@@ -151,7 +151,7 @@ namespace REstate.Remote.Services
 
             return new StoreSchematicResponse
             {
-                SchematicBytes = MessagePackSerializer.NonGeneric.Serialize(
+                SchematicBytes = LZ4MessagePackSerializer.NonGeneric.Serialize(
                     newSchematic.GetType(),
                     newSchematic,
                     ContractlessStandardResolver.Instance)
@@ -181,7 +181,7 @@ namespace REstate.Remote.Services
             return new GetMachineSchematicResponse
             {
                 MachineId = machine.MachineId,
-                SchematicBytes = MessagePackSerializer.NonGeneric
+                SchematicBytes = LZ4MessagePackSerializer.NonGeneric
                     .Serialize(schematic.GetType(), schematic, ContractlessStandardResolver.Instance)
             };
         }
@@ -315,7 +315,7 @@ namespace REstate.Remote.Services
 
                 return new GetSchematicResponse
                 {
-                    SchematicBytes = MessagePackSerializer.NonGeneric.Serialize(
+                    SchematicBytes = LZ4MessagePackSerializer.NonGeneric.Serialize(
                         schematic.GetType(),
                         schematic,
                         ContractlessStandardResolver.Instance)

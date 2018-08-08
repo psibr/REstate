@@ -1,4 +1,4 @@
-﻿namespace REstate.Tests.Units
+﻿namespace NaturalSchematicExamples
 {
     public partial class ProvisioningSystem
     {

@@ -61,5 +61,10 @@ namespace REstate.Natural
         {
             return _stateMachine.SendAsync(typeof(TSignal), signal, lastCommitNumber, cancellationToken);
         }
+
+        public override string ToString()
+        {
+            return _stateMachine.ToString();
+        }
     }
 }

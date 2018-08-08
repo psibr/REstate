@@ -1,4 +1,5 @@
 ﻿using REstate.Engine;
+using REstate.Engine.Connectors.Resolution;
 using REstate.Schematics;
 
 namespace REstate
