@@ -1,8 +1,8 @@
-using REstate.Schematics.Builder.Providers;
 using System;
 using System.Collections.Generic;
+using REstate.Schematics.Builders.Providers;
 
-namespace REstate.Schematics.Builder
+namespace REstate.Schematics.Builders
 {
     public interface IActionBuilder<TInput>
         : IActionBuilderProvider<TInput, IActionBuilder<TInput>>

@@ -55,14 +55,27 @@ namespace REstate.Natural
         Task<INaturalSchematic> StoreSchematicAsync(
             INaturalSchematic naturalSchematic,
             CancellationToken cancellationToken = default);
+
+        Task<INaturalStateMachine> CreateMachineAsync<TNaturalSchematicFactory>(
+            string machineId,
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default)
+            where TNaturalSchematicFactory : INaturalSchematicFactory, new();
+
+        Task<INaturalStateMachine> CreateMachineAsync<TNaturalSchematicFactory>(
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default)
+            where TNaturalSchematicFactory : INaturalSchematicFactory, new();
     }
 
     public class NaturalStateEngine : INaturalStateEngine
     {
+        private readonly IAgent _agent;
         private readonly IStateEngine<TypeState, TypeState> _stateEngine;
 
-        public NaturalStateEngine(IStateEngine<TypeState, TypeState> stateEngine)
+        public NaturalStateEngine(IAgent agent, IStateEngine<TypeState, TypeState> stateEngine)
         {
+            _agent = agent;
             _stateEngine = stateEngine;
         }
 
@@ -176,6 +189,38 @@ namespace REstate.Natural
                 .ConfigureAwait(false);
 
             return new NaturalSchematic(schematic);
+        }
+
+        public async Task<INaturalStateMachine> CreateMachineAsync<TNaturalSchematicFactory>(
+            string machineId,
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default)
+            where TNaturalSchematicFactory : INaturalSchematicFactory, new()
+        {
+            var schematic = _agent.ConstructSchematic<TNaturalSchematicFactory>();
+
+            var machine = await CreateMachineAsync(
+                schematic,
+                machineId,
+                metadata,
+                cancellationToken).ConfigureAwait(false);
+
+            return machine;
+        }
+
+        public async Task<INaturalStateMachine> CreateMachineAsync<TNaturalSchematicFactory>(
+            IDictionary<string, string> metadata = null,
+            CancellationToken cancellationToken = default)
+            where TNaturalSchematicFactory : INaturalSchematicFactory, new()
+        {
+            var schematic = _agent.ConstructSchematic<TNaturalSchematicFactory>();
+
+            var machine = await CreateMachineAsync(
+                schematic,
+                metadata,
+                cancellationToken).ConfigureAwait(false);
+
+            return machine;
         }
     }
 }

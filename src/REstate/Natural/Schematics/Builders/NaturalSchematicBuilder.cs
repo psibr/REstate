@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using REstate.Engine.Connectors;
 using REstate.IoC;
 using REstate.Schematics;
@@ -31,11 +32,11 @@ namespace REstate.Natural.Schematics.Builders
     internal class CreationContext
         : ICreationContext
     {
-        internal Dictionary<Type, State<TypeState, TypeState>> states = new Dictionary<Type, State<TypeState, TypeState>>();
+        internal Dictionary<Type, State<TypeState, TypeState>> States = new Dictionary<Type, State<TypeState, TypeState>>();
 
-        internal TypeState initialState;
+        internal TypeState InitialState;
 
-        internal Schematic<TypeState, TypeState> schematic = new Schematic<TypeState, TypeState>();
+        internal Schematic<TypeState, TypeState> Schematic = new Schematic<TypeState, TypeState>();
 
         internal IAgent Agent { get; }
 
@@ -53,6 +54,10 @@ namespace REstate.Natural.Schematics.Builders
             {
                 Value = typeState
             };
+
+            var description = typeof(TState).GetCustomAttribute<DescriptionAttribute>(false)?.Description;
+
+            state.Description = description;
 
             if (typeState.IsActionable() || typeState.IsPrecondition())
             {
@@ -73,18 +78,18 @@ namespace REstate.Natural.Schematics.Builders
                     };
             }
 
-            states.Add(typeState, state);
+            States.Add(typeState, state);
 
-            schematic.InitialState = typeState;
+            Schematic.InitialState = typeState;
         }
 
         public INaturalSchematic BuildAs(string schematicName)
         {
-            schematic.SchematicName = schematicName;
+            Schematic.SchematicName = schematicName;
 
-            schematic.States = states.Values.ToArray();
+            Schematic.States = States.Values.ToArray();
 
-            return new NaturalSchematic(schematic);
+            return new NaturalSchematic(Schematic);
         }
 
         public IForStateContext<TState> For<TState>()
@@ -92,12 +97,16 @@ namespace REstate.Natural.Schematics.Builders
         {
             TypeState typeState = typeof(TState);
 
-            if (!states.TryGetValue(typeState, out var state))
+            if (!States.TryGetValue(typeState, out var state))
             {
                 state = new State<TypeState, TypeState>
                 {
                     Value = typeof(TState)
                 };
+
+                var description = typeof(TState).GetCustomAttribute<DescriptionAttribute>(false)?.Description;
+
+                state.Description = description;
 
                 if (typeState.IsActionable() || typeState.IsPrecondition())
                 {
@@ -118,10 +127,10 @@ namespace REstate.Natural.Schematics.Builders
                         };
                 }
 
-                states.Add(typeState, state);
+                States.Add(typeState, state);
             }
 
-            return new ForStateContext<TState>() { creationContext = this, state = state };
+            return new ForStateContext<TState>() { CreationContext = this, State = state };
         }
     }
 
@@ -129,13 +138,18 @@ namespace REstate.Natural.Schematics.Builders
         : IForStateContext<TState>
         where TState : IStateDefinition
     {
-        internal CreationContext creationContext;
+        internal CreationContext CreationContext;
 
-        internal State<TypeState, TypeState> state;
+        internal State<TypeState, TypeState> State;
 
         public IOnContext<TState, TSignal> On<TSignal>()
         {
-            return new OnContext<TState, TSignal> { creationContext = creationContext, state = state, input = typeof(TSignal) };
+            return new OnContext<TState, TSignal>
+            {
+                CreationContext = CreationContext,
+                State = State,
+                Input = typeof(TSignal)
+            };
         }
     }
 
@@ -143,27 +157,31 @@ namespace REstate.Natural.Schematics.Builders
         : IOnContext<TState, TSignal>
         where TState : IStateDefinition
     {
-        internal CreationContext creationContext;
+        internal CreationContext CreationContext;
 
-        internal State<TypeState, TypeState> state;
+        internal State<TypeState, TypeState> State;
 
-        internal TypeState input;
+        internal TypeState Input;
 
         public ICreationContext MoveTo<TNewState>()
             where TNewState : IStateDefinition<TSignal>
         {
             TypeState newTypeState = typeof(TNewState);
 
-            if (!creationContext.states.TryGetValue(newTypeState, out var newState))
+            if (!CreationContext.States.TryGetValue(newTypeState, out var newState))
             { 
                 newState = new State<TypeState, TypeState>
                 {
                     Value = newTypeState
                 };
 
+                var description = typeof(TNewState).GetCustomAttribute<DescriptionAttribute>(false)?.Description;
+
+                newState.Description = description;
+
                 if (newTypeState.IsActionable() || newTypeState.IsPrecondition())
                 {
-                    creationContext.Agent.Configuration.Register(registrar =>
+                    CreationContext.Agent.Configuration.Register(registrar =>
                         registrar.RegisterConnector(newTypeState)
                             .WithConfiguration(new ConnectorConfiguration(newTypeState.GetConnectorKey())));
 
@@ -180,41 +198,37 @@ namespace REstate.Natural.Schematics.Builders
                         };
                 }
 
-                creationContext.states.Add(newTypeState, newState);
+                CreationContext.States.Add(newTypeState, newState);
             }
 
-            state.Transitions = (state.Transitions ?? new Transition<TypeState, TypeState>[0])
+            State.Transitions = (State.Transitions ?? new Transition<TypeState, TypeState>[0])
                 .Concat(new[]
                 {
                     new Transition<TypeState, TypeState>
                     {
-                        Input = input,
+                        Input = Input,
                         ResultantState = newTypeState
                     }
                 }).ToArray();
 
-            return creationContext;
+            return CreationContext;
         }
 
         public IWhenContext<TState, TSignal> When<TPrecondition>()
+            where TPrecondition : INaturalPrecondition<TSignal>
         {
             TypeState preconditionTypeState = typeof(TPrecondition);
 
-            if (!preconditionTypeState.IsPrecondition())
-            {
-                throw new ArgumentException($"Type {preconditionTypeState.AssemblyQualifiedName} does not implement {nameof(Engine.Connectors.IPrecondition)}.");
-            }
-
-            creationContext.Agent.Configuration.Register(registrar =>
+            CreationContext.Agent.Configuration.Register(registrar =>
                 registrar.RegisterConnector(preconditionTypeState)
                     .WithConfiguration(new ConnectorConfiguration(preconditionTypeState.GetConnectorKey())));
 
             return new WhenContext<TState, TSignal>
             {
-                creationContext = creationContext,
-                state = state,
-                input = input,
-                precondition = new Precondition
+                CreationContext = CreationContext,
+                State = State,
+                Input = Input,
+                Precondition = new Precondition
                 {
                     ConnectorKey = preconditionTypeState.GetConnectorKey()
                 }
@@ -226,29 +240,33 @@ namespace REstate.Natural.Schematics.Builders
         : IWhenContext<TState, TSignal>
         where TState : IStateDefinition
     {
-        internal CreationContext creationContext;
+        internal CreationContext CreationContext;
 
-        internal State<TypeState, TypeState> state;
+        internal State<TypeState, TypeState> State;
 
-        internal TypeState input;
+        internal TypeState Input;
 
-        internal Precondition precondition;
+        internal Precondition Precondition;
 
         public ICreationContext MoveTo<TNewState>()
             where TNewState : IStateDefinition<TSignal>
         {
             TypeState newTypeState = typeof(TNewState);
 
-            if (!creationContext.states.TryGetValue(newTypeState, out var newState))
+            if (!CreationContext.States.TryGetValue(newTypeState, out var newState))
             {
                 newState = new State<TypeState, TypeState>
                 {
                     Value = newTypeState
                 };
 
+                var description = typeof(TNewState).GetCustomAttribute<DescriptionAttribute>(false)?.Description;
+
+                newState.Description = description;
+
                 if (newTypeState.IsActionable() || newTypeState.IsPrecondition())
                 {
-                    creationContext.Agent.Configuration.Register(registrar =>
+                    CreationContext.Agent.Configuration.Register(registrar =>
                         registrar.RegisterConnector(newTypeState)
                             .WithConfiguration(new ConnectorConfiguration(newTypeState.GetConnectorKey())));
 
@@ -265,21 +283,21 @@ namespace REstate.Natural.Schematics.Builders
                         };
                 }
 
-                creationContext.states.Add(newTypeState, newState);
+                CreationContext.States.Add(newTypeState, newState);
             }
 
-            state.Transitions = (state.Transitions ?? new Transition<TypeState, TypeState>[0])
+            State.Transitions = (State.Transitions ?? new Transition<TypeState, TypeState>[0])
                 .Concat(new[]
                 {
                     new Transition<TypeState, TypeState>
                     {
-                        Input = input,
+                        Input = Input,
                         ResultantState = newTypeState,
-                        Precondition = precondition
+                        Precondition = Precondition
                     }
                 }).ToArray();
 
-            return creationContext;
+            return CreationContext;
         }
     }
 }

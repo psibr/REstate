@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace REstate
+namespace REstate.Natural
 {
     /// <summary>
     /// Applied to a StateDefinition to indicate the State's name instead of class name.
@@ -16,7 +16,10 @@ namespace REstate
         public string Name { get; private set; }
     }
 
-    [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
+    /// <summary>
+    /// Applied to a StateDefinition or Precondition to add a Description.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
     public sealed class DescriptionAttribute : Attribute
     {
         public DescriptionAttribute(string description)

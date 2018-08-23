@@ -1,7 +1,6 @@
-﻿using System;
-using REstate.Engine.Connectors;
+﻿using REstate.Engine.Connectors;
 
-namespace REstate.Schematics.Builder.Providers
+namespace REstate.Schematics.Builders.Providers
 {
     public interface IStateBuilderProvider<TState, TInput, out TThis>
         : IState<TState, TInput>
@@ -20,10 +19,12 @@ namespace REstate.Schematics.Builder.Providers
 
         TThis WithAction(ConnectorKey connectorKey, System.Action<IActionBuilder<TInput>> action = null);
 
-        TThis WithAction<TConnector>(System.Action<IActionBuilder<TInput>> action = null) where TConnector : IAction;
+        TThis WithAction<TConnector>(System.Action<IActionBuilder<TInput>> action = null)
+            where TConnector : IAction;
 
         TThis WithPrecondition(ConnectorKey connectorKey, System.Action<IPreconditionBuilder> precondition = null);
 
-        TThis WithPrecondition<TConnector>(System.Action<IPreconditionBuilder> precondition = null) where TConnector : Engine.Connectors.IPrecondition;
+        TThis WithPrecondition<TConnector>(System.Action<IPreconditionBuilder> precondition = null)
+            where TConnector : Engine.Connectors.IPrecondition;
     }
 }

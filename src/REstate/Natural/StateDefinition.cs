@@ -8,21 +8,11 @@ using System.Threading.Tasks;
 
 namespace REstate.Natural
 {
-
     public interface IStateDefinition<in TSignal>
         : IStateDefinition
         , IAction<TypeState, TypeState>
         , IPrecondition<TypeState, TypeState>
     {
-        Task InvokeAsync(
-            ConnectorContext context,
-            TSignal signal,
-            CancellationToken cancellationToken = default);
-
-        Task<bool> ValidateAsync(
-            ConnectorContext context,
-            TSignal signal,
-            CancellationToken cancellationToken = default);
     }
 
     public interface IStateDefinition
@@ -58,32 +48,19 @@ namespace REstate.Natural
                 signal = castedSignal;
             }
 
-            return InvokeAsync(
-                new ConnectorContext
-                {
-                    Schematic = new NaturalSchematic(schematic),
-                    Machine = new NaturalStateMachine(machine),
-                    Status = status,
-                    Settings = connectorSettings
-                },
-                signal,
-                cancellationToken);
-        }
+            if (this is INaturalAction<TSignal> action)
+                return action.InvokeAsync(
+                    new ConnectorContext
+                    {
+                        Schematic = new NaturalSchematic(schematic),
+                        Machine = new NaturalStateMachine(machine),
+                        Status = status,
+                        Settings = connectorSettings
+                    },
+                    signal,
+                    cancellationToken);
 
-        public virtual Task InvokeAsync(
-            ConnectorContext context,
-            TSignal signal,
-            CancellationToken cancellationToken = default)
-        {
             return Task.CompletedTask;
-        }
-
-        public virtual Task<bool> ValidateAsync(
-            ConnectorContext context,
-            TSignal signal,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(true);
         }
 
         public Task<bool> ValidateAsync<TRuntimePayload>(
@@ -107,16 +84,19 @@ namespace REstate.Natural
                 signal = castedSignal;
             }
 
-            return ValidateAsync(
-                new ConnectorContext
-                {
-                    Schematic = new NaturalSchematic(schematic),
-                    Machine = new NaturalStateMachine(machine),
-                    Status = status,
-                    Settings = connectorSettings
-                },
-                signal,
-                cancellationToken);
+            if (this is INaturalPrecondition<TSignal> precondition)
+                return precondition.ValidateAsync(
+                    new ConnectorContext
+                    {
+                        Schematic = new NaturalSchematic(schematic),
+                        Machine = new NaturalStateMachine(machine),
+                        Status = status,
+                        Settings = connectorSettings
+                    },
+                    signal,
+                    cancellationToken);
+
+            return Task.FromResult(true);
         }
-}
+    }
 }

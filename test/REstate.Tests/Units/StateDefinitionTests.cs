@@ -1,6 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using NaturalSchematicExamples;
+using REstate.Schematics;
 
 namespace REstate.Tests.Units
 {
@@ -13,7 +15,9 @@ namespace REstate.Tests.Units
         {
             var host = new REstateHost();
 
-            var machine = await host.Agent().CreateMachineAsync<ProvisioningSystem>();
+            var machine = await host.Agent()
+                .GetNaturalStateEngine()
+                .CreateMachineAsync<ProvisioningSystem>();
 
             var newState = await machine.SignalAsync(new ReserveSignal());
             newState = await machine.SignalAsync(new ReleaseSignal());

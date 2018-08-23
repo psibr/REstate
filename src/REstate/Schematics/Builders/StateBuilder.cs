@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using REstate.Engine.Connectors;
-using REstate.Schematics.Builder.Providers;
+using REstate.Schematics.Builders.Providers;
 
-namespace REstate.Schematics.Builder
+namespace REstate.Schematics.Builders
 {
     public interface IStateBuilder<TState, TInput>
         : IStateBuilderProvider<TState, TInput, IStateBuilder<TState, TInput>>

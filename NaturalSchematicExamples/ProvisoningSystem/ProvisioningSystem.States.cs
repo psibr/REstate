@@ -7,6 +7,7 @@ namespace NaturalSchematicExamples
 {
     public partial class ProvisioningSystem
     {
+        [Description("The resource has not yet been provisioned")]
         public class Unprovisioned
             : StateDefinition
         {
@@ -14,9 +15,10 @@ namespace NaturalSchematicExamples
 
         public class Provisioning
             : StateDefinition<ReserveSignal>
+            , INaturalAction<ReserveSignal>
         {
             [Description("Provision necessary resource and forwards the Reservation")]
-            public override async Task InvokeAsync(
+            public async Task InvokeAsync(
                 ConnectorContext context,
                 ReserveSignal reserveSignal,
                 CancellationToken cancellationToken = default)
@@ -32,9 +34,10 @@ namespace NaturalSchematicExamples
 
         public class Provisioned
             : StateDefinition<IProvisionedSignal>
+            , INaturalAction<IProvisionedSignal>
         {
             [Description("Handle Reservation/Release as a counter")]
-            public override Task InvokeAsync(
+            public Task InvokeAsync(
                 ConnectorContext context,
                 IProvisionedSignal provisionedSignal,
                 CancellationToken cancellationToken = default)
@@ -45,6 +48,7 @@ namespace NaturalSchematicExamples
 
         public class Deprovisioning
             : StateDefinition<DeprovisionSignal>
+            , INaturalAction<DeprovisionSignal>
         {
             public Deprovisioning(IAgent agent)
             {
@@ -54,7 +58,7 @@ namespace NaturalSchematicExamples
             public IAgent Agent { get; }
 
             [Description("Deprovision all resources allocated")]
-            public override async Task InvokeAsync(
+            public async Task InvokeAsync(
                 ConnectorContext context,
                 DeprovisionSignal deprovisionSignal,
                 CancellationToken cancellationToken = default)

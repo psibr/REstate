@@ -4,7 +4,7 @@
     /// Builder for natural Schematics.
     /// </summary>
     public interface INaturalSchematicBuilder
-    {
+    { 
         ICreationContext StartsIn<TState>() where TState : IStateDefinition;
     }
 
@@ -58,7 +58,7 @@
         /// <returns></returns>
         ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition<TSignal>;
 
-        IWhenContext<TState, TSignal> When<TPrecondition>();
+        IWhenContext<TState, TSignal> When<TPrecondition>() where TPrecondition : INaturalPrecondition<TSignal>;
     }
 
     public interface IWhenContext<TState, out TSignal>
