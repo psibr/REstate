@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace REstate.Schematics.Builder.Providers
+namespace REstate.Schematics.Builders.Providers
 {
     /// <summary>
     /// Low-level interface to allow contravariance (polymorphic return type) in the fluent interface.

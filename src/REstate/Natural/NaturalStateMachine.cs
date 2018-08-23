@@ -52,14 +52,26 @@ namespace REstate.Natural
             return new NaturalSchematic(schematic);
         }
 
-        public Task<Status<TypeState>> SignalAsync<TSignal>(TSignal signal, CancellationToken cancellationToken = default)
+        public Task<Status<TypeState>> SignalAsync<TSignal>(
+            TSignal signal,
+            CancellationToken cancellationToken = default)
         {
-            return _stateMachine.SendAsync(typeof(TSignal), signal, cancellationToken);
+            return _stateMachine.SendAsync(
+                typeof(TSignal),
+                signal,
+                cancellationToken);
         }
 
-        public Task<Status<TypeState>> SignalAsync<TSignal>(TSignal signal, long lastCommitNumber, CancellationToken cancellationToken = default)
+        public Task<Status<TypeState>> SignalAsync<TSignal>(
+            TSignal signal,
+            long lastCommitNumber,
+            CancellationToken cancellationToken = default)
         {
-            return _stateMachine.SendAsync(typeof(TSignal), signal, lastCommitNumber, cancellationToken);
+            return _stateMachine.SendAsync(
+                typeof(TSignal),
+                signal,
+                lastCommitNumber,
+                cancellationToken);
         }
 
         public override string ToString()

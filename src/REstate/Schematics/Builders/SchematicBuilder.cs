@@ -1,12 +1,12 @@
-﻿using REstate.Schematics.Builder.Providers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using REstate.Schematics.Builders.Providers;
 
-namespace REstate.Schematics.Builder
+namespace REstate.Schematics.Builders
 {
     public interface ISchematicBuilder<TState, TInput>
-    : ISchematicBuilderProvider<TState, TInput, ISchematicBuilder<TState, TInput>>
+        : ISchematicBuilderProvider<TState, TInput, ISchematicBuilder<TState, TInput>>
     {
 
     }

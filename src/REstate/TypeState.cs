@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using REstate.Engine.Connectors;
+using REstate.Natural;
 
 namespace REstate
 {
@@ -32,22 +33,12 @@ namespace REstate
 
         public string GetFullName()
         {
-            if (_fullName == null)
-            {
-                _fullName = GetFullNameFrom(AssemblyQualifiedName);
-            }
-
-            return _fullName;
+            return _fullName ?? (_fullName = GetFullNameFrom(AssemblyQualifiedName));
         }
 
         public string GetName()
         {
-            if (_name == null)
-            {
-                _name = GetNameFrom(AssemblyQualifiedName);
-            }
-
-            return _name;
+            return _name ?? (_name = GetNameFrom(AssemblyQualifiedName));
         }
 
         public string GetStateName()
@@ -84,12 +75,12 @@ namespace REstate
         private bool CheckIsPrecondition()
             => typeof(IPrecondition).IsAssignableFrom(_underlyingType.Value);
 
-        private string GetFullNameFrom(string assemblyQualifiedName)
+        private static string GetFullNameFrom(string assemblyQualifiedName)
         {
             return assemblyQualifiedName.Substring(0, assemblyQualifiedName.IndexOf(',', assemblyQualifiedName.IndexOf(',') + 1));
         }
 
-        private string GetNameFrom(string assemblyQualifiedName)
+        private static string GetNameFrom(string assemblyQualifiedName)
         {
             var nameEndIndex = assemblyQualifiedName.IndexOf(',');
 
@@ -104,7 +95,7 @@ namespace REstate
 
         public bool Equals(TypeState other)
         {
-            return GetFullName().Equals(other.GetFullName(), StringComparison.Ordinal);
+            return other != null && GetFullName().Equals(other.GetFullName(), StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)

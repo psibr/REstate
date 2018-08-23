@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace REstate.Schematics.Builder.Providers
+namespace REstate.Schematics.Builders.Providers
 {
     public interface IActionBuilderProvider<TInput, out TThis>
         : IAction<TInput>

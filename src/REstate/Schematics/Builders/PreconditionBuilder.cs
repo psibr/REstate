@@ -1,8 +1,8 @@
-﻿using REstate.Schematics.Builder.Providers;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using REstate.Schematics.Builders.Providers;
 
-namespace REstate.Schematics.Builder
+namespace REstate.Schematics.Builders
 {
     public interface IPreconditionBuilder
         : IPreconditionBuilderProvider<IPreconditionBuilder>

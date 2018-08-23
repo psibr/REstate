@@ -1,9 +1,9 @@
-using REstate.Schematics.Builder.Providers;
+using REstate.Schematics.Builders.Providers;
 
-namespace REstate.Schematics.Builder
+namespace REstate.Schematics.Builders
 {
     public interface ITransitionBuilder<TState, TInput>
-    : ITransitionBuilderProvider<TState, TInput, ITransitionBuilder<TState, TInput>>
+        : ITransitionBuilderProvider<TState, TInput, ITransitionBuilder<TState, TInput>>
     {
 
     }

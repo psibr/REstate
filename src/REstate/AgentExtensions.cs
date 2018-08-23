@@ -1,4 +1,4 @@
-﻿using REstate.Schematics.Builder;
+﻿using REstate.Schematics.Builders;
 
 namespace REstate
 {
