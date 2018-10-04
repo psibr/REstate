@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using MessagePack;
 
 namespace REstate.Remote.Models
@@ -17,6 +18,9 @@ namespace REstate.Remote.Models
 
         [Key(3)]
         public long? CommitNumber { get; set; }
+
+        [Key(4)]
+        public IDictionary<string, string> StateBag { get; set; }
     }
 
     [MessagePackObject]
@@ -30,6 +34,9 @@ namespace REstate.Remote.Models
 
         [Key(2)]
         public long? CommitNumber { get; set; }
+
+        [Key(3)]
+        public IDictionary<string, string> StateBag { get; set; }
     }
 
     [MessagePackObject]
@@ -46,5 +53,8 @@ namespace REstate.Remote.Models
 
         [Key(4)]
         public DateTimeOffset UpdatedTime { get; set; }
+
+        [Key(5)]
+        public IDictionary<string, string> StateBag { get; set; }
     }
 }

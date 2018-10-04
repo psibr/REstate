@@ -18,8 +18,8 @@ namespace REstate.Remote.Services
         Task<GetMachineSchematicResponse> GetMachineSchematicAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default);
         Task<GetSchematicResponse> GetSchematicAsync<TState, TInput>(string schematicName, CancellationToken cancellationToken);
         Task<GetCurrentStateResponse> GetCurrentStateAsync<TState, TInput>(string machineId, CancellationToken cancellationToken = default);
-        Task<SendResponse> SendAsync<TState, TInput>(string machineId, TInput input, long? commitNumber, CancellationToken cancellationToken = default);
-        Task<SendResponse> SendWithPayloadAsync<TState, TInput, TPayload>(string machineId, TInput input, TPayload payload, long? commitNumber, CancellationToken cancellationToken = default);
+        Task<SendResponse> SendAsync<TState, TInput>(string machineId, TInput input, long? commitNumber, IDictionary<string, string> stateBag, CancellationToken cancellationToken = default);
+        Task<SendResponse> SendWithPayloadAsync<TState, TInput, TPayload>(string machineId, TInput input, TPayload payload, long? commitNumber, IDictionary<string, string> stateBag, CancellationToken cancellationToken = default);
         Task<StoreSchematicResponse> StoreSchematicAsync<TState, TInput>(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default);
     }
 }

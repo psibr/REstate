@@ -24,5 +24,8 @@ namespace REstate.Engine.Repositories.Redis
 
         [Key(5)]
         public IDictionary<string, string> Metadata { get; set; }
+
+        [Key(6)]
+        public IDictionary<string, string> StateBag { get; set; }
     }
 }

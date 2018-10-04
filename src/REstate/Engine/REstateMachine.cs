@@ -51,25 +51,35 @@ namespace REstate.Engine
 
         public Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
-            TPayload payload, 
+            TPayload payload,
             CancellationToken cancellationToken = default) 
-            => SendAsync(input, payload, default, cancellationToken);
+            => SendAsync(input, payload, null, null, cancellationToken);
 
         public Task<Status<TState>> SendAsync(
             TInput input,
             CancellationToken cancellationToken = default) 
-            => SendAsync<object>(input, null, default, cancellationToken);
+            => SendAsync<object>(input, null, null, null, cancellationToken);
 
         public Task<Status<TState>> SendAsync(
             TInput input,
             long lastCommitNumber,
+            IDictionary<string, string> stateBag = null,
             CancellationToken cancellationToken = default) 
-            => SendAsync<object>(input, null, lastCommitNumber, cancellationToken);
+            => SendAsync<object>(input, null, (long?)lastCommitNumber, stateBag, cancellationToken);
 
-        public async Task<Status<TState>> SendAsync<TPayload>(
+        public Task<Status<TState>> SendAsync<TPayload>(
+            TInput input,
+            TPayload payload,
+            long lastCommitNumber,
+            IDictionary<string, string> stateBag = null,
+            CancellationToken cancellationToken = default)
+            => SendAsync(input, payload, (long?)lastCommitNumber, stateBag, cancellationToken);
+
+        private async Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
-            long lastCommitNumber,
+            long? lastCommitNumber,
+            IDictionary<string, string> stateBag = null,
             CancellationToken cancellationToken = default)
         {
             using (var dataContext = await  _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
@@ -128,12 +138,13 @@ namespace REstate.Engine
                             machineId: MachineId,
                             state: transition.ResultantState,
                             lastCommitNumber: lastCommitNumber == default ? currentStatus.CommitNumber : lastCommitNumber,
+                            stateBag: stateBag,
                             cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
                     catch (StateConflictException)
                     {
-                        if (Schematic.StateConflictRetryCount == -1 
-                            || retries < Schematic.StateConflictRetryCount)
+                        if ((Schematic.StateConflictRetryCount == -1 || retries < Schematic.StateConflictRetryCount)
+                                && lastCommitNumber != null /*If a specific commit number was requested, retrying is worthless*/)
                         {
                             retries++;
                             continue;
@@ -211,7 +222,7 @@ namespace REstate.Engine
 
             var configuration = Schematic.States[currentState.State];
 
-            //Recursively look for anscestors
+            //Recursively look for ancestors
             while(configuration.ParentState != null)
             {
                 //If status matches an ancestor, true
@@ -286,8 +297,8 @@ namespace REstate.Engine
             
 
             public async Task<Status<TState>> SendAsync<TPayload>(
-                TInput input, 
-                TPayload payload, 
+                TInput input,
+                TPayload payload,
                 CancellationToken cancellationToken = default)
             {
                 if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
@@ -300,14 +311,15 @@ namespace REstate.Engine
             }
 
             public async Task<Status<TState>> SendAsync<TPayload>(
-                TInput input, 
-                TPayload payload, 
-                long lastCommitNumber, 
+                TInput input,
+                TPayload payload,
+                long lastCommitNumber,
+                IDictionary<string, string> stateBag = null,
                 CancellationToken cancellationToken = default)
             {
                 if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
 
-                var status = await Machine.SendAsync(input, payload, lastCommitNumber, cancellationToken);
+                var status = await Machine.SendAsync(input, payload, lastCommitNumber, stateBag, cancellationToken);
 
                 CurrentStatus = status;
 
@@ -315,7 +327,7 @@ namespace REstate.Engine
             }
 
             public async Task<Status<TState>> SendAsync(
-                TInput input, 
+                TInput input,
                 CancellationToken cancellationToken = default)
             {
                 if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
@@ -328,13 +340,14 @@ namespace REstate.Engine
             }
 
             public async Task<Status<TState>> SendAsync(
-                TInput input, 
-                long lastCommitNumber, 
+                TInput input,
+                long lastCommitNumber,
+                IDictionary<string, string> stateBag = null,
                 CancellationToken cancellationToken = default)
             {
                 if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
 
-                var status = await Machine.SendAsync(input, lastCommitNumber, cancellationToken);
+                var status = await Machine.SendAsync(input, lastCommitNumber, stateBag, cancellationToken);
 
                 CurrentStatus = status;
 

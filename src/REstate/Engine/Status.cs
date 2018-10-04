@@ -16,12 +16,14 @@ namespace REstate.Engine
         /// <param name="state">The state to be represented by the status</param>
         /// <param name="updatedTime">The date and time the state interaction occured; the value will be converted to UTC</param>
         /// <param name="commitNumber">A unique identifier for this state interaction; calculated as previous commit number++</param>
-        public Status(string machineId, T state, DateTimeOffset updatedTime, long commitNumber)
+        /// <param name="stateBag">A dictionary of key/value pairs that can be used to track state in addition to the machine state</param>
+        public Status(string machineId, T state, DateTimeOffset updatedTime, long commitNumber, IDictionary<string, string> stateBag)
         {
             MachineId = machineId;
             State = state;
             UpdatedTime = updatedTime;
             CommitNumber = commitNumber;
+            StateBag = stateBag;
         }
 
         /// <summary>
@@ -46,6 +48,11 @@ namespace REstate.Engine
         /// </summary>
         /// <returns>A UTC offset date and time</returns>
         public DateTimeOffset UpdatedTime { get; }
+
+        /// <summary>
+        /// A dictionary of key/value pairs that can be used to track state in addition to the machine state
+        /// </summary>
+        public IDictionary<string, string> StateBag { get; set; }
 
         /// <summary>
         /// Presents the state the status represents in a textual form

@@ -18,9 +18,11 @@ namespace REstate.Engine.Repositories
 
         public IDictionary<string, string> Metadata { get; set; }
 
+        public IDictionary<string, string> StateBag { get; set; }
+
         public static implicit operator Status<TState>(MachineStatus<TState, TInput> record)
         {
-            return new Status<TState>(record.MachineId, record.State, record.UpdatedTime, record.CommitNumber);
+            return new Status<TState>(record.MachineId, record.State, record.UpdatedTime, record.CommitNumber, record.StateBag);
         }
     }
 }

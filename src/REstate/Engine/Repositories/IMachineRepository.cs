@@ -65,13 +65,19 @@ namespace REstate.Engine.Repositories
         /// <param name="machineId">The Id of the Machine</param>
         /// <param name="state">The state to which the Status is set.</param>
         /// <param name="lastCommitNumber">
-        /// If provided, will guarentee the update will occur only 
+        /// If provided, will guarantee the update will occur only 
         /// if the value matches the current Status's CommitNumber.
         /// </param>
+        /// <param name="stateBag">A dictionary of string keys and values to associate with the transition</param>
         /// <param name="cancellationToken"></param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
         /// <exception cref="MachineDoesNotExistException">Thrown when no matching MachineId was found.</exception>
         /// <exception cref="StateConflictException">Thrown when a conflict occured on CommitNumber; no update was performed.</exception>
-        Task<MachineStatus<TState, TInput>> SetMachineStateAsync(string machineId, TState state, long? lastCommitNumber, CancellationToken cancellationToken = default);
+        Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
+            string machineId,
+            TState state,
+            long? lastCommitNumber,
+            IDictionary<string, string> stateBag = null,
+            CancellationToken cancellationToken = default);
     }
 }

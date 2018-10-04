@@ -26,5 +26,8 @@ namespace REstate.Remote.Models
 
         [Key(4)]
         public DateTimeOffset UpdatedTime { get; set; }
+
+        [Key(5)]
+        public IDictionary<string, string> StateBag { get; set; }
     }
 }

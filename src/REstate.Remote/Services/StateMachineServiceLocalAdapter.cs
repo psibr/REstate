@@ -27,14 +27,15 @@ namespace REstate.Remote.Services
             {
                 var machine = await engine.GetMachineAsync(machineId, cancellationToken).ConfigureAwait(false);
 
-                Status<TState> status = await machine.GetCurrentStateAsync(cancellationToken).ConfigureAwait(false);
+                var status = await machine.GetCurrentStateAsync(cancellationToken).ConfigureAwait(false);
 
                 return new GetCurrentStateResponse
                 {
                     MachineId = machineId,
                     CommitNumber = status.CommitNumber,
                     StateBytes = LZ4MessagePackSerializer.Serialize(status.State, ContractlessStandardResolver.Instance),
-                    UpdatedTime = status.UpdatedTime
+                    UpdatedTime = status.UpdatedTime,
+                    StateBag = status.StateBag
                 };
             }
             catch (MachineDoesNotExistException doesNotExistException)
@@ -47,6 +48,7 @@ namespace REstate.Remote.Services
             string machineId,
             TInput input,
             long? commitNumber,
+            IDictionary<string, string> stateBag,
             CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent.AsLocal()
@@ -61,7 +63,7 @@ namespace REstate.Remote.Services
                 try
                 {
                     newStatus = commitNumber != null
-                        ? await machine.SendAsync(input, commitNumber.Value, cancellationToken).ConfigureAwait(false)
+                        ? await machine.SendAsync(input, commitNumber.Value, stateBag, cancellationToken).ConfigureAwait(false)
                         : await machine.SendAsync(input, cancellationToken).ConfigureAwait(false);
                 }
                 catch (TransitionNotDefinedException noDefinedTransitionException)
@@ -82,7 +84,8 @@ namespace REstate.Remote.Services
                     MachineId = machineId,
                     CommitNumber = newStatus.CommitNumber,
                     StateBytes = LZ4MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
-                    UpdatedTime = newStatus.UpdatedTime
+                    UpdatedTime = newStatus.UpdatedTime,
+                    StateBag = newStatus.StateBag
                 };
             }
             catch (MachineDoesNotExistException doesNotExistException)
@@ -96,6 +99,7 @@ namespace REstate.Remote.Services
             TInput input,
             TPayload payload,
             long? commitNumber,
+            IDictionary<string, string> stateBag,
             CancellationToken cancellationToken = default)
         {
             var engine = REstateHost.Agent.AsLocal()
@@ -110,7 +114,7 @@ namespace REstate.Remote.Services
                 try
                 {
                     newStatus = commitNumber != null
-                        ? await machine.SendAsync(input, payload, commitNumber.Value, cancellationToken).ConfigureAwait(false)
+                        ? await machine.SendAsync(input, payload, commitNumber.Value, stateBag, cancellationToken).ConfigureAwait(false)
                         : await machine.SendAsync(input, payload, cancellationToken).ConfigureAwait(false);
                 }
                 catch (TransitionNotDefinedException noDefinedTransitionException)
@@ -131,7 +135,8 @@ namespace REstate.Remote.Services
                     MachineId = machineId,
                     CommitNumber = newStatus.CommitNumber,
                     StateBytes = LZ4MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
-                    UpdatedTime = newStatus.UpdatedTime
+                    UpdatedTime = newStatus.UpdatedTime,
+                    StateBag = newStatus.StateBag
                 };
             }
             catch (MachineDoesNotExistException doesNotExistException)

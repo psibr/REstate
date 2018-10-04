@@ -37,4 +37,9 @@ I want to delete previously created machines")]
                 _ => _.Then_MachineDoesNotExistException_is_thrown());
         }
     }
+
+    public class MachineDeletion
+        : MachineDeletionScenarios<REstateContext<string, string>>
+    {
+    }
 }

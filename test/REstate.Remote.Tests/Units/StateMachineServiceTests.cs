@@ -64,6 +64,10 @@ namespace REstate.Remote.Tests.Units
             var inputBytes = LZ4MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance);
             var stateBytes = new byte[50];
             var commitNumber = 0L;
+            IDictionary<string, string> stateBag = new Dictionary<string, string>
+            {
+                ["key"] = "value"
+            };
             var updatedCommitNumber = commitNumber + 1;
             var updatedTime = DateTime.Now;
 
@@ -72,13 +76,15 @@ namespace REstate.Remote.Tests.Units
                     It.Is<string>(it => it == machineId),
                     It.Is<string>(it => it == input),
                     It.Is<long>(it => it == commitNumber),
+                    It.Is<IDictionary<string, string>>(it => it == stateBag),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new SendResponse
                 {
                     MachineId = machineId,
                     CommitNumber = updatedCommitNumber,
                     StateBytes = stateBytes,
-                    UpdatedTime = updatedTime
+                    UpdatedTime = updatedTime,
+                    StateBag = stateBag
                 });
 
             // Act
@@ -87,7 +93,8 @@ namespace REstate.Remote.Tests.Units
                 {
                     MachineId = machineId,
                     CommitNumber = commitNumber,
-                    InputBytes = inputBytes
+                    InputBytes = inputBytes,
+                    StateBag = stateBag
                 });
 
             // Assert
@@ -96,6 +103,7 @@ namespace REstate.Remote.Tests.Units
             Assert.Equal(updatedCommitNumber, response.CommitNumber);
             Assert.Equal(stateBytes, response.StateBytes);
             Assert.Equal(updatedTime, response.UpdatedTime);
+            Assert.Equal(stateBag, response.StateBag);
         }
 
         [Fact]
@@ -108,6 +116,10 @@ namespace REstate.Remote.Tests.Units
             var inputBytes = LZ4MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance);
             var payloadBytes = LZ4MessagePackSerializer.Typeless.Serialize(payload);
             var commitNumber = 0L;
+            IDictionary<string, string> stateBag = new Dictionary<string, string>
+            {
+                ["key"] = "value"
+            };
             var stateBytes = new byte[50];
             var updatedCommitNumber = commitNumber + 1;
             var updatedTime = DateTime.Now;
@@ -118,13 +130,15 @@ namespace REstate.Remote.Tests.Units
                     It.Is<string>(it => it == input),
                     It.Is<string>(it => it == payload),
                     It.Is<long>(it => it == commitNumber),
+                    It.Is<IDictionary<string, string>>(it => it == stateBag),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new SendResponse
                 {
                     MachineId = machineId,
                     CommitNumber = updatedCommitNumber,
                     StateBytes = stateBytes,
-                    UpdatedTime = updatedTime
+                    UpdatedTime = updatedTime,
+                    StateBag = stateBag
                 });
 
             // Act
@@ -134,7 +148,8 @@ namespace REstate.Remote.Tests.Units
                     MachineId = machineId,
                     InputBytes = inputBytes,
                     PayloadBytes = payloadBytes,
-                    CommitNumber = commitNumber
+                    CommitNumber = commitNumber,
+                    StateBag = stateBag
                 });
 
             // Assert
@@ -143,6 +158,7 @@ namespace REstate.Remote.Tests.Units
             Assert.Equal(stateBytes, response.StateBytes);
             Assert.Equal(updatedCommitNumber, response.CommitNumber);
             Assert.Equal(updatedTime, response.UpdatedTime);
+            Assert.Equal(stateBag, response.StateBag);
         }
 
         [Fact]

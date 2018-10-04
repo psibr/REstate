@@ -42,6 +42,13 @@ namespace REstate.Tests.Features.Context
                 .GetStateEngine<TState, TInput>()
                 .StoreSchematicAsync(schematic);
         }
+
+        public Task Given_a_Schematic(Func<IAgent, ISchematic<TState, TInput>> schematic)
+        {
+            CurrentSchematic = schematic.Invoke(CurrentHost.Agent());
+
+            return Task.CompletedTask;
+        }
         #endregion
 
         #region WHEN

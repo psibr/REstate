@@ -15,6 +15,8 @@ namespace REstate.Tests.Features.Context
 
         public List<IStateMachine<TState, TInput>> BulkCreatedMachines { get; set; }
 
+        public Status<TState> CurrentStatus { get; set; }
+
         #region GIVEN
         public async Task Given_a_Machine_exists_with_MachineId_MACHINEID(ISchematic<TState, TInput> schematic, string machineId)
         {
@@ -140,8 +142,46 @@ namespace REstate.Tests.Features.Context
                 CurrentException = ex;
             }
         }
-        #endregion
+
+        public async Task When_input_is_sent(TInput input)
+        {
+            try
+            {
+                CurrentStatus = await CurrentMachine.SendAsync(input);
+            }
+            catch (Exception ex)
+            {
+                CurrentException = ex;
+            }
+        }
+
+        public async Task When_input_and_a_payload_is_sent<TPayload>(TInput input, TPayload payload)
+        {
+            try
+            {
+                CurrentStatus = await CurrentMachine.SendAsync(input, payload);
+            }
+            catch (Exception ex)
+            {
+                CurrentException = ex;
+            }
+        }
+
+        public async Task When_input_is_sent_with_a_CommitNumber_and_StateBag(TInput input, long commitNumber, IDictionary<string, string> stateBag)
+        {
+            try
+            {
+                CurrentStatus = await CurrentMachine.SendAsync(input, commitNumber, stateBag);
+            }
+            catch (Exception ex)
+            {
+                CurrentException = ex;
+            }
+        }
+
         
+        #endregion
+
         #region THEN
         public Task Then_the_Machine_is_valid(IStateMachine<TState, TInput> machine)
         {
@@ -185,6 +225,28 @@ namespace REstate.Tests.Features.Context
         {
             Assert.NotNull(CurrentException);
             Assert.IsType<MachineDoesNotExistException>(CurrentException);
+
+            return Task.CompletedTask;
+        }
+
+        public Task Then_the_Machines_state_is_STATE(TState state)
+        {
+            Assert.Equal(state, CurrentStatus.State);
+
+            return Task.CompletedTask;
+        }
+
+        public Task Then_the_StateBag_has_a_matching_entry(KeyValuePair<string, string> stateBagEntry)
+        {
+            Assert.True(CurrentStatus.StateBag.Contains(stateBagEntry));
+
+            return Task.CompletedTask;
+        }
+
+        public Task Then_a_StateConflictException_was_thrown()
+        {
+            Assert.NotNull(CurrentException);
+            Assert.True(CurrentException is StateConflictException);
 
             return Task.CompletedTask;
         }

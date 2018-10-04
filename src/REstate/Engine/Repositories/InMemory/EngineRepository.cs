@@ -19,13 +19,7 @@ namespace REstate.Engine.Repositories.InMemory
         private ConcurrentDictionary<string, (MachineStatus<TState, TInput> MachineStatus, Metadata Metadata)> Machines { get; } =
             new ConcurrentDictionary<string, (MachineStatus<TState, TInput>, Metadata)>();
 
-        /// <summary>
-        /// Retrieves a previously stored Schematic by name.
-        /// </summary>
-        /// <param name="schematicName">The name of the Schematic</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="schematicName"/> is null.</exception>
-        /// <exception cref="SchematicDoesNotExistException">Thrown when no matching Schematic was found for the given name.</exception>
+        /// <inheritdoc />
         public Task<Schematic<TState, TInput>> RetrieveSchematicAsync(
             string schematicName,
             CancellationToken cancellationToken = default)
@@ -38,13 +32,7 @@ namespace REstate.Engine.Repositories.InMemory
             return Task.FromResult(schematic);
         }
 
-        /// <summary>
-        /// Stores a Schematic, using its <c>SchematicName</c> as the key.
-        /// </summary>
-        /// <param name="schematic">The Schematic to store</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="schematic"/> is null.</exception>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="schematic"/> has a null <c>SchematicName</c> property.</exception>
+        /// <inheritdoc />
         public Task<Schematic<TState, TInput>> StoreSchematicAsync(
             Schematic<TState, TInput> schematic,
             CancellationToken cancellationToken = default)
@@ -59,14 +47,7 @@ namespace REstate.Engine.Repositories.InMemory
             return Task.FromResult(storedSchematic);
         }
 
-        /// <summary>
-        /// Creates a new Machine from a provided Schematic.
-        /// </summary>
-        /// <param name="schematicName">The name of the stored Schematic</param>
-        /// <param name="machineId">The Id of Machine to create; if null, an Id will be generated.</param>
-        /// <param name="metadata">Related metadata for the Machine</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="schematicName"/> is null.</exception>
+        /// <inheritdoc />
         public Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             string schematicName,
             string machineId,
@@ -81,15 +62,7 @@ namespace REstate.Engine.Repositories.InMemory
             return CreateMachineAsync(schematic, machineId, metadata, cancellationToken);
         }
 
-        /// <summary>
-        /// Creates a new Machine from a provided Schematic.
-        /// </summary>
-        /// <param name="schematic">The Schematic of the Machine</param>
-        /// <param name="machineId">The Id of Machine to create; if null, an Id will be generated.</param>
-        /// <param name="metadata">Related metadata for the Machine</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="schematic"/> is null.</exception>
-        /// <exception cref="SchematicDoesNotExistException">Thrown when no matching Schematic was found for the given name.</exception>
+        /// <inheritdoc />
         public Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             Schematic<TState, TInput> schematic,
             string machineId,
@@ -107,7 +80,8 @@ namespace REstate.Engine.Repositories.InMemory
                 State = schematic.InitialState,
                 CommitNumber = 0L,
                 UpdatedTime = DateTime.UtcNow,
-                Metadata = metadata
+                Metadata = metadata,
+                StateBag = new Dictionary<string, string>()
             };
 
             if(Machines.TryAdd(id, (record, metadata)))
@@ -116,6 +90,7 @@ namespace REstate.Engine.Repositories.InMemory
             throw new MachineAlreadyExistException(id);
         }
 
+        /// <inheritdoc />
         public Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(
             Schematic<TState, TInput> schematic,
             IEnumerable<Metadata> metadata,
@@ -134,7 +109,8 @@ namespace REstate.Engine.Repositories.InMemory
                         State = schematic.InitialState,
                         CommitNumber = 0L,
                         UpdatedTime = DateTime.UtcNow,
-                        Metadata = meta
+                        Metadata = meta,
+                        StateBag = new Dictionary<string, string>()
                     },
                     meta)).ToList();
 
@@ -151,6 +127,7 @@ namespace REstate.Engine.Repositories.InMemory
                 machineRecords.Select(r => r.MachineStatus).ToList());
         }
 
+        /// <inheritdoc />
         public Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(
             string schematicName,
             IEnumerable<Metadata> metadata,
@@ -161,15 +138,7 @@ namespace REstate.Engine.Repositories.InMemory
             return BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
         }
 
-        /// <summary>
-        /// Deletes a Machine.
-        /// </summary>
-        /// <remarks>
-        /// Does not throw an exception if a matching Machine was not found.
-        /// </remarks>
-        /// <param name="machineId">The Id of the Machine to delete</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
+        /// <inheritdoc />
         public Task DeleteMachineAsync(
             string machineId,
             CancellationToken cancellationToken = default)
@@ -185,13 +154,7 @@ namespace REstate.Engine.Repositories.InMemory
 #endif
         }
 
-        /// <summary>
-        /// Retrieves the record for a Machine Status.
-        /// </summary>
-        /// <param name="machineId">The Id of the Machine</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
-        /// <exception cref="MachineDoesNotExistException">Thrown when no matching MachineId was found.</exception>
+        /// <inheritdoc />
         public Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(
             string machineId,
             CancellationToken cancellationToken = default)
@@ -204,23 +167,12 @@ namespace REstate.Engine.Repositories.InMemory
             return Task.FromResult(record.MachineStatus);
         }
 
-        /// <summary>
-        /// Updates the Status record of a Machine
-        /// </summary>
-        /// <param name="machineId">The Id of the Machine</param>
-        /// <param name="state">The state to which the Status is set.</param>
-        /// <param name="lastCommitNumber">
-        /// If provided, will guarentee the update will occur only 
-        /// if the value matches the current Status's CommitNumber.
-        /// </param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
-        /// <exception cref="MachineDoesNotExistException">Thrown when no matching MachineId was found.</exception>
-        /// <exception cref="StateConflictException">Thrown when a conflict occured on CommitNumber; no update was performed.</exception>
+        /// <inheritdoc />
         public Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
             string machineId,
             TState state,
             long? lastCommitNumber,
+            IDictionary<string, string> stateBag = null,
             CancellationToken cancellationToken = default)
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
@@ -235,6 +187,9 @@ namespace REstate.Engine.Repositories.InMemory
                     record.MachineStatus.State = state;
                     record.MachineStatus.CommitNumber++;
                     record.MachineStatus.UpdatedTime = DateTimeOffset.UtcNow;
+
+                    if(stateBag != null && lastCommitNumber != null)
+                        record.MachineStatus.StateBag = stateBag;
                 }
                 else
                 {

@@ -16,6 +16,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         public string MetadataJson { get; set; }
 
         public string SchematicJson { get; set; }
+
+        public string StateBagJson { get; set; }
     }
 
     public class EntityFrameworkCoreSchematic

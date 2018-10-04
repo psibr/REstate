@@ -21,13 +21,14 @@ namespace REstate.Engine
 
         Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
-            TPayload payload, 
+            TPayload payload,
             CancellationToken cancellationToken = default);
 
         Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload, 
             long lastCommitNumber,
+            IDictionary<string, string> stateBag = null,
             CancellationToken cancellationToken = default);
 
         Task<Status<TState>> SendAsync(
@@ -37,6 +38,7 @@ namespace REstate.Engine
         Task<Status<TState>> SendAsync(
             TInput input,
             long lastCommitNumber,
+            IDictionary<string, string> stateBag = null,
             CancellationToken cancellationToken = default);
     }
 }

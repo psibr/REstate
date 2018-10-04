@@ -19,8 +19,8 @@ namespace REstate.Remote.Services
 
     // non generic delegates for generic method calls
     using GetCurrentStateAsyncDelegate = Func<string, CancellationToken, Task<GetCurrentStateResponse>>;
-    using SendAsyncDelegate = Func<string, object, long?, CancellationToken, Task<SendResponse>>;
-    using SendWithPayloadAsyncDelegate = Func<string, object, object, long?, CancellationToken, Task<SendResponse>>;
+    using SendAsyncDelegate = Func<string, object, long?, IDictionary<string, string>, CancellationToken, Task<SendResponse>>;
+    using SendWithPayloadAsyncDelegate = Func<string, object, object, long?, IDictionary<string, string>, CancellationToken, Task<SendResponse>>;
     using StoreSchematicAsyncDelegate = Func<object, CancellationToken, Task<StoreSchematicResponse>>;
     using GetMachineSchematicAsyncDelegate = Func<string, CancellationToken, Task<GetMachineSchematicResponse>>;
     using GetMachineMetadataAsyncDelegate = Func<string, CancellationToken, Task<GetMachineMetadataResponse>>;
@@ -66,7 +66,7 @@ namespace REstate.Remote.Services
 
         public async UnaryResult<GetCurrentStateResponse> GetCurrentStateAsync(GetCurrentStateRequest request)
         {
-            (var stateType, var inputType) = GetGenericTupleFromHeaders();
+            var (stateType, inputType) = GetGenericTupleFromHeaders();
 
             var getCurrentStateAsync = (GetCurrentStateAsyncDelegate)DelegateCache
                 .GetOrAdd(
@@ -99,7 +99,7 @@ namespace REstate.Remote.Services
 
         public async UnaryResult<SendResponse> SendAsync(SendRequest request)
         {
-            (var stateType, var inputType) = GetGenericTupleFromHeaders();
+            var (stateType, inputType) = GetGenericTupleFromHeaders();
 
             var input = LZ4MessagePackSerializer.NonGeneric.Deserialize(
                 inputType,
@@ -114,6 +114,7 @@ namespace REstate.Remote.Services
                         var machineIdParameter = Expression.Parameter(typeof(string), "machineId");
                         var inputParameter = Expression.Parameter(typeof(object), "input");
                         var commitNumberParameter = Expression.Parameter(typeof(long?), "commitNumber");
+                        var stateBagParameter = Expression.Parameter(typeof(IDictionary<string, string>), "stateBag");
                         var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
                         return Expression.Lambda<SendAsyncDelegate>(
@@ -126,12 +127,14 @@ namespace REstate.Remote.Services
                                         machineIdParameter,
                                         Expression.Convert(inputParameter, inputType),
                                         commitNumberParameter,
+                                        stateBagParameter,
                                         cancellationTokenParameter
                                     }),
                                 false,
                                 machineIdParameter,
                                 inputParameter,
                                 commitNumberParameter,
+                                stateBagParameter,
                                 cancellationTokenParameter)
                             .Compile();
                     });
@@ -140,12 +143,13 @@ namespace REstate.Remote.Services
                 request.MachineId,
                 input,
                 request.CommitNumber,
+                request.StateBag,
                 GetCallCancellationToken());
         }
 
         public async UnaryResult<SendResponse> SendWithPayloadAsync(SendWithPayloadRequest request)
         {
-            (var stateType, var inputType) = GetGenericTupleFromHeaders();
+            var (stateType, inputType) = GetGenericTupleFromHeaders();
 
             var input = LZ4MessagePackSerializer.NonGeneric.Deserialize(
                 inputType,
@@ -164,6 +168,7 @@ namespace REstate.Remote.Services
                         var inputParameter = Expression.Parameter(typeof(object), "input");
                         var payloadParameter = Expression.Parameter(typeof(object), "payload");
                         var commitNumberParameter = Expression.Parameter(typeof(long?), "commitNumber");
+                        var stateBagParameter = Expression.Parameter(typeof(IDictionary<string, string>), "stateBag");
                         var cancellationTokenParameter = Expression.Parameter(typeof(CancellationToken), "cancellationToken");
 
                         return Expression.Lambda<SendWithPayloadAsyncDelegate>(
@@ -176,7 +181,8 @@ namespace REstate.Remote.Services
                                             machineIdParameter,
                                             Expression.Convert(inputParameter, inputType),
                                             Expression.Convert(payloadParameter, payloadType),
-                                        commitNumberParameter,
+                                            commitNumberParameter,
+                                            stateBagParameter,
                                             cancellationTokenParameter
                                     }),
                                 false,
@@ -184,6 +190,7 @@ namespace REstate.Remote.Services
                                 inputParameter,
                                 payloadParameter,
                                 commitNumberParameter,
+                                stateBagParameter,
                                 cancellationTokenParameter)
                             .Compile();
                     });
@@ -193,6 +200,7 @@ namespace REstate.Remote.Services
                     input,
                     payload,
                     request.CommitNumber,
+                    request.StateBag,
                     GetCallCancellationToken());
         }
 

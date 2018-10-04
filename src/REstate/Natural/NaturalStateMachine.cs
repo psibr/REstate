@@ -25,6 +25,7 @@ namespace REstate.Natural
         Task<Status<TypeState>> SignalAsync<TSignal>(
             TSignal signal,
             long lastCommitNumber,
+            IDictionary<string, string> stateBag = null,
             CancellationToken cancellationToken = default);
     }
 
@@ -65,12 +66,14 @@ namespace REstate.Natural
         public Task<Status<TypeState>> SignalAsync<TSignal>(
             TSignal signal,
             long lastCommitNumber,
+            IDictionary<string, string> stateBag = null,
             CancellationToken cancellationToken = default)
         {
             return _stateMachine.SendAsync(
                 typeof(TSignal),
                 signal,
                 lastCommitNumber,
+                stateBag,
                 cancellationToken);
         }
 

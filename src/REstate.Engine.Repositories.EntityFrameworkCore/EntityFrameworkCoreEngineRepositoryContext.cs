@@ -27,13 +27,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
         protected REstateDbContext DbContext { get; }
 
-        /// <summary>
-        /// Retrieves a previously stored Schematic by name.
-        /// </summary>
-        /// <param name="schematicName">The name of the Schematic</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="schematicName"/> is null.</exception>
-        /// <exception cref="SchematicDoesNotExistException">Thrown when no matching Schematic was found for the given name.</exception>
+        /// <inheritdoc />
         public async Task<Schematic<TState, TInput>> RetrieveSchematicAsync(string schematicName, CancellationToken cancellationToken = default)
         {
             if (schematicName == null) throw new ArgumentNullException(nameof(schematicName));
@@ -57,13 +51,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             return schematic;
         }
 
-        /// <summary>
-        /// Stores a Schematic, using its <c>SchematicName</c> as the key.
-        /// </summary>
-        /// <param name="schematic">The Schematic to store</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="schematic"/> is null.</exception>
-        /// <exception cref="System.ArgumentException">Thrown if <paramref name="schematic"/> has a null <c>SchematicName</c> property.</exception>
+        /// <inheritdoc />
         public async Task<Schematic<TState, TInput>> StoreSchematicAsync(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default)
         {
             if (schematic == null) throw new ArgumentNullException(nameof(schematic));
@@ -87,14 +75,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             return schematic;
         }
 
-        /// <summary>
-        /// Creates a new Machine from a provided Schematic.
-        /// </summary>
-        /// <param name="schematicName">The name of the stored Schematic</param>
-        /// <param name="machineId">The Id of Machine to create; if null, an Id will be generated.</param>
-        /// <param name="metadata">Related metadata for the Machine</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="schematicName"/> is null.</exception>
+        /// <inheritdoc />
         public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, string machineId, IDictionary<string, string> metadata,
             CancellationToken cancellationToken = default)
         {
@@ -105,15 +86,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             return await CreateMachineAsync(schematic, machineId, metadata, cancellationToken).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Creates a new Machine from a provided Schematic.
-        /// </summary>
-        /// <param name="schematic">The Schematic of the Machine</param>
-        /// <param name="machineId">The Id of Machine to create; if null, an Id will be generated.</param>
-        /// <param name="metadata">Related metadata for the Machine</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="schematic"/> is null.</exception>
-        /// <exception cref="SchematicDoesNotExistException">Thrown when no matching Schematic was found for the given name.</exception>
+        /// <inheritdoc />
         public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(
             Schematic<TState, TInput> schematic,
             string machineId,
@@ -140,6 +113,12 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             var commitNumber = 0L;
             var updatedTime = DateTimeOffset.UtcNow;
 
+            var stateBag = new Dictionary<string, string>();
+
+            var stateBagJson = MessagePackSerializer.ToJson(
+                obj: stateBag
+            );
+
             var record = new EntityFrameworkCoreMachineStatus
             {
                 MachineId = id,
@@ -147,7 +126,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 StateJson = stateJson,
                 CommitNumber = commitNumber,
                 UpdatedTime = updatedTime,
-                MetadataJson = metadataJson
+                MetadataJson = metadataJson,
+                StateBagJson = stateBagJson
             };
 
             DbContext.Machines.Add(record);
@@ -169,10 +149,12 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 State = schematic.InitialState,
                 Metadata = metadata,
                 CommitNumber = commitNumber,
-                UpdatedTime = updatedTime
+                UpdatedTime = updatedTime,
+                StateBag = stateBag
             };
         }
 
+        /// <inheritdoc />
         public async Task<ICollection<MachineStatus<TState, TInput>>> BulkCreateMachinesAsync(
             Schematic<TState, TInput> schematic,
             IEnumerable<IDictionary<string, string>> metadata,
@@ -203,6 +185,12 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     metadataJson = MessagePackSerializer.ToJson(
                         obj: dictionary);
 
+                var stateBag = new Dictionary<string, string>();
+
+                var stateBagJson = MessagePackSerializer.ToJson(
+                    obj: stateBag
+                );
+
                 records.Add(new EntityFrameworkCoreMachineStatus
                 {
                     MachineId = machineId,
@@ -210,7 +198,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     StateJson = stateJson,
                     CommitNumber = commitNumber,
                     UpdatedTime = updatedTime,
-                    MetadataJson = metadataJson
+                    MetadataJson = metadataJson,
+                    StateBagJson = stateBagJson
                 });
 
                 machineStatuses.Add(new MachineStatus<TState, TInput>
@@ -220,7 +209,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     State = schematic.InitialState,
                     Metadata = dictionary,
                     CommitNumber = commitNumber,
-                    UpdatedTime = updatedTime
+                    UpdatedTime = updatedTime,
+                    StateBag = stateBag
                 });
             }
 
@@ -241,15 +231,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             return await BulkCreateMachinesAsync(schematic, metadata, cancellationToken).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Deletes a Machine.
-        /// </summary>
-        /// <remarks>
-        /// Does not throw an exception if a matching Machine was not found.
-        /// </remarks>
-        /// <param name="machineId">The Id of the Machine to delete</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
+        /// <inheritdoc />
         public async Task DeleteMachineAsync(string machineId, CancellationToken cancellationToken = default)
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
@@ -267,13 +249,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             }
         }
 
-        /// <summary>
-        /// Retrieves the record for a Machine Status.
-        /// </summary>
-        /// <param name="machineId">The Id of the Machine</param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
-        /// <exception cref="MachineDoesNotExistException">Thrown when no matching MachineId was found.</exception>
+        /// <inheritdoc />
         public async Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(
             string machineId, 
             CancellationToken cancellationToken = default)
@@ -300,6 +276,11 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 metadata = MessagePackSerializer.Deserialize<IDictionary<string, string>>(
                     bytes: MessagePackSerializer.FromJson(machineRecord.MetadataJson));
 
+            IDictionary<string, string> stateBag = null;
+            if(machineRecord.StateBagJson != null)
+                stateBag = MessagePackSerializer.Deserialize<IDictionary<string, string>>(
+                    bytes: MessagePackSerializer.FromJson(machineRecord.StateBagJson));
+
             return new MachineStatus<TState, TInput>
             {
                 MachineId = machineId,
@@ -307,27 +288,17 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 State = state,
                 Metadata = metadata,
                 CommitNumber = machineRecord.CommitNumber,
-                UpdatedTime = machineRecord.UpdatedTime
+                UpdatedTime = machineRecord.UpdatedTime,
+                StateBag = stateBag
             };
         }
 
-        /// <summary>
-        /// Updates the Status record of a Machine
-        /// </summary>
-        /// <param name="machineId">The Id of the Machine</param>
-        /// <param name="state">The state to which the Status is set.</param>
-        /// <param name="lastCommitNumber">
-        /// If provided, will guarentee the update will occur only 
-        /// if the value matches the current Status's CommitNumber.
-        /// </param>
-        /// <param name="cancellationToken"></param>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="machineId"/> is null.</exception>
-        /// <exception cref="MachineDoesNotExistException">Thrown when no matching MachineId was found.</exception>
-        /// <exception cref="StateConflictException">Thrown when a conflict occured on CommitNumber; no update was performed.</exception>
+        /// <inheritdoc />
         public async Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
             string machineId,
             TState state,
             long? lastCommitNumber,
+            IDictionary<string, string> stateBag = null,
             CancellationToken cancellationToken = default)
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
@@ -348,6 +319,10 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 machineRecord.StateJson = stateJson;
                 machineRecord.CommitNumber++;
                 machineRecord.UpdatedTime = DateTimeOffset.UtcNow;
+
+                if(stateBag != null && lastCommitNumber != null)
+                    machineRecord.StateBagJson = MessagePackSerializer.ToJson(
+                        obj: stateBag);
             }
             else
             {
@@ -372,6 +347,11 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 metadata = MessagePackSerializer.Deserialize<IDictionary<string, string>>(
                     bytes: MessagePackSerializer.FromJson(machineRecord.MetadataJson));
 
+            IDictionary<string, string> currentStateBag = null;
+            if (machineRecord.StateBagJson != null)
+                currentStateBag = MessagePackSerializer.Deserialize<IDictionary<string, string>>(
+                    bytes: MessagePackSerializer.FromJson(machineRecord.StateBagJson));
+
             return new MachineStatus<TState, TInput>
             {
                 MachineId = machineId,
@@ -379,7 +359,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 State = state,
                 Metadata = metadata,
                 CommitNumber = machineRecord.CommitNumber,
-                UpdatedTime = machineRecord.UpdatedTime
+                UpdatedTime = machineRecord.UpdatedTime,
+                StateBag = currentStateBag
             };
         }
 
