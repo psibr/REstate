@@ -238,7 +238,7 @@ namespace REstate.Tests.Features.Context
 
         public Task Then_the_StateBag_has_a_matching_entry(KeyValuePair<string, string> stateBagEntry)
         {
-            Assert.True(CurrentStatus.StateBag.Contains(stateBagEntry));
+            Assert.Contains(stateBagEntry, CurrentStatus.StateBag);
 
             return Task.CompletedTask;
         }

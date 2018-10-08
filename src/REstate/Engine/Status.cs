@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace REstate.Engine
 {
@@ -23,7 +24,7 @@ namespace REstate.Engine
             State = state;
             UpdatedTime = updatedTime;
             CommitNumber = commitNumber;
-            StateBag = stateBag;
+            StateBag = new ReadOnlyDictionary<string, string>(stateBag);
         }
 
         /// <summary>
@@ -52,7 +53,7 @@ namespace REstate.Engine
         /// <summary>
         /// A dictionary of key/value pairs that can be used to track state in addition to the machine state
         /// </summary>
-        public IDictionary<string, string> StateBag { get; set; }
+        public IReadOnlyDictionary<string, string> StateBag { get; }
 
         /// <summary>
         /// Presents the state the status represents in a textual form

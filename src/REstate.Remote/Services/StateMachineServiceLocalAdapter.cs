@@ -35,7 +35,7 @@ namespace REstate.Remote.Services
                     CommitNumber = status.CommitNumber,
                     StateBytes = LZ4MessagePackSerializer.Serialize(status.State, ContractlessStandardResolver.Instance),
                     UpdatedTime = status.UpdatedTime,
-                    StateBag = status.StateBag
+                    StateBag = (IDictionary<string, string>)status.StateBag
                 };
             }
             catch (MachineDoesNotExistException doesNotExistException)
@@ -85,7 +85,7 @@ namespace REstate.Remote.Services
                     CommitNumber = newStatus.CommitNumber,
                     StateBytes = LZ4MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
                     UpdatedTime = newStatus.UpdatedTime,
-                    StateBag = newStatus.StateBag
+                    StateBag = (IDictionary<string, string>)newStatus.StateBag
                 };
             }
             catch (MachineDoesNotExistException doesNotExistException)
@@ -136,7 +136,7 @@ namespace REstate.Remote.Services
                     CommitNumber = newStatus.CommitNumber,
                     StateBytes = LZ4MessagePackSerializer.Serialize(newStatus.State, ContractlessStandardResolver.Instance),
                     UpdatedTime = newStatus.UpdatedTime,
-                    StateBag = newStatus.StateBag
+                    StateBag = (IDictionary<string, string>)newStatus.StateBag
                 };
             }
             catch (MachineDoesNotExistException doesNotExistException)
