@@ -16,6 +16,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>REstate</PackageTags>
     <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)'=='Debug' ">
