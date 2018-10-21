@@ -1,55 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace REstate.Engine.Repositories.EntityFrameworkCore
 {
-    public class EntityFrameworkCoreMachineStatus
-    {
-        public string MachineId { get; set; }
-
-        public long CommitNumber { get; set; }
-
-        public DateTimeOffset UpdatedTime { get; set; }
-
-        public string StateJson { get; set; }
-
-        public List<MetadataEntry> MetadataEntries { get; set; }
-
-        public string SchematicJson { get; set; }
-        
-        public List<StateBagEntry> StateBagEntries { get; set; }
-    }
-
-    public class MetadataEntry
-    {
-        public string MachineId { get; set; }
-
-        public string Key { get; set; }
-
-        public string Value { get; set; }
-    }
-    
-    public class StateBagEntry
-    {
-        public string MachineId { get; set; }
-
-        public string Key { get; set; }
-
-        public string Value { get; set; }
-    }
-
-    public class EntityFrameworkCoreSchematic
-    {
-        public string SchematicName { get; set; }
-
-        public string SchematicJson { get; set; }
-    }
-
     public class REstateDbContext
         : DbContext
     {
-        public REstateDbContext(DbContextOptions options)
+        internal REstateDbContext(DbContextOptions options)
             : base(options)
         {
         }
@@ -73,14 +29,14 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<EntityFrameworkCoreMachineStatus>()
+            modelBuilder.Entity<Machine>()
                 .HasKey(status => status.MachineId);
 
-            modelBuilder.Entity<EntityFrameworkCoreMachineStatus>()
+            modelBuilder.Entity<Machine>()
                 .Property(status => status.CommitNumber)
                 .IsConcurrencyToken();
 
-            modelBuilder.Entity<EntityFrameworkCoreMachineStatus>()
+            modelBuilder.Entity<Machine>()
                 .HasMany<MetadataEntry>(machine => machine.MetadataEntries)
                 .WithOne();
 
@@ -91,7 +47,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     entry.Key
                 });
             
-            modelBuilder.Entity<EntityFrameworkCoreMachineStatus>()
+            modelBuilder.Entity<Machine>()
                 .HasMany<StateBagEntry>(machine => machine.StateBagEntries)
                 .WithOne();
 
@@ -102,16 +58,16 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     entry.Key
                 });
 
-            modelBuilder.Entity<EntityFrameworkCoreSchematic>()
+            modelBuilder.Entity<Schematic>()
                 .HasKey(schematic => schematic.SchematicName);
         }
 
-        public DbSet<EntityFrameworkCoreMachineStatus> Machines { get; set; }
+        public DbSet<Machine> Machines { get; set; }
 
         public DbSet<MetadataEntry> MetadataEntries { get; set; }
         
         public DbSet<StateBagEntry> StateBagEntries { get; set; }
 
-        public DbSet<EntityFrameworkCoreSchematic> Schematics { get; set; }
+        public DbSet<Schematic> Schematics { get; set; }
     }
 }

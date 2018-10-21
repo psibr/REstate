@@ -10,19 +10,15 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
     public class EntityFrameworkCoreRepositoryComponent
         : IComponent
     {
-        private readonly REstateEntityFrameworkCoreServerOptions _options;
+        private readonly DbContextOptions _dbContextOptions;
 
         /// <summary>
-        /// Creates an instance of the component given configurationusing a <see cref="DbContextOptionsBuilder"/>. />
+        /// Creates an instance of the component given configuration using a <see cref="DbContextOptionsBuilder"/>. />
         /// </summary>
-        /// <param name="optionsBuilder">The connection options REstate will use</param>
-        public EntityFrameworkCoreRepositoryComponent(Action<DbContextOptionsBuilder> optionsBuilder)
+        /// <param name="dbContextOptions">The connection options REstate will use</param>
+        public EntityFrameworkCoreRepositoryComponent(DbContextOptions dbContextOptions)
         {
-            var builder = new DbContextOptionsBuilder();
-
-            optionsBuilder?.Invoke(builder);
-
-            _options = new REstateEntityFrameworkCoreServerOptions(builder.Options);
+            _dbContextOptions = dbContextOptions;
         }
 
         /// <summary>
@@ -31,8 +27,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         /// <param name="registrar">The registrar to which the configuration and dependencies should be added</param>
         public void Register(IRegistrar registrar)
         {
-            registrar.Register(_options);
-            registrar.Register(typeof(IRepositoryContextFactory<,>), typeof(EntityFrameworkCoreRepositoryContextFactory<,>));
+            registrar.Register(new REstateDbContextFactory(_dbContextOptions));
+            registrar.Register(typeof(IRepositoryContextFactory<,>), typeof(RepositoryFactory<,>));
         }
     }
 

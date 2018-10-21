@@ -4,22 +4,21 @@ using System.Threading.Tasks;
 namespace REstate.Engine.Repositories.EntityFrameworkCore
 {
 
-    public class EntityFrameworkCoreRepositoryContextFactory<TState, TInput>
+    public class RepositoryFactory<TState, TInput>
         : IRepositoryContextFactory<TState, TInput>
     {
-        internal EntityFrameworkCoreRepositoryContextFactory(REstateEntityFrameworkCoreServerOptions options)
-        {
-            Options = options;
-        }
+        private readonly REstateDbContextFactory _dbContextFactory;
 
-        private REstateEntityFrameworkCoreServerOptions Options { get; }
+        internal RepositoryFactory(REstateDbContextFactory dbContextFactory)
+        {
+            _dbContextFactory = dbContextFactory;
+        }
 
         public Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult<IEngineRepositoryContext<TState, TInput>>(
-                new EntityFrameworkCoreEngineRepositoryContext<TState, TInput>(
-                    new REstateDbContext(Options.DbContextOptions)));
+                new Repository<TState, TInput>(_dbContextFactory.CreateContext()));
         }
     }
 

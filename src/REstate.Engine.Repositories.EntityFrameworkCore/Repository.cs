@@ -11,21 +11,20 @@ using REstate.Schematics;
 
 namespace REstate.Engine.Repositories.EntityFrameworkCore
 {
-    public class EntityFrameworkCoreEngineRepositoryContext<TState, TInput>
+    public class Repository<TState, TInput>
         : IEngineRepositoryContext<TState, TInput>
-            , ISchematicRepository<TState, TInput>
-            , IMachineRepository<TState, TInput>
+        , ISchematicRepository<TState, TInput>
+        , IMachineRepository<TState, TInput>
     {
-        public EntityFrameworkCoreEngineRepositoryContext(REstateDbContext dbContext)
+        public Repository(REstateDbContext dbContext)
         {
             DbContext = dbContext;
         }
 
-
         public ISchematicRepository<TState, TInput> Schematics => this;
         public IMachineRepository<TState, TInput> Machines => this;
 
-        protected REstateDbContext DbContext { get; }
+        private REstateDbContext DbContext { get; }
 
         /// <inheritdoc />
         public async Task<Schematic<TState, TInput>> RetrieveSchematicAsync(string schematicName,
@@ -33,7 +32,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         {
             if (schematicName == null) throw new ArgumentNullException(nameof(schematicName));
 
-            EntityFrameworkCoreSchematic result;
+            Schematic result;
             try
             {
                 result = await DbContext.Schematics.SingleAsync(
@@ -65,7 +64,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 obj: schematic,
                 resolver: ContractlessStandardResolver.Instance);
 
-            var record = new EntityFrameworkCoreSchematic
+            var record = new Schematic
             {
                 SchematicName = schematic.SchematicName,
                 SchematicJson = schematicJson
@@ -112,7 +111,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             var commitNumber = 0L;
             var updatedTime = DateTimeOffset.UtcNow;
 
-            var record = new EntityFrameworkCoreMachineStatus
+            var record = new Machine
             {
                 MachineId = id,
                 SchematicJson = schematicJson,
@@ -173,7 +172,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             const long commitNumber = 0L;
             var updatedTime = DateTimeOffset.UtcNow;
 
-            var records = new List<EntityFrameworkCoreMachineStatus>();
+            var records = new List<Machine>();
             var machineStatuses = new List<MachineStatus<TState, TInput>>();
 
             foreach (var dictionary in metadata)
@@ -191,7 +190,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     }).ToList();
                 }
 
-                records.Add(new EntityFrameworkCoreMachineStatus
+                records.Add(new Machine
                 {
                     MachineId = machineId,
                     SchematicJson = schematicJson,
@@ -365,7 +364,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         // To detect redundant calls
         private bool _disposedValue;
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (!_disposedValue)
             {

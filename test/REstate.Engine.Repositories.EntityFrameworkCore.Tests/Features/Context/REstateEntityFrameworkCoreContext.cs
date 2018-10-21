@@ -11,7 +11,10 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore.Tests.Features.Context
         public Task Given_EntityFrameworkCore_is_the_registered_repository()
         {
             CurrentHost.Agent().Configuration
-                .RegisterComponent(new EntityFrameworkCoreRepositoryComponent(builder => builder.UseInMemoryDatabase("REstateScenarioTests")));
+                .RegisterComponent(new EntityFrameworkCoreRepositoryComponent(
+                    new DbContextOptionsBuilder()
+                        .UseInMemoryDatabase("REstateScenarioTests")
+                        .Options));
 
             return Task.CompletedTask;
         }
