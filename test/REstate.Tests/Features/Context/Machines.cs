@@ -22,7 +22,11 @@ namespace REstate.Tests.Features.Context
         {
             CurrentMachine = await CurrentHost.Agent()
                 .GetStateEngine<TState, TInput>()
-                .CreateMachineAsync(schematic, machineId);
+                .CreateMachineAsync(schematic, machineId, new Dictionary<string, string>
+                {
+                    ["Key1"] = "Value1",
+                    ["Key2"] = "Value2"
+                });
         }
         #endregion
 
@@ -33,7 +37,11 @@ namespace REstate.Tests.Features.Context
             {
                 CurrentMachine = await CurrentHost.Agent()
                     .GetStateEngine<TState, TInput>()
-                    .CreateMachineAsync(schematic);
+                    .CreateMachineAsync(schematic, new Dictionary<string, string>
+                    {
+                        ["Key1"] = "Value1",
+                        ["Key2"] = "Value2"
+                    });
             }
             catch (Exception ex)
             {

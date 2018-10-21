@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
 namespace REstate.Engine.Repositories.EntityFrameworkCore
@@ -6,18 +7,36 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
     public class EntityFrameworkCoreMachineStatus
     {
         public string MachineId { get; set; }
-        
+
         public long CommitNumber { get; set; }
 
         public DateTimeOffset UpdatedTime { get; set; }
 
         public string StateJson { get; set; }
 
-        public string MetadataJson { get; set; }
+        public List<MetadataEntry> MetadataEntries { get; set; }
 
         public string SchematicJson { get; set; }
+        
+        public List<StateBagEntry> StateBagEntries { get; set; }
+    }
 
-        public string StateBagJson { get; set; }
+    public class MetadataEntry
+    {
+        public string MachineId { get; set; }
+
+        public string Key { get; set; }
+
+        public string Value { get; set; }
+    }
+    
+    public class StateBagEntry
+    {
+        public string MachineId { get; set; }
+
+        public string Key { get; set; }
+
+        public string Value { get; set; }
     }
 
     public class EntityFrameworkCoreSchematic
@@ -61,11 +80,37 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 .Property(status => status.CommitNumber)
                 .IsConcurrencyToken();
 
+            modelBuilder.Entity<EntityFrameworkCoreMachineStatus>()
+                .HasMany<MetadataEntry>(machine => machine.MetadataEntries)
+                .WithOne();
+
+            modelBuilder.Entity<MetadataEntry>()
+                .HasKey(entry => new
+                {
+                    entry.MachineId,
+                    entry.Key
+                });
+            
+            modelBuilder.Entity<EntityFrameworkCoreMachineStatus>()
+                .HasMany<StateBagEntry>(machine => machine.StateBagEntries)
+                .WithOne();
+
+            modelBuilder.Entity<StateBagEntry>()
+                .HasKey(entry => new
+                {
+                    entry.MachineId,
+                    entry.Key
+                });
+
             modelBuilder.Entity<EntityFrameworkCoreSchematic>()
                 .HasKey(schematic => schematic.SchematicName);
         }
 
         public DbSet<EntityFrameworkCoreMachineStatus> Machines { get; set; }
+
+        public DbSet<MetadataEntry> MetadataEntries { get; set; }
+        
+        public DbSet<StateBagEntry> StateBagEntries { get; set; }
 
         public DbSet<EntityFrameworkCoreSchematic> Schematics { get; set; }
     }

@@ -13,8 +13,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 {
     public class EntityFrameworkCoreEngineRepositoryContext<TState, TInput>
         : IEngineRepositoryContext<TState, TInput>
-        , ISchematicRepository<TState, TInput>
-        , IMachineRepository<TState, TInput>
+            , ISchematicRepository<TState, TInput>
+            , IMachineRepository<TState, TInput>
     {
         public EntityFrameworkCoreEngineRepositoryContext(REstateDbContext dbContext)
         {
@@ -28,7 +28,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         protected REstateDbContext DbContext { get; }
 
         /// <inheritdoc />
-        public async Task<Schematic<TState, TInput>> RetrieveSchematicAsync(string schematicName, CancellationToken cancellationToken = default)
+        public async Task<Schematic<TState, TInput>> RetrieveSchematicAsync(string schematicName,
+            CancellationToken cancellationToken = default)
         {
             if (schematicName == null) throw new ArgumentNullException(nameof(schematicName));
 
@@ -45,21 +46,23 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             }
 
             var schematic = MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
-                           bytes: MessagePackSerializer.FromJson(result.SchematicJson), 
-                           resolver: ContractlessStandardResolver.Instance);
+                bytes: MessagePackSerializer.FromJson(result.SchematicJson),
+                resolver: ContractlessStandardResolver.Instance);
 
             return schematic;
         }
 
         /// <inheritdoc />
-        public async Task<Schematic<TState, TInput>> StoreSchematicAsync(Schematic<TState, TInput> schematic, CancellationToken cancellationToken = default)
+        public async Task<Schematic<TState, TInput>> StoreSchematicAsync(Schematic<TState, TInput> schematic,
+            CancellationToken cancellationToken = default)
         {
             if (schematic == null) throw new ArgumentNullException(nameof(schematic));
-            if (schematic.SchematicName == null) throw new ArgumentException("Schematic must have a name to be stored.", nameof(schematic));
+            if (schematic.SchematicName == null)
+                throw new ArgumentException("Schematic must have a name to be stored.", nameof(schematic));
 
 
             var schematicJson = MessagePackSerializer.ToJson(
-                obj: schematic, 
+                obj: schematic,
                 resolver: ContractlessStandardResolver.Instance);
 
             var record = new EntityFrameworkCoreSchematic
@@ -76,7 +79,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         }
 
         /// <inheritdoc />
-        public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, string machineId, IDictionary<string, string> metadata,
+        public async Task<MachineStatus<TState, TInput>> CreateMachineAsync(string schematicName, string machineId,
+            IDictionary<string, string> metadata,
             CancellationToken cancellationToken = default)
         {
             if (schematicName == null) throw new ArgumentNullException(nameof(schematicName));
@@ -98,26 +102,15 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             var id = machineId ?? Guid.NewGuid().ToString();
 
             var schematicJson = MessagePackSerializer.ToJson(
-                obj: schematic, 
+                obj: schematic,
                 resolver: ContractlessStandardResolver.Instance);
 
             var stateJson = MessagePackSerializer.ToJson(
-                obj: schematic.InitialState, 
+                obj: schematic.InitialState,
                 resolver: ContractlessStandardResolver.Instance);
-
-            string metadataJson = null;
-            if (metadata != null)
-                metadataJson = MessagePackSerializer.ToJson(
-                    obj: metadata);
 
             var commitNumber = 0L;
             var updatedTime = DateTimeOffset.UtcNow;
-
-            var stateBag = new Dictionary<string, string>();
-
-            var stateBagJson = MessagePackSerializer.ToJson(
-                obj: stateBag
-            );
 
             var record = new EntityFrameworkCoreMachineStatus
             {
@@ -125,10 +118,17 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 SchematicJson = schematicJson,
                 StateJson = stateJson,
                 CommitNumber = commitNumber,
-                UpdatedTime = updatedTime,
-                MetadataJson = metadataJson,
-                StateBagJson = stateBagJson
+                UpdatedTime = updatedTime
             };
+
+            if (metadata != null)
+            {
+                record.MetadataEntries = metadata.Select(kvp => new MetadataEntry
+                {
+                    Key = kvp.Key,
+                    Value = kvp.Value
+                }).ToList();
+            }
 
             DbContext.Machines.Add(record);
 
@@ -136,8 +136,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             {
                 await DbContext.SaveChangesAsync(cancellationToken);
             }
-            catch(DbUpdateException dbEx) 
-            when (dbEx.InnerException is SqlException sqlEx && sqlEx.Number == 2627)
+            catch (DbUpdateException dbEx)
+                when (dbEx.InnerException is SqlException sqlEx && sqlEx.Number == 2627)
             {
                 throw new MachineAlreadyExistException(record.MachineId);
             }
@@ -150,7 +150,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 Metadata = metadata,
                 CommitNumber = commitNumber,
                 UpdatedTime = updatedTime,
-                StateBag = stateBag
+                StateBag = new Dictionary<string, string>(0)
             };
         }
 
@@ -163,11 +163,11 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             if (schematic == null) throw new ArgumentNullException(nameof(schematic));
 
             var schematicJson = MessagePackSerializer.ToJson(
-                obj: schematic, 
+                obj: schematic,
                 resolver: ContractlessStandardResolver.Instance);
 
             var stateJson = MessagePackSerializer.ToJson(
-                obj: schematic.InitialState, 
+                obj: schematic.InitialState,
                 resolver: ContractlessStandardResolver.Instance);
 
             const long commitNumber = 0L;
@@ -180,16 +180,16 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             {
                 var machineId = Guid.NewGuid().ToString();
 
-                string metadataJson = null;
+                List<MetadataEntry> metadataEntries = null;
+                
                 if (dictionary != null)
-                    metadataJson = MessagePackSerializer.ToJson(
-                        obj: dictionary);
-
-                var stateBag = new Dictionary<string, string>();
-
-                var stateBagJson = MessagePackSerializer.ToJson(
-                    obj: stateBag
-                );
+                {
+                    metadataEntries = dictionary.Select(kvp => new MetadataEntry
+                    {
+                        Key = kvp.Key,
+                        Value = kvp.Value
+                    }).ToList();
+                }
 
                 records.Add(new EntityFrameworkCoreMachineStatus
                 {
@@ -198,8 +198,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     StateJson = stateJson,
                     CommitNumber = commitNumber,
                     UpdatedTime = updatedTime,
-                    MetadataJson = metadataJson,
-                    StateBagJson = stateBagJson
+                    MetadataEntries = metadataEntries
                 });
 
                 machineStatuses.Add(new MachineStatus<TState, TInput>
@@ -210,7 +209,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     Metadata = dictionary,
                     CommitNumber = commitNumber,
                     UpdatedTime = updatedTime,
-                    StateBag = stateBag
+                    StateBag = new Dictionary<string, string>(0)
                 });
             }
 
@@ -251,36 +250,34 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
         /// <inheritdoc />
         public async Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(
-            string machineId, 
+            string machineId,
             CancellationToken cancellationToken = default)
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
 
             var machineRecord = await DbContext.Machines
+                .Include(machine => machine.MetadataEntries)
+                .Include(machine => machine.StateBagEntries)
                 .SingleOrDefaultAsync(
                     status => status.MachineId == machineId,
                     cancellationToken).ConfigureAwait(false);
 
-            if(machineRecord == null) throw new MachineDoesNotExistException(machineId);
+            if (machineRecord == null) throw new MachineDoesNotExistException(machineId);
 
             var schematic = MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
-                bytes: MessagePackSerializer.FromJson(machineRecord.SchematicJson), 
+                bytes: MessagePackSerializer.FromJson(machineRecord.SchematicJson),
                 resolver: ContractlessStandardResolver.Instance);
 
             var state = MessagePackSerializer.Deserialize<TState>(
                 bytes: MessagePackSerializer.FromJson(machineRecord.StateJson),
                 resolver: ContractlessStandardResolver.Instance);
 
-            IDictionary<string, string> metadata = null;
-            if(machineRecord.MetadataJson != null)
-                metadata = MessagePackSerializer.Deserialize<IDictionary<string, string>>(
-                    bytes: MessagePackSerializer.FromJson(machineRecord.MetadataJson));
+            var metadata = machineRecord.MetadataEntries
+                .ToDictionary(entry => entry.Key, entry => entry.Value);
 
-            IDictionary<string, string> stateBag = null;
-            if(machineRecord.StateBagJson != null)
-                stateBag = MessagePackSerializer.Deserialize<IDictionary<string, string>>(
-                    bytes: MessagePackSerializer.FromJson(machineRecord.StateBagJson));
-
+            var stateBag = machineRecord.StateBagEntries
+                .ToDictionary(entry => entry.Key, entry => entry.Value);            
+            
             return new MachineStatus<TState, TInput>
             {
                 MachineId = machineId,
@@ -304,25 +301,30 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
 
             var machineRecord = await DbContext.Machines
+                .Include(machine => machine.MetadataEntries)
+                .Include(machine => machine.StateBagEntries)
                 .SingleOrDefaultAsync(
                     status => status.MachineId == machineId,
                     cancellationToken).ConfigureAwait(false);
 
-            if(machineRecord == null) throw new MachineDoesNotExistException(machineId);
+            if (machineRecord == null) throw new MachineDoesNotExistException(machineId);
 
             if (lastCommitNumber == null || machineRecord.CommitNumber == lastCommitNumber)
             {
                 var stateJson = MessagePackSerializer.ToJson(
-                    obj: state, 
+                    obj: state,
                     resolver: ContractlessStandardResolver.Instance);
 
                 machineRecord.StateJson = stateJson;
                 machineRecord.CommitNumber++;
                 machineRecord.UpdatedTime = DateTimeOffset.UtcNow;
 
-                if(stateBag != null && lastCommitNumber != null)
-                    machineRecord.StateBagJson = MessagePackSerializer.ToJson(
-                        obj: stateBag);
+                if (stateBag != null && lastCommitNumber != null)
+                    machineRecord.StateBagEntries = stateBag.Select(kvp => new StateBagEntry
+                    {
+                        Key = kvp.Key,
+                        Value = kvp.Value
+                    }).ToList();
             }
             else
             {
@@ -339,19 +341,13 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             }
 
             var schematic = MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
-                bytes: MessagePackSerializer.FromJson(machineRecord.SchematicJson), 
+                bytes: MessagePackSerializer.FromJson(machineRecord.SchematicJson),
                 resolver: ContractlessStandardResolver.Instance);
 
-            IDictionary<string, string> metadata = null;
-            if(machineRecord.MetadataJson != null)
-                metadata = MessagePackSerializer.Deserialize<IDictionary<string, string>>(
-                    bytes: MessagePackSerializer.FromJson(machineRecord.MetadataJson));
+            var metadata = machineRecord.MetadataEntries?.ToDictionary(entry => entry.Key, entry => entry.Value);
 
-            IDictionary<string, string> currentStateBag = null;
-            if (machineRecord.StateBagJson != null)
-                currentStateBag = MessagePackSerializer.Deserialize<IDictionary<string, string>>(
-                    bytes: MessagePackSerializer.FromJson(machineRecord.StateBagJson));
-
+            var currentStateBag = machineRecord.StateBagEntries?.ToDictionary(entry => entry.Key, entry => entry.Value);
+            
             return new MachineStatus<TState, TInput>
             {
                 MachineId = machineId,
@@ -365,6 +361,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         }
 
         #region IDisposable Support
+
         // To detect redundant calls
         private bool _disposedValue;
 
@@ -387,7 +384,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
         }
-        #endregion
 
+        #endregion
     }
 }
