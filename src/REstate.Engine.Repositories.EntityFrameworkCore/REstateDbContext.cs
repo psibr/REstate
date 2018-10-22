@@ -31,13 +31,32 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
             modelBuilder.Entity<Machine>()
                 .HasKey(status => status.MachineId);
+            
+            modelBuilder.Entity<Machine>()
+                .Property(machine => machine.MachineId)
+                .IsUnicode(false)
+                .IsRequired();
 
             modelBuilder.Entity<Machine>()
+                .Property(machine => machine.StateJson)
+                .IsUnicode(false)
+                .IsRequired();
+            
+            modelBuilder.Entity<Machine>()
                 .Property(status => status.CommitNumber)
+                .IsRequired()
                 .IsConcurrencyToken();
+            
+            modelBuilder.Entity<Machine>()
+                .Property(status => status.UpdatedTime)
+                .IsRequired();
 
             modelBuilder.Entity<Machine>()
                 .HasMany<MetadataEntry>(machine => machine.MetadataEntries)
+                .WithOne();
+            
+            modelBuilder.Entity<Machine>()
+                .HasMany<StateBagEntry>(machine => machine.StateBagEntries)
                 .WithOne();
 
             modelBuilder.Entity<MetadataEntry>()
@@ -47,9 +66,15 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     entry.Key
                 });
             
-            modelBuilder.Entity<Machine>()
-                .HasMany<StateBagEntry>(machine => machine.StateBagEntries)
-                .WithOne();
+            modelBuilder.Entity<MetadataEntry>()
+                .Property(entry => entry.MachineId)
+                .IsUnicode(false)
+                .IsRequired();
+
+            modelBuilder.Entity<MetadataEntry>()
+                .Property(entry => entry.Key)
+                .IsUnicode(false)
+                .IsRequired();
 
             modelBuilder.Entity<StateBagEntry>()
                 .HasKey(entry => new
@@ -57,9 +82,29 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     entry.MachineId,
                     entry.Key
                 });
+            
+            modelBuilder.Entity<StateBagEntry>()
+                .Property(entry => entry.MachineId)
+                .IsUnicode(false)
+                .IsRequired();
+            
+            modelBuilder.Entity<StateBagEntry>()
+                .Property(entry => entry.Key)
+                .IsUnicode(false)
+                .IsRequired();
 
             modelBuilder.Entity<Schematic>()
                 .HasKey(schematic => schematic.SchematicName);
+
+            modelBuilder.Entity<Schematic>()
+                .Property(schematic => schematic.SchematicName)
+                .IsUnicode(false)
+                .IsRequired();
+            
+            modelBuilder.Entity<Schematic>()
+                .Property(schematic => schematic.SchematicJson)
+                .IsUnicode(false)
+                .IsRequired();
         }
 
         public DbSet<Machine> Machines { get; set; }
