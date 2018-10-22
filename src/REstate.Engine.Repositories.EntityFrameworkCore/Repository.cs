@@ -100,7 +100,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
             var id = machineId ?? Guid.NewGuid().ToString();
 
-            var schematicJson = MessagePackSerializer.ToJson(
+            var schematicBytes = LZ4MessagePackSerializer.Serialize(
                 obj: schematic,
                 resolver: ContractlessStandardResolver.Instance);
 
@@ -108,13 +108,13 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 obj: schematic.InitialState,
                 resolver: ContractlessStandardResolver.Instance);
 
-            var commitNumber = 0L;
+            const long commitNumber = 0L;
             var updatedTime = DateTimeOffset.UtcNow;
 
             var record = new Machine
             {
                 MachineId = id,
-                SchematicJson = schematicJson,
+                SchematicBytes = schematicBytes,
                 StateJson = stateJson,
                 CommitNumber = commitNumber,
                 UpdatedTime = updatedTime
@@ -161,7 +161,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         {
             if (schematic == null) throw new ArgumentNullException(nameof(schematic));
 
-            var schematicJson = MessagePackSerializer.ToJson(
+            var schematicBytes = LZ4MessagePackSerializer.Serialize(
                 obj: schematic,
                 resolver: ContractlessStandardResolver.Instance);
 
@@ -193,7 +193,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 records.Add(new Machine
                 {
                     MachineId = machineId,
-                    SchematicJson = schematicJson,
+                    SchematicBytes = schematicBytes,
                     StateJson = stateJson,
                     CommitNumber = commitNumber,
                     UpdatedTime = updatedTime,
@@ -263,8 +263,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
             if (machineRecord == null) throw new MachineDoesNotExistException(machineId);
 
-            var schematic = MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
-                bytes: MessagePackSerializer.FromJson(machineRecord.SchematicJson),
+            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
+                bytes: machineRecord.SchematicBytes,
                 resolver: ContractlessStandardResolver.Instance);
 
             var state = MessagePackSerializer.Deserialize<TState>(
@@ -339,8 +339,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 throw new StateConflictException(ex);
             }
 
-            var schematic = MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
-                bytes: MessagePackSerializer.FromJson(machineRecord.SchematicJson),
+            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
+                bytes: machineRecord.SchematicBytes,
                 resolver: ContractlessStandardResolver.Instance);
 
             var metadata = machineRecord.MetadataEntries?.ToDictionary(entry => entry.Key, entry => entry.Value);

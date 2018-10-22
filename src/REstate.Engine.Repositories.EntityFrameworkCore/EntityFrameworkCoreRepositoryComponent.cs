@@ -31,5 +31,4 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             registrar.Register(typeof(IRepositoryContextFactory<,>), typeof(RepositoryFactory<,>));
         }
     }
-
 }
