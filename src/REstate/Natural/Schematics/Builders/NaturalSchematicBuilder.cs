@@ -2,12 +2,76 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using REstate.Engine.Connectors;
 using REstate.IoC;
 using REstate.Schematics;
 
 namespace REstate.Natural.Schematics.Builders
 {
+    internal static class AgentNaturalSchematicExtensions
+    {
+        public static State<TypeState, TypeState> CreateState<TState>(this IAgent agent)
+            where TState : IStateDefinition
+        {
+            var type = typeof(TState);
+            TypeState typeState = type;
+
+            var state = new State<TypeState, TypeState>
+            {
+                Value = typeState
+            };
+
+            var description = typeof(TState).GetCustomAttribute<DescriptionAttribute>(false)?.Description;
+
+            state.Description = description;
+
+            if (typeState.IsActionable() || typeState.IsPrecondition())
+            {
+                agent.Configuration.Register(registrar =>
+                    registrar.RegisterConnector(typeState)
+                        .WithConfiguration(new ConnectorConfiguration(typeState.GetConnectorKey())));
+
+                if (typeState.IsActionable())
+                {
+                    string actionDescription = null;
+
+                    var naturalActionInterface = type.GetInterfaces()
+                        .FirstOrDefault(i => i.IsGenericType
+                                             && i.GetGenericTypeDefinition() ==
+                                             typeof(INaturalAction<>));
+
+                    if (naturalActionInterface != null)
+                    {
+                        var invokeMethodInfo = type.GetMethod(nameof(INaturalAction<object>.InvokeAsync),
+                            new[]
+                            {
+                                typeof(ConnectorContext),
+                                naturalActionInterface.GenericTypeArguments[0],
+                                typeof(CancellationToken)
+                            });
+
+                        actionDescription = invokeMethodInfo?.GetCustomAttribute<DescriptionAttribute>()?.Description;
+                    }
+
+                    state.Action = new REstate.Schematics.Action<TypeState>
+                    {
+                        ConnectorKey = typeState.GetConnectorKey(),
+                        Description = actionDescription
+                    };
+                }
+
+                if (typeState.IsPrecondition())
+                    state.Precondition = new Precondition
+                    {
+                        ConnectorKey = typeState.GetConnectorKey()
+                    };
+            }
+
+            return state;
+        }
+    }
+
     internal class NaturalSchematicBuilder
         : INaturalSchematicBuilder
     {
@@ -16,7 +80,7 @@ namespace REstate.Natural.Schematics.Builders
             Agent = agent;
         }
 
-        internal IAgent Agent { get; }
+        private IAgent Agent { get; }
 
         public ICreationContext StartsIn<TState>()
             where TState : IStateDefinition
@@ -32,11 +96,10 @@ namespace REstate.Natural.Schematics.Builders
     internal class CreationContext
         : ICreationContext
     {
-        internal Dictionary<Type, State<TypeState, TypeState>> States = new Dictionary<Type, State<TypeState, TypeState>>();
+        internal readonly Dictionary<Type, State<TypeState, TypeState>> States =
+            new Dictionary<Type, State<TypeState, TypeState>>();
 
-        internal TypeState InitialState;
-
-        internal Schematic<TypeState, TypeState> Schematic = new Schematic<TypeState, TypeState>();
+        private readonly Schematic<TypeState, TypeState> _schematic = new Schematic<TypeState, TypeState>();
 
         internal IAgent Agent { get; }
 
@@ -50,46 +113,20 @@ namespace REstate.Natural.Schematics.Builders
         {
             TypeState typeState = typeof(TState);
 
-            var state = new State<TypeState, TypeState>
-            {
-                Value = typeState
-            };
-
-            var description = typeof(TState).GetCustomAttribute<DescriptionAttribute>(false)?.Description;
-
-            state.Description = description;
-
-            if (typeState.IsActionable() || typeState.IsPrecondition())
-            {
-                Agent.Configuration.Register(registrar =>
-                    registrar.RegisterConnector(typeState)
-                        .WithConfiguration(new ConnectorConfiguration(typeState.GetConnectorKey())));
-
-                if (typeState.IsActionable())
-                    state.Action = new REstate.Schematics.Action<TypeState>
-                    {
-                        ConnectorKey = typeState.GetConnectorKey()
-                    };
-
-                if (typeState.IsPrecondition())
-                    state.Precondition = new Precondition
-                    {
-                        ConnectorKey = typeState.GetConnectorKey()
-                    };
-            }
+            var state = Agent.CreateState<TState>();
 
             States.Add(typeState, state);
 
-            Schematic.InitialState = typeState;
+            _schematic.InitialState = typeState;
         }
 
         public INaturalSchematic BuildAs(string schematicName)
         {
-            Schematic.SchematicName = schematicName;
+            _schematic.SchematicName = schematicName;
 
-            Schematic.States = States.Values.ToArray();
+            _schematic.States = States.Values.ToArray();
 
-            return new NaturalSchematic(Schematic);
+            return new NaturalSchematic(_schematic);
         }
 
         public IForStateContext<TState> For<TState>()
@@ -99,38 +136,12 @@ namespace REstate.Natural.Schematics.Builders
 
             if (!States.TryGetValue(typeState, out var state))
             {
-                state = new State<TypeState, TypeState>
-                {
-                    Value = typeof(TState)
-                };
-
-                var description = typeof(TState).GetCustomAttribute<DescriptionAttribute>(false)?.Description;
-
-                state.Description = description;
-
-                if (typeState.IsActionable() || typeState.IsPrecondition())
-                {
-                    Agent.Configuration.Register(registrar =>
-                        registrar.RegisterConnector(typeState)
-                            .WithConfiguration(new ConnectorConfiguration(typeState.GetConnectorKey())));
-
-                    if (typeState.IsActionable())
-                        state.Action = new REstate.Schematics.Action<TypeState>
-                        {
-                            ConnectorKey = typeState.GetConnectorKey()
-                        };
-
-                    if (typeState.IsPrecondition())
-                        state.Precondition = new Precondition
-                        {
-                            ConnectorKey = typeState.GetConnectorKey(),
-                        };
-                }
+                state = Agent.CreateState<TState>();
 
                 States.Add(typeState, state);
             }
 
-            return new ForStateContext<TState>() { CreationContext = this, State = state };
+            return new ForStateContext<TState> {CreationContext = this, State = state};
         }
     }
 
@@ -169,34 +180,8 @@ namespace REstate.Natural.Schematics.Builders
             TypeState newTypeState = typeof(TNewState);
 
             if (!CreationContext.States.TryGetValue(newTypeState, out var newState))
-            { 
-                newState = new State<TypeState, TypeState>
-                {
-                    Value = newTypeState
-                };
-
-                var description = typeof(TNewState).GetCustomAttribute<DescriptionAttribute>(false)?.Description;
-
-                newState.Description = description;
-
-                if (newTypeState.IsActionable() || newTypeState.IsPrecondition())
-                {
-                    CreationContext.Agent.Configuration.Register(registrar =>
-                        registrar.RegisterConnector(newTypeState)
-                            .WithConfiguration(new ConnectorConfiguration(newTypeState.GetConnectorKey())));
-
-                    if (newTypeState.IsActionable())
-                        newState.Action = new REstate.Schematics.Action<TypeState>
-                        {
-                            ConnectorKey = newTypeState.GetConnectorKey()
-                        };
-
-                    if (newTypeState.IsPrecondition())
-                        newState.Precondition = new Precondition
-                        {
-                            ConnectorKey = newTypeState.GetConnectorKey()
-                        };
-                }
+            {
+                newState = CreationContext.Agent.CreateState<TNewState>();
 
                 CreationContext.States.Add(newTypeState, newState);
             }
@@ -255,33 +240,7 @@ namespace REstate.Natural.Schematics.Builders
 
             if (!CreationContext.States.TryGetValue(newTypeState, out var newState))
             {
-                newState = new State<TypeState, TypeState>
-                {
-                    Value = newTypeState
-                };
-
-                var description = typeof(TNewState).GetCustomAttribute<DescriptionAttribute>(false)?.Description;
-
-                newState.Description = description;
-
-                if (newTypeState.IsActionable() || newTypeState.IsPrecondition())
-                {
-                    CreationContext.Agent.Configuration.Register(registrar =>
-                        registrar.RegisterConnector(newTypeState)
-                            .WithConfiguration(new ConnectorConfiguration(newTypeState.GetConnectorKey())));
-
-                    if (newTypeState.IsActionable())
-                        newState.Action = new REstate.Schematics.Action<TypeState>
-                        {
-                            ConnectorKey = newTypeState.GetConnectorKey()
-                        };
-
-                    if (newTypeState.IsPrecondition())
-                        newState.Precondition = new Precondition
-                        {
-                            ConnectorKey = newTypeState.GetConnectorKey()
-                        };
-                }
+                newState = CreationContext.Agent.CreateState<TNewState>();
 
                 CreationContext.States.Add(newTypeState, newState);
             }

@@ -15,9 +15,9 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore.Tests
             new object[] { new Provider("InMemory", builder => builder.UseInMemoryDatabase("InMemory")) },
             
             // Uncomment below to run provider specific tests that require external databases
-            /*
+            
             new object[] { new Provider("SqlServer", builder => builder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=REstateEfTests;Trusted_Connection=True;MultipleActiveResultSets=true")) }
-            */
+
         };
 
         [Theory]

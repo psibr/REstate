@@ -43,7 +43,7 @@ namespace REstate.Natural
 
         public override string ToString()
         {
-            return _schematic.ToString();
+            return NaturalDotGraphCartographer.Instance.WriteMap(this);
         }
     }
 }

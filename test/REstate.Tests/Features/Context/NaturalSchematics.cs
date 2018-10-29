@@ -36,6 +36,8 @@ namespace REstate.Tests.Features.Context
                     await CurrentHost.Agent()
                         .GetStateEngine<TypeState, TypeState>()
                         .GetSchematicAsync(schematicName));
+
+                var machine = await CurrentHost.Agent().GetNaturalStateEngine().CreateMachineAsync(CurrentNaturalSchematic);
             }
             catch(Exception ex)
             {
