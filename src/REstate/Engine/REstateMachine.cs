@@ -111,7 +111,7 @@ namespace REstate.Engine
                             connectorSettings: transition.Precondition.Settings,
                             cancellationToken: cancellationToken).ConfigureAwait(false))
                         {
-                            throw new InvalidOperationException("Precondition prevented transition.");
+                            throw new TransitionFailedPreconditionException(currentStatus.State.ToString(), input.ToString(), transition.ResultantState.ToString());
                         }
                     }
                     var resultantState = Schematic.States[transition.ResultantState];
