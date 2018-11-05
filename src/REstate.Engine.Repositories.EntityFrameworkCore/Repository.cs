@@ -4,8 +4,6 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MessagePack;
-using MessagePack.Resolvers;
 using Microsoft.EntityFrameworkCore;
 using REstate.Schematics;
 
@@ -44,9 +42,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 throw new SchematicDoesNotExistException(schematicName);
             }
 
-            var schematic = MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
-                bytes: MessagePackSerializer.FromJson(result.SchematicJson),
-                resolver: ContractlessStandardResolver.Instance);
+            var schematic = result.SchematicBytes.ToSchematic<TState, TInput>();
 
             return schematic;
         }
@@ -60,14 +56,12 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 throw new ArgumentException("Schematic must have a name to be stored.", nameof(schematic));
 
 
-            var schematicJson = MessagePackSerializer.ToJson(
-                obj: schematic,
-                resolver: ContractlessStandardResolver.Instance);
+            var schematicBytes = schematic.ToSchematicRepresentation();
 
             var record = new Schematic
             {
                 SchematicName = schematic.SchematicName,
-                SchematicJson = schematicJson
+                SchematicBytes = schematicBytes
             };
 
             DbContext.Schematics.Add(record);
@@ -100,13 +94,9 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
             var id = machineId ?? Guid.NewGuid().ToString();
 
-            var schematicBytes = LZ4MessagePackSerializer.Serialize(
-                obj: schematic,
-                resolver: ContractlessStandardResolver.Instance);
+            var schematicBytes = schematic.ToSchematicRepresentation();
 
-            var stateJson = MessagePackSerializer.ToJson(
-                obj: schematic.InitialState,
-                resolver: ContractlessStandardResolver.Instance);
+            var stateJson = schematic.InitialState.ToStateRepresentation();
 
             const long commitNumber = 0L;
             var updatedTime = DateTimeOffset.UtcNow;
@@ -161,13 +151,9 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         {
             if (schematic == null) throw new ArgumentNullException(nameof(schematic));
 
-            var schematicBytes = LZ4MessagePackSerializer.Serialize(
-                obj: schematic,
-                resolver: ContractlessStandardResolver.Instance);
+            var schematicBytes = schematic.ToSchematicRepresentation();
 
-            var stateJson = MessagePackSerializer.ToJson(
-                obj: schematic.InitialState,
-                resolver: ContractlessStandardResolver.Instance);
+            var stateJson = schematic.InitialState.ToStateRepresentation();
 
             const long commitNumber = 0L;
             var updatedTime = DateTimeOffset.UtcNow;
@@ -263,13 +249,9 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
             if (machineRecord == null) throw new MachineDoesNotExistException(machineId);
 
-            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
-                bytes: machineRecord.SchematicBytes,
-                resolver: ContractlessStandardResolver.Instance);
+            var schematic = machineRecord.SchematicBytes.ToSchematic<TState, TInput>();
 
-            var state = MessagePackSerializer.Deserialize<TState>(
-                bytes: MessagePackSerializer.FromJson(machineRecord.StateJson),
-                resolver: ContractlessStandardResolver.Instance);
+            var state = machineRecord.StateJson.ToState<TState>();
 
             var metadata = machineRecord.MetadataEntries
                 .ToDictionary(entry => entry.Key, entry => entry.Value);
@@ -310,9 +292,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
             if (lastCommitNumber == null || machineRecord.CommitNumber == lastCommitNumber)
             {
-                var stateJson = MessagePackSerializer.ToJson(
-                    obj: state,
-                    resolver: ContractlessStandardResolver.Instance);
+                var stateJson = state.ToStateRepresentation();
 
                 machineRecord.StateJson = stateJson;
                 machineRecord.CommitNumber++;
@@ -339,9 +319,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 throw new StateConflictException(ex);
             }
 
-            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
-                bytes: machineRecord.SchematicBytes,
-                resolver: ContractlessStandardResolver.Instance);
+            var schematic = machineRecord.SchematicBytes.ToSchematic<TState, TInput>();
 
             var metadata = machineRecord.MetadataEntries?.ToDictionary(entry => entry.Key, entry => entry.Value);
 

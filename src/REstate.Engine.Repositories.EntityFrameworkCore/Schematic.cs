@@ -4,6 +4,6 @@
     {
         public string SchematicName { get; set; }
 
-        public string SchematicJson { get; set; }
+        public byte[] SchematicBytes { get; set; }
     }
 }

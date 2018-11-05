@@ -52,11 +52,11 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 .IsRequired();
 
             modelBuilder.Entity<Machine>()
-                .HasMany<MetadataEntry>(machine => machine.MetadataEntries)
+                .HasMany(machine => machine.MetadataEntries)
                 .WithOne();
             
             modelBuilder.Entity<Machine>()
-                .HasMany<StateBagEntry>(machine => machine.StateBagEntries)
+                .HasMany(machine => machine.StateBagEntries)
                 .WithOne();
 
             modelBuilder.Entity<MetadataEntry>()
@@ -98,11 +98,6 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
             modelBuilder.Entity<Schematic>()
                 .Property(schematic => schematic.SchematicName)
-                .IsUnicode(false)
-                .IsRequired();
-            
-            modelBuilder.Entity<Schematic>()
-                .Property(schematic => schematic.SchematicJson)
                 .IsUnicode(false)
                 .IsRequired();
         }
