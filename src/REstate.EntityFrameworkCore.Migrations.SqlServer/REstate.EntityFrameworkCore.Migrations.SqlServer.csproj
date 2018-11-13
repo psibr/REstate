@@ -2,8 +2,6 @@
 
     <PropertyGroup>
         <TargetFramework>netcoreapp2.1</TargetFramework>
-        <RuntimeFrameworkVersion>2.1</RuntimeFrameworkVersion>
-        <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <LangVersion>latest</LangVersion>
 
