@@ -15,8 +15,6 @@
     <RepositoryUrl>https://github.com/psibr/REstate</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>REstate</PackageTags>
-    <RuntimeFrameworkVersion>2.0.0</RuntimeFrameworkVersion>
-    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
@@ -25,7 +23,6 @@
     <PackageReference Include="MessagePack" Version="1.7.3.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.1.4" />
     <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
-    
   </ItemGroup>
 
   <ItemGroup>

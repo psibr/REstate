@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
+        <RuntimeFrameworkVersion>2.1</RuntimeFrameworkVersion>
+        <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <LangVersion>latest</LangVersion>
+
+        <Authors>Ovan Crone</Authors>
+        <Company>Psibernetic Solutions</Company>
+        <Description>Entity Framework Core migrations for SQL Server.</Description>
+        <Copyright>Ovan Crone 2016</Copyright>
+        <PackageLicenseUrl>https://github.com/psibr/REstate/blob/v6.0/LICENSE</PackageLicenseUrl>
+        <Version>3.0.0</Version>
+        <AssemblyVersion>3.0.0.0</AssemblyVersion>
+        <FileVersion>3.0.0.0</FileVersion>
+        <PackageProjectUrl>https://github.com/psibr/REstate</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/psibr/REstate</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>REstate</PackageTags>
+        <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.1.4">
+            <PrivateAssets>All</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.1.4" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.1.4" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\REstate.Engine.Repositories.EntityFrameworkCore\REstate.Engine.Repositories.EntityFrameworkCore.csproj" />
+    </ItemGroup>
+
+</Project>
