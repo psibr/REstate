@@ -15,6 +15,8 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
         public List<MetadataEntry> MetadataEntries { get; set; }
 
+        public string SchematicName { get; set; }
+
         public byte[] SchematicBytes { get; set; }
         
         public List<StateBagEntry> StateBagEntries { get; set; }

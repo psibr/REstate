@@ -47,7 +47,13 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 .Property(status => status.CommitNumber)
                 .IsRequired()
                 .IsConcurrencyToken();
-            
+
+            modelBuilder.Entity<Machine>()
+                .Property(machine => machine.SchematicName)
+                .IsUnicode(false)
+                .HasMaxLength(450)
+                .IsRequired(false);
+
             modelBuilder.Entity<Machine>()
                 .Property(status => status.UpdatedTime)
                 .IsRequired();

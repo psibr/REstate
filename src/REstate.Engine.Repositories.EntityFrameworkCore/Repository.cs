@@ -104,6 +104,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             var record = new Machine
             {
                 MachineId = id,
+                SchematicName = schematic.SchematicName,
                 SchematicBytes = schematicBytes,
                 StateJson = stateJson,
                 CommitNumber = commitNumber,
