@@ -123,12 +123,31 @@ namespace REstate.Engine.Connectors.Resolution
 
                     if (connectorType != null)
                     {
-                        Agent.Configuration.Register(registrar =>
-                            registrar.RegisterConnector(connectorType)
-                                .WithConfiguration(new ConnectorConfiguration(connectorKey.Identifier)));
+                        IAction<TState, TInput> action = null;
 
-                        var action = (Agent.Configuration as HostConfiguration).Container
-                            .Resolve<IAction<TState, TInput>>(connectorKey.Identifier);
+                        var resolutionExceptions = new List<Exception>(0);
+
+                        for (var i = 0; i <= 1; i++)
+                        {
+                            try
+                            {
+                                action = (Agent.Configuration as HostConfiguration).Container
+                                    .Resolve<IAction<TState, TInput>>(connectorKey.Identifier);
+                            }
+                            catch (Exception ex)
+                            {
+                                resolutionExceptions.Add(ex);
+
+                                Agent.Configuration.Register(registrar =>
+                                    registrar.RegisterConnector(connectorType)
+                                        .WithConfiguration(new ConnectorConfiguration(connectorKey.Identifier)));
+                            }
+                        }
+
+                        if(action == null)
+                            throw new AggregateException(
+                                message: "Action resolution failed even after best attempt re-register.", 
+                                innerExceptions: resolutionExceptions);
 
                         Actions.TryAdd(connectorKey.Identifier, action);
 
