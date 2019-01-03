@@ -14,7 +14,6 @@
     <Product>REstate</Product>
     <Description>Provides gRPC/HTTP2 interconnect support for REstate's engine in either client or server configuration.</Description>
     <Copyright>Ovan Crone 2016</Copyright>
-    <PackageLicenseUrl>https://github.com/psibr/REstate/blob/v6.0/LICENSE</PackageLicenseUrl>
     <LangVersion>latest</LangVersion>
     <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

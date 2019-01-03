@@ -6,7 +6,6 @@
     <Company>Psibernetic Solutions</Company>
     <Description>Entity Framework Core repository for REstate Machines and Schematics.</Description>
     <Copyright>Ovan Crone 2016</Copyright>
-    <PackageLicenseUrl>https://github.com/psibr/REstate/blob/v6.0/LICENSE</PackageLicenseUrl>
     <Version>3.0.0</Version>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
     <FileVersion>3.0.0.0</FileVersion>

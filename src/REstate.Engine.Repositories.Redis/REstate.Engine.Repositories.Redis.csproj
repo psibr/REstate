@@ -9,7 +9,6 @@
     <Product>REstate</Product>
     <Description>Redis storage provider for REstate's engine.</Description>
     <Copyright>Ovan Crone 2016</Copyright>
-    <PackageLicenseUrl>https://github.com/psibr/REstate/blob/v6.0/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/psibr/REstate</PackageProjectUrl>
     <RepositoryUrl>https://github.com/psibr/REstate</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

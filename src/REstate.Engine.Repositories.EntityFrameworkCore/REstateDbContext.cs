@@ -35,6 +35,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             modelBuilder.Entity<Machine>()
                 .Property(machine => machine.MachineId)
                 .IsUnicode(false)
+                .HasMaxLength(450)
                 .IsRequired();
 
             modelBuilder.Entity<Machine>()
@@ -69,11 +70,13 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             modelBuilder.Entity<MetadataEntry>()
                 .Property(entry => entry.MachineId)
                 .IsUnicode(false)
+                .HasMaxLength(450)
                 .IsRequired();
 
             modelBuilder.Entity<MetadataEntry>()
                 .Property(entry => entry.Key)
                 .IsUnicode(false)
+                .HasMaxLength(450)
                 .IsRequired();
 
             modelBuilder.Entity<StateBagEntry>()
@@ -86,11 +89,13 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             modelBuilder.Entity<StateBagEntry>()
                 .Property(entry => entry.MachineId)
                 .IsUnicode(false)
+                .HasMaxLength(450)
                 .IsRequired();
             
             modelBuilder.Entity<StateBagEntry>()
                 .Property(entry => entry.Key)
                 .IsUnicode(false)
+                .HasMaxLength(450)
                 .IsRequired();
 
             modelBuilder.Entity<Schematic>()
