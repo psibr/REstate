@@ -13,12 +13,12 @@ namespace REstate
         public static INaturalSchematic ConstructSchematic<TNaturalSchematicFactory>(this IAgent agent)
             where TNaturalSchematicFactory : INaturalSchematicFactory, new()
         {
-            return new TNaturalSchematicFactory().BuildSchematic(new NaturalSchematicBuilder(agent));
+            return new TNaturalSchematicFactory().BuildSchematic(new NaturalSchematicBuilder());
         }
 
         public static INaturalSchematic ConstructSchematic(this IAgent agent, INaturalSchematicFactory naturalSchematicFactory)
         {
-            return naturalSchematicFactory.BuildSchematic(new NaturalSchematicBuilder(agent));
+            return naturalSchematicFactory.BuildSchematic(new NaturalSchematicBuilder());
         }
     }
 }

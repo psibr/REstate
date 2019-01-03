@@ -8,11 +8,12 @@ using REstate.Schematics;
 namespace REstate.Engine.Connectors.Resolution
 {
     /// <summary>
-    /// The default connector resoultion strategy that ignores versioning.
+    /// The default connector resolution strategy that ignores versioning.
     /// </summary>
     public class DefaultConnectorResolver<TState, TInput>
         : IConnectorResolver<TState, TInput>
     {
+        protected readonly object SyncRoot = new object();
         protected readonly ConcurrentDictionary<string, IAction<TState, TInput>> Actions;
         protected readonly ConcurrentDictionary<string, IBulkAction<TState, TInput>> BulkActions;
         protected readonly ConcurrentDictionary<string, IPrecondition<TState, TInput>> Preconditions;
@@ -38,8 +39,8 @@ namespace REstate.Engine.Connectors.Resolution
             // 2) If the type is NOT a constructed generic such as MyAction then just use that.
             //
             // These checks are done to enable both scenarios respectively: 
-            // 1) Common connectors like logging or enqueing where the type of the 
-            // states and input aren't as critical to be known exactly, but can stil be used.
+            // 1) Common connectors like logging or enqueueing where the type of the 
+            // states and input aren't as critical to be known exactly, but can still be used.
             // 2) Application-specific connectors such as a business process or system control event
             // where the types of the states and inputs would be expected to be a certain type. 
             // e.g.
@@ -113,51 +114,57 @@ namespace REstate.Engine.Connectors.Resolution
                 try
                 {
                     if (!Actions.TryGetValue(connectorKey.Identifier, out var action))
-                        throw new ConnectorResolutionException($"No Action exists matching connectorKey: \"{connectorKey.Identifier}\".");
+                        throw new ConnectorResolutionException(
+                            $"No Action exists matching connectorKey: \"{connectorKey.Identifier}\".");
 
                     return action;
                 }
-                catch (ConnectorResolutionException)
+                catch (ConnectorResolutionException connectorResolutionException)
                 {
                     var connectorType = Type.GetType(connectorKey.Identifier);
 
                     if (connectorType != null)
                     {
-                        IAction<TState, TInput> action = null;
-
-                        var resolutionExceptions = new List<Exception>(0);
-
-                        for (var i = 0; i <= 1; i++)
+                        lock (SyncRoot)
                         {
-                            try
-                            {
-                                action = (Agent.Configuration as HostConfiguration).Container
-                                    .Resolve<IAction<TState, TInput>>(connectorKey.Identifier);
-                            }
-                            catch (Exception ex)
-                            {
-                                resolutionExceptions.Add(ex);
+                            IAction<TState, TInput> action = null;
 
-                                Agent.Configuration.Register(registrar =>
-                                    registrar.RegisterConnector(connectorType)
-                                        .WithConfiguration(new ConnectorConfiguration(connectorKey.Identifier)));
+                            var resolutionExceptions = new List<Exception>
+                            {
+                                connectorResolutionException
+                            };
+
+                            for (var i = 0; i <= 1; i++)
+                            {
+                                try
+                                {
+                                    action = (Agent.Configuration as HostConfiguration).Container
+                                        .Resolve<IAction<TState, TInput>>(connectorKey.Identifier);
+                                }
+                                catch (Exception ex)
+                                {
+                                    resolutionExceptions.Add(ex);
+
+                                    Agent.Configuration.Register(registrar =>
+                                        registrar.RegisterConnector(connectorType)
+                                            .WithConfiguration(new ConnectorConfiguration(connectorKey.Identifier)));
+                                }
                             }
+
+                            if (action == null)
+                                throw new AggregateException(
+                                    message: "Action resolution failed even after best attempt re-register.",
+                                    innerExceptions: resolutionExceptions);
+
+                            Actions.TryAdd(connectorKey.Identifier, action);
+
+                            continue;
                         }
-
-                        if(action == null)
-                            throw new AggregateException(
-                                message: "Action resolution failed even after best attempt re-register.", 
-                                innerExceptions: resolutionExceptions);
-
-                        Actions.TryAdd(connectorKey.Identifier, action);
-
-                        continue;
                     }
 
                     throw;
                 }
-            }
-            while (true);
+            } while (true);
         }
 
         /// <summary>
@@ -176,22 +183,47 @@ namespace REstate.Engine.Connectors.Resolution
 
                     return bulkAction;
                 }
-                catch (ConnectorResolutionException)
+                catch (ConnectorResolutionException connectorResolutionException)
                 {
                     var connectorType = Type.GetType(connectorKey.Identifier);
 
                     if (connectorType != null)
                     {
-                        Agent.Configuration.Register(registrar =>
-                            registrar.RegisterConnector(connectorType)
-                                .WithConfiguration(new ConnectorConfiguration(connectorKey.Identifier)));
+                        lock (SyncRoot)
+                        {
+                            IBulkAction<TState, TInput> bulkAction = null;
 
-                        var bulkAction = (Agent.Configuration as HostConfiguration).Container
-                            .Resolve<IBulkAction<TState, TInput>>(connectorKey.Identifier);
+                            var resolutionExceptions = new List<Exception>
+                            {
+                                connectorResolutionException
+                            };
 
-                        BulkActions.TryAdd(connectorKey.Identifier, bulkAction);
+                            for (var i = 0; i <= 1; i++)
+                            {
+                                try
+                                {
+                                    bulkAction = (Agent.Configuration as HostConfiguration).Container
+                                        .Resolve<IBulkAction<TState, TInput>>(connectorKey.Identifier);
+                                }
+                                catch (Exception ex)
+                                {
+                                    resolutionExceptions.Add(ex);
 
-                        continue;
+                                    Agent.Configuration.Register(registrar =>
+                                        registrar.RegisterConnector(connectorType)
+                                            .WithConfiguration(new ConnectorConfiguration(connectorKey.Identifier)));
+                                }
+                            }
+
+                            if (bulkAction == null)
+                                throw new AggregateException(
+                                    message: "BulkAction resolution failed even after best attempt re-register.",
+                                    innerExceptions: resolutionExceptions);
+
+                            BulkActions.TryAdd(connectorKey.Identifier, bulkAction);
+
+                            continue;
+                        }
                     }
 
                     throw;
@@ -216,22 +248,47 @@ namespace REstate.Engine.Connectors.Resolution
 
                     return precondition;
                 }
-                catch (ConnectorResolutionException)
+                catch (ConnectorResolutionException connectorResolutionException)
                 {
                     var connectorType = Type.GetType(connectorKey.Identifier);
 
                     if (connectorType != null)
                     {
-                        Agent.Configuration.Register(registrar =>
-                            registrar.RegisterConnector(connectorType)
-                                .WithConfiguration(new ConnectorConfiguration(connectorKey.Identifier)));
+                        lock (SyncRoot)
+                        {
+                            IPrecondition<TState, TInput> precondition = null;
 
-                        var precondition = (Agent.Configuration as HostConfiguration).Container
-                            .Resolve<IPrecondition<TState, TInput>>(connectorKey.Identifier);
+                            var resolutionExceptions = new List<Exception>
+                            {
+                                connectorResolutionException
+                            };
 
-                        Preconditions.TryAdd(connectorKey.Identifier, precondition);
+                            for (var i = 0; i <= 1; i++)
+                            {
+                                try
+                                {
+                                    precondition = (Agent.Configuration as HostConfiguration).Container
+                                        .Resolve<IPrecondition<TState, TInput>>(connectorKey.Identifier);
+                                }
+                                catch (Exception ex)
+                                {
+                                    resolutionExceptions.Add(ex);
 
-                        continue;
+                                    Agent.Configuration.Register(registrar =>
+                                        registrar.RegisterConnector(connectorType)
+                                            .WithConfiguration(new ConnectorConfiguration(connectorKey.Identifier)));
+                                }
+                            }
+
+                            if (precondition == null)
+                                throw new AggregateException(
+                                    message: "Precondition resolution failed even after best attempt re-register.",
+                                    innerExceptions: resolutionExceptions);
+
+                            Preconditions.TryAdd(connectorKey.Identifier, precondition);
+
+                            continue;
+                        }
                     }
 
                     throw;
