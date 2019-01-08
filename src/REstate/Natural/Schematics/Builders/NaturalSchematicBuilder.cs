@@ -34,6 +34,7 @@ namespace REstate.Natural.Schematics.Builders
                 if (typeState.IsActionable())
                 {
                     string actionDescription = null;
+                    var longRunning = false;
 
                     var naturalActionInterface = type.GetInterfaces()
                         .FirstOrDefault(i => i.IsGenericType
@@ -51,12 +52,14 @@ namespace REstate.Natural.Schematics.Builders
                             });
 
                         actionDescription = invokeMethodInfo?.GetCustomAttribute<DescriptionAttribute>()?.Description;
+                        longRunning = !(invokeMethodInfo?.GetCustomAttribute<LongRunningAttribute>() is null);
                     }
 
                     state.Action = new REstate.Schematics.Action<TypeState>
                     {
                         ConnectorKey = typeState.GetConnectorKey(),
-                        Description = actionDescription
+                        Description = actionDescription,
+                        LongRunning = longRunning
                     };
                 }
 

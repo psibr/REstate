@@ -7,6 +7,7 @@ using REstate.Engine.Connectors;
 using REstate.Engine.Connectors.Resolution;
 using REstate.Engine.EventListeners;
 using REstate.Engine.Repositories;
+using REstate.Logging;
 using REstate.Schematics;
 
 namespace REstate.Engine
@@ -137,7 +138,7 @@ namespace REstate.Engine
                         currentStatus = await dataContext.Machines.SetMachineStateAsync(
                             machineId: MachineId,
                             state: transition.ResultantState,
-                            lastCommitNumber: lastCommitNumber == default ? currentStatus.CommitNumber : lastCommitNumber,
+                            lastCommitNumber: lastCommitNumber ?? currentStatus.CommitNumber,
                             stateBag: stateBag,
                             cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
@@ -166,19 +167,41 @@ namespace REstate.Engine
                         var action =
                             _connectorResolver.ResolveAction(schematicState.Action.ConnectorKey);
 
-                        InterceptorMachine interceptor;
-                        using (interceptor = new InterceptorMachine(this, currentStatus))
+                        async Task<Status<TState>> InvokeAndCaptureAsync(Status<TState> originalStatus)
                         {
-                            await action.InvokeAsync(
-                                schematic: Schematic,
-                                machine: interceptor,
-                                status: currentStatus,
-                                inputParameters: new InputParameters<TInput, TPayload>(input, payload),
-                                connectorSettings: schematicState.Action.Settings,
-                                cancellationToken: cancellationToken).ConfigureAwait(false);
+                            InterceptorMachine interceptor;
+                            using (interceptor = new InterceptorMachine(this, originalStatus))
+                            {
+                                await action.InvokeAsync(
+                                    schematic: Schematic,
+                                    machine: interceptor,
+                                    status: originalStatus,
+                                    inputParameters: new InputParameters<TInput, TPayload>(input, payload),
+                                    connectorSettings: schematicState.Action.Settings,
+                                    cancellationToken: cancellationToken).ConfigureAwait(false);
+                            }
+
+                            return interceptor.CurrentStatus;
                         }
 
-                        currentStatus = interceptor.CurrentStatus;
+                        if (schematicState.Action.LongRunning)
+                        {
+                            var originalStatus = currentStatus;
+#pragma warning disable 4014
+                            Task.Run(() => InvokeAndCaptureAsync(originalStatus), CancellationToken.None)
+                                .ContinueWith(t =>
+                                {
+                                    LogProvider.GetLogger(action.GetType())
+                                            .ErrorException("Long running action experienced an unhandled exception.",
+                                                t.Exception?.InnerException, TaskContinuationOptions.OnlyOnFaulted);
+                                }, CancellationToken.None);
+#pragma warning restore 4014
+
+                            return currentStatus;
+                        }
+
+                        currentStatus = await InvokeAndCaptureAsync(currentStatus);
+                        
                     }
                     catch
                     {

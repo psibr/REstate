@@ -13,5 +13,7 @@ namespace REstate.Schematics.Builders.Providers
         TThis WithSetting(ValueTuple<string, string> setting);
 
         TThis OnFailureSend(TInput input);
+
+        TThis IsLongRunning();
     }
 }

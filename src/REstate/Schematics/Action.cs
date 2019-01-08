@@ -29,5 +29,7 @@ namespace REstate.Schematics
         IReadOnlyDictionary<string, string> IAction<TInput>.Settings =>
             new ReadOnlyDictionary<string, string>(
                 Configuration ?? new Dictionary<string, string>(0));
+
+        public bool LongRunning { get; set; }
     }
 }

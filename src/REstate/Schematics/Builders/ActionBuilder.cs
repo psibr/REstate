@@ -30,6 +30,7 @@ namespace REstate.Schematics.Builders
         public IExceptionInput<TInput> OnExceptionInput { get; private set; }
 
         public IReadOnlyDictionary<string, string> Settings => _settings;
+        public bool LongRunning { get; private set; }
 
         private readonly Dictionary<string, string> _settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -68,6 +69,13 @@ namespace REstate.Schematics.Builders
         public IActionBuilder<TInput> OnFailureSend(TInput input)
         {
             OnExceptionInput = new ExceptionInput<TInput>(input);
+
+            return this;
+        }
+
+        public IActionBuilder<TInput> IsLongRunning()
+        {
+            LongRunning = true;
 
             return this;
         }

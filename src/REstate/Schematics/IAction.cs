@@ -11,5 +11,7 @@ namespace REstate.Schematics
         IExceptionInput<TInput> OnExceptionInput { get; }
 
         IReadOnlyDictionary<string, string> Settings { get; }
+
+        bool LongRunning { get; }
     }
 }
