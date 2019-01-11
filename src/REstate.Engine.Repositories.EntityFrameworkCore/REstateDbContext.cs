@@ -85,6 +85,9 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 .HasMaxLength(450)
                 .IsRequired();
 
+            modelBuilder.Entity<MetadataEntry>()
+                .HasIndex(entry => entry.Key);
+
             modelBuilder.Entity<StateBagEntry>()
                 .HasKey(entry => new
                 {
