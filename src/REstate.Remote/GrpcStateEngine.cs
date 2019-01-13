@@ -168,6 +168,12 @@ namespace REstate.Remote
             return new GrpcStateMachine<TState, TInput>(_stateMachineService, machineId);
         }
 
+        ///<inheritdoc />
+        public IStateMachine<TState, TInput> GetMachineReference(string machineId)
+        {
+            return new GrpcStateMachine<TState, TInput>(_stateMachineService, machineId);
+        }
+
         public async Task<ISchematic<TState, TInput>> GetSchematicAsync(
             string schematicName,
             CancellationToken cancellationToken = default)
