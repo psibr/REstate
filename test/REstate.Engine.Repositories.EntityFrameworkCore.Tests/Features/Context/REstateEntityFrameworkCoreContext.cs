@@ -9,21 +9,21 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore.Tests.Features.Context
         : REstateContext<TState, TInput>
     {
         #region GIVEN
-        public async Task Given_EntityFrameworkCore_is_the_registered_repository()
+        public Task Given_EntityFrameworkCore_is_the_registered_repository()
         {
             var options = new DbContextOptionsBuilder()
-                //.UseInMemoryDatabase("REstateScenarioTests")
-                .UseSqlServer(
-                    "Server=(localdb)\\mssqllocaldb;Database=REstateEfTestsIntegrated;Trusted_Connection=True;MultipleActiveResultSets=true")
+                .UseInMemoryDatabase("REstateScenarioTests")
+                //.UseSqlServer(
+                //    "Server=(localdb)\\mssqllocaldb;Database=REstateEfTestsIntegrated;Trusted_Connection=True;MultipleActiveResultSets=true")
                 .Options;
 
             CurrentHost.Agent().Configuration
                 .RegisterComponent(new EntityFrameworkCoreRepositoryComponent(
                     options));
 
-            await new REstateDbContextFactory(options).CreateContext().Database.EnsureCreatedAsync(CancellationToken.None);
+            //await new REstateDbContextFactory(options).CreateContext().Database.EnsureCreatedAsync(CancellationToken.None);
 
-            //return Task.CompletedTask;
+            return Task.CompletedTask;
         }
         #endregion
 
