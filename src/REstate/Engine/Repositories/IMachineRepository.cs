@@ -80,4 +80,14 @@ namespace REstate.Engine.Repositories
             IDictionary<string, string> stateBag = null,
             CancellationToken cancellationToken = default);
     }
+
+    public interface IOptimisticallyConcurrentStateRepository<TState, TInput>
+    {
+        Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
+            MachineStatus<TState, TInput> machineStatus,
+            TState state,
+            long? lastCommitNumber,
+            IDictionary<string, string> stateBag = null,
+            CancellationToken cancellationToken = default);
+    }
 }

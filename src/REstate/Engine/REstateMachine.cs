@@ -88,8 +88,10 @@ namespace REstate.Engine
 
                 while (true)
                 {
-                    Status<TState> currentStatus = await dataContext.Machines
+                    var machineStatus = await dataContext.Machines
                         .GetMachineStatusAsync(MachineId, cancellationToken).ConfigureAwait(false);
+
+                    Status<TState> currentStatus = machineStatus;
 
                     var schematicState = Schematic.States[currentStatus.State];
 
@@ -134,12 +136,21 @@ namespace REstate.Engine
 
                     try
                     {
-                        currentStatus = await dataContext.Machines.SetMachineStateAsync(
-                            machineId: MachineId,
-                            state: transition.ResultantState,
-                            lastCommitNumber: lastCommitNumber == default ? currentStatus.CommitNumber : lastCommitNumber,
-                            stateBag: stateBag,
-                            cancellationToken: cancellationToken).ConfigureAwait(false);
+                        // ReSharper disable once SuspiciousTypeConversion.Global
+                        if (dataContext.Machines is IOptimisticallyConcurrentStateRepository<TState, TInput> optimisticMode)
+                            currentStatus = await optimisticMode.SetMachineStateAsync(
+                                machineStatus: machineStatus,
+                                state: transition.ResultantState,
+                                lastCommitNumber: lastCommitNumber ?? currentStatus.CommitNumber,
+                                stateBag: stateBag,
+                                cancellationToken: cancellationToken).ConfigureAwait(false);
+                        else
+                            currentStatus = await dataContext.Machines.SetMachineStateAsync(
+                                machineId: MachineId,
+                                state: transition.ResultantState,
+                                lastCommitNumber: lastCommitNumber ?? currentStatus.CommitNumber,
+                                stateBag: stateBag,
+                                cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
                     catch (StateConflictException)
                     {

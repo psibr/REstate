@@ -13,16 +13,17 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         : IEngineRepositoryContext<TState, TInput>
         , ISchematicRepository<TState, TInput>
         , IMachineRepository<TState, TInput>
+        , IOptimisticallyConcurrentStateRepository<TState, TInput>
     {
-        public Repository(REstateDbContext dbContext)
+        public Repository(REstateDbContextFactory dbContextFactory)
         {
-            DbContext = dbContext;
+            DbContextFactory = dbContextFactory;
         }
 
         public ISchematicRepository<TState, TInput> Schematics => this;
         public IMachineRepository<TState, TInput> Machines => this;
 
-        private REstateDbContext DbContext { get; }
+        private REstateDbContextFactory DbContextFactory { get; }
 
         /// <inheritdoc />
         public async Task<Schematic<TState, TInput>> RetrieveSchematicAsync(string schematicName,
@@ -31,9 +32,11 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             if (schematicName == null) throw new ArgumentNullException(nameof(schematicName));
 
             Schematic result;
+
+            using(var context = DbContextFactory.CreateContext())
             try
             {
-                result = await DbContext.Schematics.SingleAsync(
+                result = await context.Schematics.SingleAsync(
                     schematicRecord => schematicRecord.SchematicName == schematicName,
                     cancellationToken).ConfigureAwait(false);
             }
@@ -41,6 +44,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             {
                 throw new SchematicDoesNotExistException(schematicName);
             }
+            
 
             var schematic = result.SchematicBytes.ToSchematic<TState, TInput>();
 
@@ -64,9 +68,13 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 SchematicBytes = schematicBytes
             };
 
-            DbContext.Schematics.Add(record);
+            using (var context = DbContextFactory.CreateContext())
+            {
 
-            await DbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                context.Schematics.Add(record);
+
+                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
 
             return schematic;
         }
@@ -120,16 +128,19 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 }).ToList();
             }
 
-            DbContext.Machines.Add(record);
+            using (var context = DbContextFactory.CreateContext())
+            {
+                context.Machines.Add(record);
 
-            try
-            {
-                await DbContext.SaveChangesAsync(cancellationToken);
-            }
-            catch (DbUpdateException dbEx)
-                when (dbEx.InnerException is SqlException sqlEx && sqlEx.Number == 2627)
-            {
-                throw new MachineAlreadyExistException(record.MachineId);
+                try
+                {
+                    await context.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateException dbEx)
+                    when (dbEx.InnerException is SqlException sqlEx && sqlEx.Number == 2627)
+                {
+                    throw new MachineAlreadyExistException(record.MachineId);
+                }
             }
 
             return new MachineStatus<TState, TInput>
@@ -199,9 +210,12 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 });
             }
 
-            await DbContext.AddRangeAsync(records, cancellationToken);
+            using (var context = DbContextFactory.CreateContext())
+            {
+                await context.AddRangeAsync(records, cancellationToken);
 
-            await DbContext.SaveChangesAsync(cancellationToken);
+                await context.SaveChangesAsync(cancellationToken);
+            }
 
             return machineStatuses;
         }
@@ -221,16 +235,26 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
 
-            var machineRecord = await DbContext.Machines
-                .SingleOrDefaultAsync(
-                    status => status.MachineId == machineId,
-                    cancellationToken).ConfigureAwait(false);
-
-            if (machineRecord != null)
+            using (var context = DbContextFactory.CreateContext())
             {
-                DbContext.Machines.Remove(machineRecord);
+                var machineRecord = new Machine
+                {
+                    MachineId = machineId
+                };
 
-                await DbContext.SaveChangesAsync(cancellationToken);
+                context.Machines.Attach(machineRecord);
+                
+                context.Machines.Remove(machineRecord);
+
+                try
+                {
+                    await context.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    // record didn't exist
+                }
+                
             }
         }
 
@@ -241,12 +265,17 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
 
-            var machineRecord = await DbContext.Machines
-                .Include(machine => machine.MetadataEntries)
-                .Include(machine => machine.StateBagEntries)
-                .SingleOrDefaultAsync(
-                    status => status.MachineId == machineId,
-                    cancellationToken).ConfigureAwait(false);
+            Machine machineRecord;
+
+            using (var context = DbContextFactory.CreateContext())
+            { 
+                 machineRecord = await context.Machines
+                    .Include(machine => machine.MetadataEntries)
+                    .Include(machine => machine.StateBagEntries)
+                    .SingleOrDefaultAsync(
+                        status => status.MachineId == machineId,
+                        cancellationToken).ConfigureAwait(false);
+            }
 
             if (machineRecord == null) throw new MachineDoesNotExistException(machineId);
 
@@ -272,6 +301,89 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             };
         }
 
+        async Task<MachineStatus<TState, TInput>> IOptimisticallyConcurrentStateRepository<TState, TInput>.SetMachineStateAsync(
+                MachineStatus<TState, TInput> machineStatus,
+                TState state,
+                long? lastCommitNumber,
+                IDictionary<string, string> stateBag,
+                CancellationToken cancellationToken)
+        {
+            if(machineStatus == null) throw  new ArgumentNullException(nameof(machineStatus));
+            if (machineStatus.MachineId == null) throw new ArgumentException("MachineId must be provided", nameof(machineStatus));
+
+            var machineRecord = new Machine
+            {
+                MachineId = machineStatus.MachineId,
+                CommitNumber = machineStatus.CommitNumber
+            };
+
+            var newStatus = new MachineStatus<TState, TInput>
+            {
+                MachineId = machineStatus.MachineId,
+                Schematic = machineStatus.Schematic,
+                State = state,
+                Metadata = machineStatus.Metadata
+            };
+
+            using (var context = DbContextFactory.CreateContext())
+            {
+
+                if (lastCommitNumber == null || machineStatus.CommitNumber == lastCommitNumber)
+                {
+                    context.Machines.Attach(machineRecord);
+
+                    var stateJson = state.ToStateRepresentation();
+
+                    machineRecord.StateJson = stateJson;
+                    machineRecord.CommitNumber++;
+                    machineRecord.UpdatedTime = DateTimeOffset.UtcNow;
+
+                    if (stateBag != null && lastCommitNumber != null)
+                    {
+                        var inserts = stateBag.Keys.Except(machineStatus.StateBag.Keys).Select(k => new StateBagEntry { Key = k, MachineId = machineStatus.MachineId, Value = stateBag[k] });
+                        var updates = machineStatus.StateBag.Keys.Intersect(stateBag.Keys).Select(k => new StateBagEntry { Key = k, MachineId = machineStatus.MachineId}).ToList();
+                        var deletes = machineStatus.StateBag.Keys.Except(stateBag.Keys).Select(k => new StateBagEntry { Key = k, MachineId = machineStatus.MachineId }).ToList();
+
+                        context.StateBagEntries.AddRange(inserts);
+
+                        context.AttachRange(updates);
+
+                        foreach (var stateBagEntry in updates)
+                        {
+                            stateBagEntry.Value = stateBag[stateBagEntry.Key];
+                        }
+
+                        context.StateBagEntries.AttachRange(deletes);
+                        context.StateBagEntries.RemoveRange(deletes);
+
+                        newStatus.StateBag = stateBag;
+                    }
+                    else
+                    {
+                        newStatus.StateBag = machineStatus.StateBag;
+                    }
+                }
+                else
+                {
+                    throw new StateConflictException();
+                }
+
+                try
+                {
+                    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    throw new StateConflictException(ex);
+                }
+            }
+
+            newStatus.CommitNumber = machineRecord.CommitNumber;
+            newStatus.UpdatedTime = machineRecord.UpdatedTime;
+
+            return newStatus;
+        }
+
         /// <inheritdoc />
         public async Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
             string machineId,
@@ -282,51 +394,26 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
 
-            var machineRecord = await DbContext.Machines
-                .Include(machine => machine.MetadataEntries)
-                .Include(machine => machine.StateBagEntries)
-                .SingleOrDefaultAsync(
-                    status => status.MachineId == machineId,
-                    cancellationToken).ConfigureAwait(false);
+            Machine machineRecord;
+            using (var context = DbContextFactory.CreateContext())
+            {
+                machineRecord = await context.Machines
+                    .Include(machine => machine.MetadataEntries)
+                    .Include(machine => machine.StateBagEntries)
+                    .SingleOrDefaultAsync(
+                        status => status.MachineId == machineId,
+                        cancellationToken).ConfigureAwait(false);
+            }
 
             if (machineRecord == null) throw new MachineDoesNotExistException(machineId);
-
-            if (lastCommitNumber == null || machineRecord.CommitNumber == lastCommitNumber)
-            {
-                var stateJson = state.ToStateRepresentation();
-
-                machineRecord.StateJson = stateJson;
-                machineRecord.CommitNumber++;
-                machineRecord.UpdatedTime = DateTimeOffset.UtcNow;
-
-                if (stateBag != null && lastCommitNumber != null)
-                    machineRecord.StateBagEntries = stateBag.Select(kvp => new StateBagEntry
-                    {
-                        Key = kvp.Key,
-                        Value = kvp.Value
-                    }).ToList();
-            }
-            else
-            {
-                throw new StateConflictException();
-            }
-
-            try
-            {
-                await DbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                throw new StateConflictException(ex);
-            }
 
             var schematic = machineRecord.SchematicBytes.ToSchematic<TState, TInput>();
 
             var metadata = machineRecord.MetadataEntries?.ToDictionary(entry => entry.Key, entry => entry.Value);
 
             var currentStateBag = machineRecord.StateBagEntries?.ToDictionary(entry => entry.Key, entry => entry.Value);
-            
-            return new MachineStatus<TState, TInput>
+
+            var machineStatus = new MachineStatus<TState, TInput>
             {
                 MachineId = machineId,
                 Schematic = schematic,
@@ -336,6 +423,10 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 UpdatedTime = machineRecord.UpdatedTime,
                 StateBag = currentStateBag
             };
+
+            return await (this as IOptimisticallyConcurrentStateRepository<TState, TInput>)
+                .SetMachineStateAsync(machineStatus, state, lastCommitNumber, stateBag, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         #region IDisposable Support
@@ -349,7 +440,6 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             {
                 if (disposing)
                 {
-                    DbContext.Dispose();
                 }
 
                 _disposedValue = true;

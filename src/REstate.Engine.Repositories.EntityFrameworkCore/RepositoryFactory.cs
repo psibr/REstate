@@ -18,7 +18,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult<IEngineRepositoryContext<TState, TInput>>(
-                new Repository<TState, TInput>(_dbContextFactory.CreateContext()));
+                new Repository<TState, TInput>(_dbContextFactory));
         }
     }
 
