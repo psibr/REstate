@@ -48,6 +48,8 @@ namespace REstate.Natural
             string machineId,
             CancellationToken cancellationToken = default);
 
+        INaturalStateMachine GetMachineReference(string machineId);
+
         Task<INaturalSchematic> GetSchematicAsync(
             string schematicName,
             CancellationToken cancellationToken = default);
@@ -165,6 +167,14 @@ namespace REstate.Natural
             var machine = await _stateEngine
                 .GetMachineAsync(machineId, cancellationToken)
                 .ConfigureAwait(false);
+
+            return new NaturalStateMachine(machine);
+        }
+
+
+        public INaturalStateMachine GetMachineReference(string machineId)
+        {
+            var machine = _stateEngine.GetMachineReference(machineId);
 
             return new NaturalStateMachine(machine);
         }
