@@ -388,9 +388,8 @@ namespace REstate.Engine
             return machine;
         }
 
-        public IStateMachine<TState, TInput> GetMachineReference(
-            string machineId,
-            CancellationToken cancellationToken = default)
+        /// <inheritdoc />
+        public IStateMachine<TState, TInput> GetMachineReference(string machineId)
         {
             var machine = _stateMachineFactory.Construct(machineId);
 
