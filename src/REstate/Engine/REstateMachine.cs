@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,10 +15,38 @@ namespace REstate.Engine
     public class REstateMachine<TState, TInput>
         : IStateMachine<TState, TInput>
     {
+        private readonly object _syncRoot = new object();
         private readonly IConnectorResolver<TState, TInput> _connectorResolver;
         private readonly IRepositoryContextFactory<TState, TInput> _repositoryContextFactory;
-        private readonly IReadOnlyDictionary<string, string> _metadata;
         private readonly IReadOnlyCollection<IEventListener> _listeners;
+
+        internal REstateMachine(
+            IConnectorResolver<TState, TInput> connectorResolver,
+            IRepositoryContextFactory<TState, TInput> repositoryContextFactory,
+            ICartographer<TState, TInput> cartographer,
+            IEnumerable<IEventListener> listeners,
+            string machineId)
+        {
+            _connectorResolver = connectorResolver;
+            _repositoryContextFactory = repositoryContextFactory;
+            _listeners = listeners.ToList();
+
+            MachineId = machineId;
+
+            CachedValues = new Lazy<Task<(ISchematic<TState, TInput> schematic, IReadOnlyDictionary<string, string> metadata)>>(
+                async () =>
+                {
+                    using (var context = await _repositoryContextFactory.OpenContextAsync(CancellationToken.None)
+                        .ConfigureAwait(false))
+                    {
+                        var machineStatus = await context.Machines.GetMachineStatusAsync(machineId, CancellationToken.None)
+                            .ConfigureAwait(false);
+
+                        return (machineStatus.Schematic,
+                            new ReadOnlyDictionary<string, string>(machineStatus.Metadata));
+                    }
+                });
+        }
 
         internal REstateMachine(
             IConnectorResolver<TState, TInput> connectorResolver,
@@ -30,41 +59,40 @@ namespace REstate.Engine
         {
             _connectorResolver = connectorResolver;
             _repositoryContextFactory = repositoryContextFactory;
-            _metadata = metadata;
             _listeners = listeners.ToList();
 
             MachineId = machineId;
 
-            Schematic = schematic;
+            CachedValues = new Lazy<Task<(ISchematic<TState, TInput> schematic, IReadOnlyDictionary<string, string> metadata)>>(
+                () => Task.FromResult((schematic, metadata)));
         }
 
-        public ISchematic<TState, TInput> Schematic { get; }
+        protected readonly Lazy<Task<(ISchematic<TState, TInput> schematic, IReadOnlyDictionary<string, string> metadata)>> CachedValues;
 
-        Task<ISchematic<TState, TInput>> IStateMachine<TState, TInput>.GetSchematicAsync(
-            CancellationToken cancellationToken) => Task.FromResult(Schematic);
+        public async Task<ISchematic<TState, TInput>> GetSchematicAsync(
+            CancellationToken cancellationToken) => (await CachedValues.Value).schematic;
 
         public string MachineId { get; }
 
-        public Task<IReadOnlyDictionary<string, string>> GetMetadataAsync(
-            CancellationToken cancellationToken = default) 
-            => Task.FromResult(_metadata);
+        public async Task<IReadOnlyDictionary<string, string>> GetMetadataAsync(
+            CancellationToken cancellationToken = default) => (await CachedValues.Value).metadata;
 
         public Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
             TPayload payload,
-            CancellationToken cancellationToken = default) 
+            CancellationToken cancellationToken = default)
             => SendAsync(input, payload, null, null, cancellationToken);
 
         public Task<Status<TState>> SendAsync(
             TInput input,
-            CancellationToken cancellationToken = default) 
+            CancellationToken cancellationToken = default)
             => SendAsync<object>(input, null, null, null, cancellationToken);
 
         public Task<Status<TState>> SendAsync(
             TInput input,
             long lastCommitNumber,
             IDictionary<string, string> stateBag = null,
-            CancellationToken cancellationToken = default) 
+            CancellationToken cancellationToken = default)
             => SendAsync<object>(input, null, (long?)lastCommitNumber, stateBag, cancellationToken);
 
         public Task<Status<TState>> SendAsync<TPayload>(
@@ -77,12 +105,12 @@ namespace REstate.Engine
 
         private async Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
-            TPayload payload, 
+            TPayload payload,
             long? lastCommitNumber,
             IDictionary<string, string> stateBag = null,
             CancellationToken cancellationToken = default)
         {
-            using (var dataContext = await  _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
+            using (var dataContext = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
             {
                 int retries = 0;
 
@@ -93,7 +121,9 @@ namespace REstate.Engine
 
                     Status<TState> currentStatus = machineStatus;
 
-                    var schematicState = Schematic.States[currentStatus.State];
+                    ISchematic<TState, TInput> schematic = machineStatus.Schematic;
+
+                    var schematicState = schematic.States[currentStatus.State];
 
                     if (!schematicState.Transitions.TryGetValue(input, out var transition))
                     {
@@ -106,7 +136,7 @@ namespace REstate.Engine
                             .ResolvePrecondition(transition.Precondition.ConnectorKey);
 
                         if (!await precondition.ValidateAsync(
-                            schematic: Schematic,
+                            schematic: schematic,
                             machine: this,
                             status: currentStatus,
                             inputParameters: new InputParameters<TInput, TPayload>(input, payload),
@@ -116,14 +146,14 @@ namespace REstate.Engine
                             throw new TransitionFailedPreconditionException(currentStatus.State.ToString(), input.ToString(), transition.ResultantState.ToString());
                         }
                     }
-                    var resultantState = Schematic.States[transition.ResultantState];
+                    var resultantState = schematic.States[transition.ResultantState];
                     if (resultantState.Precondition != null)
                     {
                         var precondition = _connectorResolver
                             .ResolvePrecondition(resultantState.Precondition.ConnectorKey);
 
                         if (!await precondition.ValidateAsync(
-                            schematic: Schematic,
+                            schematic: schematic,
                             machine: this,
                             status: currentStatus,
                             inputParameters: new InputParameters<TInput, TPayload>(input, payload),
@@ -138,14 +168,14 @@ namespace REstate.Engine
                     {
                         // ReSharper disable once SuspiciousTypeConversion.Global
                         if (dataContext.Machines is IOptimisticallyConcurrentStateRepository<TState, TInput> optimisticMode)
-                            currentStatus = await optimisticMode.SetMachineStateAsync(
+                            machineStatus = await optimisticMode.SetMachineStateAsync(
                                 machineStatus: machineStatus,
                                 state: transition.ResultantState,
                                 lastCommitNumber: lastCommitNumber ?? currentStatus.CommitNumber,
                                 stateBag: stateBag,
                                 cancellationToken: cancellationToken).ConfigureAwait(false);
                         else
-                            currentStatus = await dataContext.Machines.SetMachineStateAsync(
+                            machineStatus = await dataContext.Machines.SetMachineStateAsync(
                                 machineId: MachineId,
                                 state: transition.ResultantState,
                                 lastCommitNumber: lastCommitNumber ?? currentStatus.CommitNumber,
@@ -154,7 +184,7 @@ namespace REstate.Engine
                     }
                     catch (StateConflictException)
                     {
-                        if ((Schematic.StateConflictRetryCount == -1 || retries < Schematic.StateConflictRetryCount)
+                        if ((schematic.StateConflictRetryCount == -1 || retries < schematic.StateConflictRetryCount)
                                 && lastCommitNumber != null /*If a specific commit number was requested, retrying is worthless*/)
                         {
                             retries++;
@@ -164,9 +194,11 @@ namespace REstate.Engine
                         throw;
                     }
 
-                    schematicState = Schematic.States[currentStatus.State];
+                    currentStatus = machineStatus;
 
-                    var preActionState = currentStatus;
+                    schematicState = schematic.States[currentStatus.State];
+
+                    var preActionState = machineStatus;
 
                     NotifyOnTransition(input, payload, preActionState);
 
@@ -181,7 +213,7 @@ namespace REstate.Engine
                         using (interceptor = new InterceptorMachine(this, currentStatus))
                         {
                             await action.InvokeAsync(
-                                schematic: Schematic,
+                                schematic: schematic,
                                 machine: interceptor,
                                 status: currentStatus,
                                 inputParameters: new InputParameters<TInput, TPayload>(input, payload),
@@ -208,43 +240,22 @@ namespace REstate.Engine
             }
         }
 
-        private void NotifyOnTransition<TPayload>(TInput input, TPayload payload, Status<TState> status)
+        private void NotifyOnTransition<TPayload>(TInput input, TPayload payload, MachineStatus<TState, TInput> status)
         {
 #pragma warning disable 4014
-            Task.Run(async () => await Task.WhenAll(
-                    _listeners.Select(listener =>
-                        listener.TransitionAsync(
-                            schematic: Schematic,
-                            status: status,
-                            metadata: _metadata,
-                            input: input,
-                            payload: payload))),
+            Task.Run(async () =>
+                {
+                    await Task.WhenAll(
+                        _listeners.Select(listener =>
+                            listener.TransitionAsync(
+                                schematic: status.Schematic,
+                                status: status,
+                                metadata: new ReadOnlyDictionary<string, string>(status.Metadata),
+                                input: input,
+                                payload: payload)));
+                },
                 CancellationToken.None);
 #pragma warning restore 4014
-        }
-
-        public async Task<bool> IsInStateAsync(Status<TState> status, CancellationToken cancellationToken = default)
-        {
-            var currentState = await GetCurrentStateAsync(cancellationToken);
-
-            //If exact match, true
-            if(status == currentState)
-                return true;
-
-            var configuration = Schematic.States[currentState.State];
-
-            //Recursively look for ancestors
-            while(configuration.ParentState != null)
-            {
-                //If status matches an ancestor, true
-                if (configuration.ParentState.Equals(status.State))
-                    return true;
-                
-                //No match, move one level up the tree
-                configuration = Schematic.States[configuration.ParentState];
-            }
-
-            return false;
         }
 
         public async Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default)
@@ -261,8 +272,7 @@ namespace REstate.Engine
             return currentStatus;
         }
 
-        public override string ToString() =>
-            $"{Schematic.SchematicName}/{MachineId}";
+        public override string ToString() => MachineId;
 
         private class InterceptorMachine
             : IStateMachine<TState, TInput>
@@ -289,7 +299,7 @@ namespace REstate.Engine
                 {
                     lock (this)
                     {
-                        if(value.CommitNumber > _currentStatus.CommitNumber)
+                        if (value.CommitNumber > _currentStatus.CommitNumber)
                             _currentStatus = value;
                     }
                 }
@@ -303,16 +313,16 @@ namespace REstate.Engine
                 CancellationToken cancellationToken = default)
                 => Machine.GetSchematicAsync(cancellationToken);
 
-            public Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default) 
+            public Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default)
                 => Machine.GetCurrentStateAsync(cancellationToken);
-            
+
 
             public async Task<Status<TState>> SendAsync<TPayload>(
                 TInput input,
                 TPayload payload,
                 CancellationToken cancellationToken = default)
             {
-                if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
+                if (_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
 
                 var status = await Machine.SendAsync(input, payload, cancellationToken);
 
@@ -328,7 +338,7 @@ namespace REstate.Engine
                 IDictionary<string, string> stateBag = null,
                 CancellationToken cancellationToken = default)
             {
-                if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
+                if (_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
 
                 var status = await Machine.SendAsync(input, payload, lastCommitNumber, stateBag, cancellationToken);
 
@@ -341,7 +351,7 @@ namespace REstate.Engine
                 TInput input,
                 CancellationToken cancellationToken = default)
             {
-                if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
+                if (_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
 
                 var status = await Machine.SendAsync(input, cancellationToken);
 
@@ -356,7 +366,7 @@ namespace REstate.Engine
                 IDictionary<string, string> stateBag = null,
                 CancellationToken cancellationToken = default)
             {
-                if(_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
+                if (_isDisposed) throw new ObjectDisposedException("IStateMachine<,>", "Cannot send input at this point as final state has been captured.");
 
                 var status = await Machine.SendAsync(input, lastCommitNumber, stateBag, cancellationToken);
 

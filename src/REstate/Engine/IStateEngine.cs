@@ -63,6 +63,15 @@ namespace REstate.Engine
             string machineId,
             CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Returns a reference machine that has not been checked for existence.
+        /// <para />
+        /// Useful for often reloaded machine paths such as request paths.
+        /// </summary>
+        /// <param name="machineId"></param>
+        /// <returns>A Machine reference that defers loading</returns>
+        IStateMachine<TState, TInput> GetMachineReference(string machineId);
+
         Task<ISchematic<TState, TInput>> GetSchematicAsync(
             string schematicName,
             CancellationToken cancellationToken = default);

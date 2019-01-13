@@ -9,5 +9,7 @@ namespace REstate.Engine
             string machineId, 
             ISchematic<TState, TInput> schematic,
             IReadOnlyDictionary<string, string> metadata);
+
+        IStateMachine<TState, TInput> Construct(string machineId);
     }
 }

@@ -30,8 +30,7 @@ namespace REstate.Tests.Units
                 .CreateMachineAsync(schematic).GetAwaiter().GetResult();
 
             // Assert
-            Assert.StartsWith($"{schematic.SchematicName}/", machine.ToString(), StringComparison.Ordinal);
-            Assert.EndsWith(machine.MachineId, machine.ToString(), StringComparison.Ordinal);
+            Assert.Equal(machine.MachineId, machine.ToString());
         }
 
         [Fact]

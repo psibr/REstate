@@ -46,5 +46,19 @@ namespace REstate.Engine
 
             return restateMachine;
         }
+
+        public IStateMachine<TState, TInput> Construct(string machineId)
+        {
+            if (machineId == null) throw new ArgumentNullException(nameof(machineId));
+
+            var restateMachine = new REstateMachine<TState, TInput>(
+                _connectorResolver,
+                _repositoryContextFactory,
+                _cartographer,
+                _listeners,
+                machineId);
+
+            return restateMachine;
+        }
     }
 }

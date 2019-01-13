@@ -388,6 +388,15 @@ namespace REstate.Engine
             return machine;
         }
 
+        public IStateMachine<TState, TInput> GetMachineReference(
+            string machineId,
+            CancellationToken cancellationToken = default)
+        {
+            var machine = _stateMachineFactory.Construct(machineId);
+
+            return machine;
+        }
+
         public async Task DeleteMachineAsync(
             string machineId,
             CancellationToken cancellationToken = default)
