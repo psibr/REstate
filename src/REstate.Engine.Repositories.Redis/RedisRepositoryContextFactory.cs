@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using StackExchange.Redis;
 
@@ -13,6 +12,11 @@ namespace REstate.Engine.Repositories.Redis
         public RedisRepositoryContextFactory(REstateRedisDatabase restateDatabase)
         {
             _restateDatabase = restateDatabase.RedisDatabase;
+        }
+
+        public IMachineStatusStore<TState, TInput> GetMachineStatusStore(string machineId)
+        {
+            return new RedisMachineStatusStore<TState, TInput>(_restateDatabase, machineId);
         }
 
         public Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(

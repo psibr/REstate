@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Threading;
+using System.Threading.Tasks;
 using REstate.Engine.Connectors.Resolution;
 using REstate.Engine.EventListeners;
 using REstate.Engine.Repositories;
@@ -27,36 +30,34 @@ namespace REstate.Engine
             _listeners = listeners;
         }
 
-        public IStateMachine<TState, TInput> ConstructFromSchematic(
-            string machineId,
-            ISchematic<TState, TInput> schematic,
-            IReadOnlyDictionary<string, string> metadata)
-        {
-            if (schematic == null)
-                throw new ArgumentNullException(nameof(schematic));
-
-            var restateMachine = new REstateMachine<TState, TInput>(
-                _connectorResolver,
-                _repositoryContextFactory,
-                _cartographer,
-                _listeners,
-                machineId,
-                schematic,
-                metadata);
-
-            return restateMachine;
-        }
-
         public IStateMachine<TState, TInput> Construct(string machineId)
         {
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
 
+            var machineStatusStore = _repositoryContextFactory
+                .GetMachineStatusStore(machineId);
+
             var restateMachine = new REstateMachine<TState, TInput>(
                 _connectorResolver,
-                _repositoryContextFactory,
-                _cartographer,
+                machineStatusStore,
                 _listeners,
                 machineId);
+
+            return restateMachine;
+        }
+
+        public IStateMachine<TState, TInput> ConstructPreloaded(string machineId, Schematic<TState, TInput> schematic, ReadOnlyDictionary<string, string> metadata)
+        {
+            var machineStatusStore = _repositoryContextFactory
+                .GetMachineStatusStore(machineId);
+
+            var restateMachine = new REstateMachine<TState, TInput>(
+                _connectorResolver,
+                machineStatusStore,
+                _listeners,
+                machineId,
+                schematic,
+                metadata);
 
             return restateMachine;
         }

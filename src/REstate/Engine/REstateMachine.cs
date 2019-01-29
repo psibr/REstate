@@ -15,20 +15,36 @@ namespace REstate.Engine
     public class REstateMachine<TState, TInput>
         : IStateMachine<TState, TInput>
     {
-        private readonly object _syncRoot = new object();
         private readonly IConnectorResolver<TState, TInput> _connectorResolver;
-        private readonly IRepositoryContextFactory<TState, TInput> _repositoryContextFactory;
+        private readonly IMachineStatusStore<TState, TInput> _machineStatusStore;
         private readonly IReadOnlyCollection<IEventListener> _listeners;
 
         internal REstateMachine(
             IConnectorResolver<TState, TInput> connectorResolver,
-            IRepositoryContextFactory<TState, TInput> repositoryContextFactory,
-            ICartographer<TState, TInput> cartographer,
+            IMachineStatusStore<TState, TInput> machineStatusStore,
+            IEnumerable<IEventListener> listeners,
+            string machineId,
+            Schematic<TState, TInput> schematic,
+            ReadOnlyDictionary<string, string> metadata)
+        {
+            _connectorResolver = connectorResolver;
+            _listeners = listeners.ToList();
+            _machineStatusStore = machineStatusStore;
+
+            MachineId = machineId;
+
+            CachedValues = new Lazy<Task<(ISchematic<TState, TInput> schematic, IReadOnlyDictionary<string, string> metadata)>>(
+                () => Task.FromResult(((ISchematic<TState, TInput>)schematic, (IReadOnlyDictionary<string, string>)metadata)));
+        }
+
+        internal REstateMachine(
+            IConnectorResolver<TState, TInput> connectorResolver,
+            IMachineStatusStore<TState, TInput> machineStatusStore,
             IEnumerable<IEventListener> listeners,
             string machineId)
         {
+            _machineStatusStore = machineStatusStore;
             _connectorResolver = connectorResolver;
-            _repositoryContextFactory = repositoryContextFactory;
             _listeners = listeners.ToList();
 
             MachineId = machineId;
@@ -36,35 +52,12 @@ namespace REstate.Engine
             CachedValues = new Lazy<Task<(ISchematic<TState, TInput> schematic, IReadOnlyDictionary<string, string> metadata)>>(
                 async () =>
                 {
-                    using (var context = await _repositoryContextFactory.OpenContextAsync(CancellationToken.None)
-                        .ConfigureAwait(false))
-                    {
-                        var machineStatus = await context.Machines.GetMachineStatusAsync(machineId, CancellationToken.None)
-                            .ConfigureAwait(false);
+                    var machineStatus = await _machineStatusStore.GetMachineStatusAsync(CancellationToken.None)
+                        .ConfigureAwait(false);
 
-                        return (machineStatus.Schematic,
-                            new ReadOnlyDictionary<string, string>(machineStatus.Metadata));
-                    }
+                    return (machineStatus.Schematic,
+                        new ReadOnlyDictionary<string, string>(machineStatus.Metadata));
                 });
-        }
-
-        internal REstateMachine(
-            IConnectorResolver<TState, TInput> connectorResolver,
-            IRepositoryContextFactory<TState, TInput> repositoryContextFactory,
-            ICartographer<TState, TInput> cartographer,
-            IEnumerable<IEventListener> listeners,
-            string machineId,
-            ISchematic<TState, TInput> schematic,
-            IReadOnlyDictionary<string, string> metadata)
-        {
-            _connectorResolver = connectorResolver;
-            _repositoryContextFactory = repositoryContextFactory;
-            _listeners = listeners.ToList();
-
-            MachineId = machineId;
-
-            CachedValues = new Lazy<Task<(ISchematic<TState, TInput> schematic, IReadOnlyDictionary<string, string> metadata)>>(
-                () => Task.FromResult((schematic, metadata)));
         }
 
         protected readonly Lazy<Task<(ISchematic<TState, TInput> schematic, IReadOnlyDictionary<string, string> metadata)>> CachedValues;
@@ -110,133 +103,129 @@ namespace REstate.Engine
             IDictionary<string, string> stateBag = null,
             CancellationToken cancellationToken = default)
         {
-            using (var dataContext = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
+            int retries = 0;
+
+            while (true)
             {
-                int retries = 0;
+                var machineStatus = await _machineStatusStore.GetMachineStatusAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
-                while (true)
+                Status<TState> currentStatus = machineStatus;
+
+                ISchematic<TState, TInput> schematic = machineStatus.Schematic;
+
+                var schematicState = schematic.States[currentStatus.State];
+
+                if (!schematicState.Transitions.TryGetValue(input, out var transition))
                 {
-                    var machineStatus = await dataContext.Machines
-                        .GetMachineStatusAsync(MachineId, cancellationToken).ConfigureAwait(false);
+                    throw new TransitionNotDefinedException(currentStatus.State.ToString(), input.ToString());
+                }
 
-                    Status<TState> currentStatus = machineStatus;
+                if (transition.Precondition != null)
+                {
+                    var precondition = _connectorResolver
+                        .ResolvePrecondition(transition.Precondition.ConnectorKey);
 
-                    ISchematic<TState, TInput> schematic = machineStatus.Schematic;
-
-                    var schematicState = schematic.States[currentStatus.State];
-
-                    if (!schematicState.Transitions.TryGetValue(input, out var transition))
+                    if (!await precondition.ValidateAsync(
+                        schematic: schematic,
+                        machine: this,
+                        status: currentStatus,
+                        inputParameters: new InputParameters<TInput, TPayload>(input, payload),
+                        connectorSettings: transition.Precondition.Settings,
+                        cancellationToken: cancellationToken).ConfigureAwait(false))
                     {
-                        throw new TransitionNotDefinedException(currentStatus.State.ToString(), input.ToString());
+                        throw new TransitionFailedPreconditionException(currentStatus.State.ToString(), input.ToString(), transition.ResultantState.ToString());
+                    }
+                }
+                var resultantState = schematic.States[transition.ResultantState];
+                if (resultantState.Precondition != null)
+                {
+                    var precondition = _connectorResolver
+                        .ResolvePrecondition(resultantState.Precondition.ConnectorKey);
+
+                    if (!await precondition.ValidateAsync(
+                        schematic: schematic,
+                        machine: this,
+                        status: currentStatus,
+                        inputParameters: new InputParameters<TInput, TPayload>(input, payload),
+                        connectorSettings: resultantState.Precondition.Settings,
+                        cancellationToken: cancellationToken).ConfigureAwait(false))
+                    {
+                        throw new TransitionFailedPreconditionException(currentStatus.State.ToString(), input.ToString(), transition.ResultantState.ToString());
+                    }
+                }
+
+                try
+                {
+                    // ReSharper disable once SuspiciousTypeConversion.Global
+                    if (_machineStatusStore is IOptimisticallyConcurrentMachineStatusStore<TState, TInput> optimisticMode)
+                        machineStatus = await optimisticMode.SetMachineStateAsync(
+                            machineStatus: machineStatus,
+                            state: transition.ResultantState,
+                            lastCommitNumber: lastCommitNumber ?? currentStatus.CommitNumber,
+                            stateBag: stateBag,
+                            cancellationToken: cancellationToken).ConfigureAwait(false);
+                    else
+                        machineStatus = await _machineStatusStore.SetMachineStateAsync(
+                            state: transition.ResultantState,
+                            lastCommitNumber: lastCommitNumber ?? currentStatus.CommitNumber,
+                            stateBag: stateBag,
+                            cancellationToken: cancellationToken).ConfigureAwait(false);
+                }
+                catch (StateConflictException)
+                {
+                    if ((schematic.StateConflictRetryCount == -1 || retries < schematic.StateConflictRetryCount)
+                            && lastCommitNumber != null /*If a specific commit number was requested, retrying is worthless*/)
+                    {
+                        retries++;
+                        continue;
                     }
 
-                    if (transition.Precondition != null)
-                    {
-                        var precondition = _connectorResolver
-                            .ResolvePrecondition(transition.Precondition.ConnectorKey);
+                    throw;
+                }
 
-                        if (!await precondition.ValidateAsync(
+                currentStatus = machineStatus;
+
+                schematicState = schematic.States[currentStatus.State];
+
+                var preActionState = machineStatus;
+
+                NotifyOnTransition(input, payload, preActionState);
+
+                if (schematicState.Action == null) return currentStatus;
+
+                try
+                {
+                    var action =
+                        _connectorResolver.ResolveAction(schematicState.Action.ConnectorKey);
+
+                    InterceptorMachine interceptor;
+                    using (interceptor = new InterceptorMachine(this, currentStatus))
+                    {
+                        await action.InvokeAsync(
                             schematic: schematic,
-                            machine: this,
+                            machine: interceptor,
                             status: currentStatus,
                             inputParameters: new InputParameters<TInput, TPayload>(input, payload),
-                            connectorSettings: transition.Precondition.Settings,
-                            cancellationToken: cancellationToken).ConfigureAwait(false))
-                        {
-                            throw new TransitionFailedPreconditionException(currentStatus.State.ToString(), input.ToString(), transition.ResultantState.ToString());
-                        }
-                    }
-                    var resultantState = schematic.States[transition.ResultantState];
-                    if (resultantState.Precondition != null)
-                    {
-                        var precondition = _connectorResolver
-                            .ResolvePrecondition(resultantState.Precondition.ConnectorKey);
-
-                        if (!await precondition.ValidateAsync(
-                            schematic: schematic,
-                            machine: this,
-                            status: currentStatus,
-                            inputParameters: new InputParameters<TInput, TPayload>(input, payload),
-                            connectorSettings: resultantState.Precondition.Settings,
-                            cancellationToken: cancellationToken).ConfigureAwait(false))
-                        {
-                            throw new TransitionFailedPreconditionException(currentStatus.State.ToString(), input.ToString(), transition.ResultantState.ToString());
-                        }
-                    }
-
-                    try
-                    {
-                        // ReSharper disable once SuspiciousTypeConversion.Global
-                        if (dataContext.Machines is IOptimisticallyConcurrentStateRepository<TState, TInput> optimisticMode)
-                            machineStatus = await optimisticMode.SetMachineStateAsync(
-                                machineStatus: machineStatus,
-                                state: transition.ResultantState,
-                                lastCommitNumber: lastCommitNumber ?? currentStatus.CommitNumber,
-                                stateBag: stateBag,
-                                cancellationToken: cancellationToken).ConfigureAwait(false);
-                        else
-                            machineStatus = await dataContext.Machines.SetMachineStateAsync(
-                                machineId: MachineId,
-                                state: transition.ResultantState,
-                                lastCommitNumber: lastCommitNumber ?? currentStatus.CommitNumber,
-                                stateBag: stateBag,
-                                cancellationToken: cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (StateConflictException)
-                    {
-                        if ((schematic.StateConflictRetryCount == -1 || retries < schematic.StateConflictRetryCount)
-                                && lastCommitNumber != null /*If a specific commit number was requested, retrying is worthless*/)
-                        {
-                            retries++;
-                            continue;
-                        }
-
-                        throw;
-                    }
-
-                    currentStatus = machineStatus;
-
-                    schematicState = schematic.States[currentStatus.State];
-
-                    var preActionState = machineStatus;
-
-                    NotifyOnTransition(input, payload, preActionState);
-
-                    if (schematicState.Action == null) return currentStatus;
-
-                    try
-                    {
-                        var action =
-                            _connectorResolver.ResolveAction(schematicState.Action.ConnectorKey);
-
-                        InterceptorMachine interceptor;
-                        using (interceptor = new InterceptorMachine(this, currentStatus))
-                        {
-                            await action.InvokeAsync(
-                                schematic: schematic,
-                                machine: interceptor,
-                                status: currentStatus,
-                                inputParameters: new InputParameters<TInput, TPayload>(input, payload),
-                                connectorSettings: schematicState.Action.Settings,
-                                cancellationToken: cancellationToken).ConfigureAwait(false);
-                        }
-
-                        currentStatus = interceptor.CurrentStatus;
-                    }
-                    catch
-                    {
-                        if (schematicState.Action.OnExceptionInput == null)
-                            throw;
-
-                        currentStatus = await SendAsync(
-                            input: schematicState.Action.OnExceptionInput.Input,
-                            payload: payload,
-                            lastCommitNumber: currentStatus.CommitNumber,
+                            connectorSettings: schematicState.Action.Settings,
                             cancellationToken: cancellationToken).ConfigureAwait(false);
                     }
 
-                    return currentStatus;
+                    currentStatus = interceptor.CurrentStatus;
                 }
+                catch
+                {
+                    if (schematicState.Action.OnExceptionInput == null)
+                        throw;
+
+                    currentStatus = await SendAsync(
+                        input: schematicState.Action.OnExceptionInput.Input,
+                        payload: payload,
+                        lastCommitNumber: currentStatus.CommitNumber,
+                        cancellationToken: cancellationToken).ConfigureAwait(false);
+                }
+
+                return currentStatus;
             }
         }
 
@@ -260,14 +249,9 @@ namespace REstate.Engine
 
         public async Task<Status<TState>> GetCurrentStateAsync(CancellationToken cancellationToken = default)
         {
-            Status<TState> currentStatus;
-
-            using (var dataContext = await _repositoryContextFactory.OpenContextAsync(cancellationToken).ConfigureAwait(false))
-            {
-                currentStatus = await dataContext.Machines
-                    .GetMachineStatusAsync(MachineId, cancellationToken)
-                    .ConfigureAwait(false);
-            }
+            var currentStatus = await _machineStatusStore
+                .GetMachineStatusAsync(cancellationToken)
+                .ConfigureAwait(false);
 
             return currentStatus;
         }

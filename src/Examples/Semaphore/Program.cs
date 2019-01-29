@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using REstate;
+using REstate.Engine;
 using Serilog;
 
 namespace Semaphore
@@ -42,7 +43,7 @@ namespace Semaphore
 
                         break;
                     }
-                    catch (InvalidOperationException)
+                    catch (StateConflictException)
                     {
                         Log.Logger.Verbose("Semapore is full, waiting {delay}ms and then retrying...",
                             onFailedToGetSlotDelayMs);

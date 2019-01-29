@@ -46,7 +46,7 @@ namespace REstate
         }
 
         /// <summary>
-        /// Creates a new semaphoroe using Machine state as the synchronization root.
+        /// Creates a new semaphore using Machine state as the synchronization root.
         /// </summary>
         /// <param name="restateAgent">The agent to use to build the semaphore</param>
         /// <param name="slots">The number or available slots in the sempahore</param>

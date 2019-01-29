@@ -16,10 +16,10 @@ namespace REstate.Engine.Repositories.Redis
         : ISchematicRepository<TState, TInput>
         , IMachineRepository<TState, TInput>
     {
-        private const string SchematicKeyPrefix = "REstate/Schematics";
-        private const string MachinesKeyPrefix = "REstate/Machines";
+        internal const string SchematicKeyPrefix = "REstate/Schematics";
+        internal const string MachinesKeyPrefix = "REstate/Machines";
 
-        private const string MachineSchematicsKeyPrefix = "REstate/MachineSchematics";
+        internal const string MachineSchematicsKeyPrefix = "REstate/MachineSchematics";
 
         private readonly IDatabase _restateDatabase;
 
@@ -190,102 +190,6 @@ namespace REstate.Engine.Repositories.Redis
             if (machineId == null) throw new ArgumentNullException(nameof(machineId));
 
             await _restateDatabase.KeyDeleteAsync($"{MachinesKeyPrefix}/{machineId}").ConfigureAwait(false);
-        }
-
-        /// <inheritdoc />
-        public async Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(
-            string machineId,
-            CancellationToken cancellationToken = default)
-        {
-            if (machineId == null) throw new ArgumentNullException(nameof(machineId));
-
-            var machineBytes = await _restateDatabase.StringGetAsync($"{MachinesKeyPrefix}/{machineId}").ConfigureAwait(false);
-
-            if (!machineBytes.HasValue) throw new MachineDoesNotExistException(machineId);
-
-            var redisRecord = MessagePackSerializer.Deserialize<RedisMachineStatus<TState, TInput>>(
-                machineBytes);
-
-            var schematicBytes = await _restateDatabase
-                .StringGetAsync($"{MachineSchematicsKeyPrefix}/{redisRecord.SchematicHash}").ConfigureAwait(false);
-
-            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
-                schematicBytes,
-                ContractlessStandardResolver.Instance);
-
-            return new MachineStatus<TState, TInput>
-            {
-                MachineId = redisRecord.MachineId,
-                Schematic = schematic,
-                CommitNumber = redisRecord.CommitNumber,
-                State = redisRecord.State,
-                UpdatedTime = redisRecord.UpdatedTime,
-                Metadata = redisRecord.Metadata,
-                StateBag = redisRecord.StateBag
-            };
-        }
-
-        /// <inheritdoc />
-        public async Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
-            string machineId,
-            TState state,
-            long? lastCommitNumber,
-            IDictionary<string, string> stateBag = null,
-            CancellationToken cancellationToken = default)
-        {
-            if (machineId == null) throw new ArgumentNullException(nameof(machineId));
-
-            var machineKey = $"{MachinesKeyPrefix}/{machineId}";
-            var machineBytes = await _restateDatabase.StringGetAsync(machineKey).ConfigureAwait(false);
-
-            var status = MessagePackSerializer.Deserialize<RedisMachineStatus<TState, TInput>>(
-                machineBytes);
-
-            if (lastCommitNumber == null || status.CommitNumber == lastCommitNumber)
-            {
-                status.State = state;
-                status.CommitNumber = status.CommitNumber++;
-                status.UpdatedTime = DateTimeOffset.UtcNow;
-
-                if(stateBag != null && lastCommitNumber != null)
-                    status.StateBag = stateBag;
-            }
-            else
-            {
-                throw new StateConflictException();
-            }
-
-            var newMachineBytes = MessagePackSerializer.Serialize(status);
-            
-            var transaction = _restateDatabase.CreateTransaction();
-
-            // Veify the record has not changed since read.
-            transaction.AddCondition(Condition.StringEqual(machineKey, machineBytes));
-
-            var setTask = transaction.StringSetAsync(machineKey, newMachineBytes);
-            var schematicBytesTask = transaction.StringGetAsync($"{MachineSchematicsKeyPrefix}/{status.SchematicHash}");
-            var committed = await transaction.ExecuteAsync().ConfigureAwait(false);
-
-            await setTask.ConfigureAwait(false);
-
-            // If the transaction failed, we had a conflict.
-            if(!committed) throw new StateConflictException();
-
-            var schematicBytes = await schematicBytesTask.ConfigureAwait(false);
-
-            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(schematicBytes,
-                ContractlessStandardResolver.Instance);
-
-            return new MachineStatus<TState, TInput>
-            {
-                MachineId = status.MachineId,
-                Schematic = schematic,
-                State = status.State,
-                CommitNumber = status.CommitNumber,
-                UpdatedTime = status.UpdatedTime,
-                Metadata = status.Metadata,
-                StateBag = status.StateBag
-            };
         }
     }
 }

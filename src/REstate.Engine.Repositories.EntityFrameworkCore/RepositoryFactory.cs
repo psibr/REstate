@@ -14,6 +14,11 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             _dbContextFactory = dbContextFactory;
         }
 
+        public IMachineStatusStore<TState, TInput> GetMachineStatusStore(string machineId)
+        {
+            return new MachineStatusStore<TState, TInput>(_dbContextFactory, machineId);
+        }
+
         public Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(
             CancellationToken cancellationToken = default)
         {

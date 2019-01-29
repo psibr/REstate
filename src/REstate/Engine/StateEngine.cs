@@ -81,7 +81,7 @@ namespace REstate.Engine
         public Task<IStateMachine<TState, TInput>> CreateMachineAsync(
             Schematic<TState, TInput> schematic,
             IDictionary<string, string> metadata = null,
-            CancellationToken cancellationToken = default) 
+            CancellationToken cancellationToken = default)
             => CreateMachineAsync(schematic, null, metadata, cancellationToken);
 
         public async Task<IStateMachine<TState, TInput>> CreateMachineAsync(
@@ -105,11 +105,7 @@ namespace REstate.Engine
             }
 
             var machine = _stateMachineFactory
-                .ConstructFromSchematic(
-                    newMachineStatus.MachineId,
-                    schematic,
-                    new ReadOnlyDictionary<string, string>(
-                        newMachineStatus.Metadata ?? new Dictionary<string, string>(0)));
+                .ConstructPreloaded(newMachineStatus.MachineId, schematic, new ReadOnlyDictionary<string, string>(metadata ?? new Dictionary<string, string>(0)));
 
             NotifyOnMachineCreated(schematic, newMachineStatus);
 
@@ -185,7 +181,7 @@ namespace REstate.Engine
             }
 
             var machine = _stateMachineFactory
-                .ConstructFromSchematic(
+                .ConstructPreloaded(
                     newMachineStatus.MachineId,
                     schematic,
                     new ReadOnlyDictionary<string, string>(
@@ -207,13 +203,13 @@ namespace REstate.Engine
                 _listeners.Select(listener =>
                     listener.MachineCreatedAsync(
                         schematic,
-                        new []
+                        new[]
                         {
                             new MachineCreationEventData<TState>(
                                 initialStatus: machineStatus,
                                 metadata: new ReadOnlyDictionary<string, string>(
                                     machineStatus.Metadata ?? new Dictionary<string, string>(0))
-                            ), 
+                            ),
                         }))),
                 CancellationToken.None);
 #pragma warning restore 4014
@@ -241,11 +237,11 @@ namespace REstate.Engine
                     .BulkCreateMachinesAsync(schematic, metadata, cancellationToken);
             }
 
-            var machines = 
+            var machines =
                 machineStatuses
                     .Select(status => (
                         machine: _stateMachineFactory
-                            .ConstructFromSchematic(
+                            .ConstructPreloaded(
                                 status.MachineId,
                                 schematic,
                                 new ReadOnlyDictionary<string, string>(
@@ -301,7 +297,7 @@ namespace REstate.Engine
             var machines = machineStatuses
                 .Select(status => (
                     machine: _stateMachineFactory
-                        .ConstructFromSchematic(
+                        .ConstructPreloaded(
                             machineId: status.MachineId,
                             schematic: schematic,
                             metadata: new ReadOnlyDictionary<string, string>(
@@ -363,27 +359,10 @@ namespace REstate.Engine
             string machineId,
             CancellationToken cancellationToken = default)
         {
-            Schematic<TState, TInput> schematic;
-            IReadOnlyDictionary<string, string> metadata;
+            var machine = _stateMachineFactory.Construct(machineId);
 
-            using (var repositories = await _repositoryContextFactory
-                .OpenContextAsync(cancellationToken)
-                .ConfigureAwait(false))
-            {
-                var machineStatus = await repositories.Machines
-                    .GetMachineStatusAsync(machineId, cancellationToken)
-                    .ConfigureAwait(false);
-
-                schematic = machineStatus.Schematic;
-                metadata = new ReadOnlyDictionary<string, string>(
-                    machineStatus.Metadata ?? new Dictionary<string, string>(0));
-            }
-
-            var machine = _stateMachineFactory
-                .ConstructFromSchematic(
-                    machineId,
-                    schematic,
-                    metadata);
+            // force load to front-load cost
+            await machine.GetSchematicAsync(cancellationToken).ConfigureAwait(false);
 
             return machine;
         }

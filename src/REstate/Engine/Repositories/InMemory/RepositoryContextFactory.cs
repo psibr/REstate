@@ -11,6 +11,11 @@ namespace REstate.Engine.Repositories.InMemory
             = new Lazy<IEngineRepositoryContext<TState, TInput>>(() 
                 => new EngineRepositoryContext<TState, TInput>(), true);
 
+        public IMachineStatusStore<TState, TInput> GetMachineStatusStore(string machineId)
+        {
+            return new InMemoryMachineStatusStore<TState, TInput>(this, machineId);
+        }
+
         public Task<IEngineRepositoryContext<TState, TInput>> OpenContextAsync(CancellationToken cancellationToken = default)
         {
             return Task.FromResult(repositoryContextLazy.Value);

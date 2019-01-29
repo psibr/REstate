@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,8 +15,8 @@ namespace REstate.Engine.Repositories.InMemory
         , IMachineRepository<TState, TInput>
     {
         private ConcurrentDictionary<string, Schematic<TState, TInput>> Schematics { get; } = new ConcurrentDictionary<string, Schematic<TState, TInput>>();
-        private ConcurrentDictionary<string, (MachineStatus<TState, TInput> MachineStatus, Metadata Metadata)> Machines { get; } =
-            new ConcurrentDictionary<string, (MachineStatus<TState, TInput>, Metadata)>();
+        private ConcurrentDictionary<string, MachineStatus<TState, TInput>> Machines { get; } =
+            new ConcurrentDictionary<string, MachineStatus<TState, TInput>>();
 
         /// <inheritdoc />
         public Task<Schematic<TState, TInput>> RetrieveSchematicAsync(
@@ -84,7 +83,7 @@ namespace REstate.Engine.Repositories.InMemory
                 StateBag = new Dictionary<string, string>()
             };
 
-            if(Machines.TryAdd(id, (record, metadata)))
+            if(Machines.TryAdd(id, record))
                 return Task.FromResult(record);
 
             throw new MachineAlreadyExistException(id);
@@ -100,9 +99,9 @@ namespace REstate.Engine.Repositories.InMemory
 
             var aggregateException = new AggregateException(exceptions);
 
-            List<(MachineStatus<TState, TInput> MachineStatus, IDictionary<string, string> Metadata)> machineRecords =
+            List<MachineStatus<TState, TInput>> machineRecords =
                 metadata.Select(meta =>
-                    (new MachineStatus<TState, TInput>
+                    new MachineStatus<TState, TInput>
                     {
                         MachineId = Guid.NewGuid().ToString(),
                         Schematic = schematic,
@@ -111,20 +110,19 @@ namespace REstate.Engine.Repositories.InMemory
                         UpdatedTime = DateTime.UtcNow,
                         Metadata = meta,
                         StateBag = new Dictionary<string, string>()
-                    },
-                    meta)).ToList();
+                    }).ToList();
 
             foreach (var machineRecord in machineRecords)
             {
-                if (!Machines.TryAdd(machineRecord.MachineStatus.MachineId, machineRecord))
-                    exceptions.Enqueue(new MachineAlreadyExistException(machineRecord.MachineStatus.MachineId));
+                if (!Machines.TryAdd(machineRecord.MachineId, machineRecord))
+                    exceptions.Enqueue(new MachineAlreadyExistException(machineRecord.MachineId));
             }
 
             if(exceptions.Count > 0)
                 throw aggregateException;
 
             return Task.FromResult<ICollection<MachineStatus<TState, TInput>>>(
-                machineRecords.Select(r => r.MachineStatus).ToList());
+                machineRecords.ToList());
         }
 
         /// <inheritdoc />
@@ -154,7 +152,6 @@ namespace REstate.Engine.Repositories.InMemory
 #endif
         }
 
-        /// <inheritdoc />
         public Task<MachineStatus<TState, TInput>> GetMachineStatusAsync(
             string machineId,
             CancellationToken cancellationToken = default)
@@ -164,40 +161,7 @@ namespace REstate.Engine.Repositories.InMemory
             if (!Machines.TryGetValue(machineId, out var record))
                 throw new MachineDoesNotExistException(machineId);
 
-            return Task.FromResult(record.MachineStatus);
-        }
-
-        /// <inheritdoc />
-        public Task<MachineStatus<TState, TInput>> SetMachineStateAsync(
-            string machineId,
-            TState state,
-            long? lastCommitNumber,
-            IDictionary<string, string> stateBag = null,
-            CancellationToken cancellationToken = default)
-        {
-            if (machineId == null) throw new ArgumentNullException(nameof(machineId));
-
-            if (!Machines.TryGetValue(machineId, out var record))
-                throw new MachineDoesNotExistException(machineId);
-
-            lock (record.MachineStatus)
-            {
-                if (lastCommitNumber == null || record.MachineStatus.CommitNumber == lastCommitNumber)
-                {
-                    record.MachineStatus.State = state;
-                    record.MachineStatus.CommitNumber++;
-                    record.MachineStatus.UpdatedTime = DateTimeOffset.UtcNow;
-
-                    if(stateBag != null && lastCommitNumber != null)
-                        record.MachineStatus.StateBag = stateBag;
-                }
-                else
-                {
-                    throw new StateConflictException();
-                }
-            }
-
-            return Task.FromResult(record.MachineStatus);
+            return Task.FromResult(record);
         }
     }
 }
