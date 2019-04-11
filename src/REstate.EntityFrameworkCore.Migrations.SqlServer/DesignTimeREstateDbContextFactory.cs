@@ -14,7 +14,9 @@ namespace REstate.EntityFrameworkCore.Migrations.SqlServer
             return new REstateDbContextFactory(new DbContextOptionsBuilder<REstateDbContext>()
                     .UseSqlServer(
                         "Server=(localdb)\\mssqllocaldb;Database=REstate;Trusted_Connection=True;MultipleActiveResultSets=true",
-                        b => b.MigrationsAssembly(GetType().Assembly.FullName))
+                        b => b
+                            .MigrationsAssembly(GetType().Assembly.FullName)
+                            .EnableRetryOnFailure())
                     .Options)
                 .CreateContext();
         }

@@ -105,6 +105,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             var schematicBytes = schematic.ToSchematicRepresentation();
 
             var stateJson = schematic.InitialState.ToStateRepresentation();
+            var naturalStateName = schematic.InitialState is TypeState typeState ? typeState.GetStateName() : null;
 
             const long commitNumber = 0L;
             var updatedTime = DateTimeOffset.UtcNow;
@@ -115,6 +116,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 SchematicName = schematic.SchematicName,
                 SchematicBytes = schematicBytes,
                 StateJson = stateJson,
+                NaturalStateName = naturalStateName,
                 CommitNumber = commitNumber,
                 UpdatedTime = updatedTime
             };
@@ -166,6 +168,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
             var schematicBytes = schematic.ToSchematicRepresentation();
 
             var stateJson = schematic.InitialState.ToStateRepresentation();
+            var naturalStateName = schematic.InitialState is TypeState typeState ? typeState.GetStateName() : null;
 
             const long commitNumber = 0L;
             var updatedTime = DateTimeOffset.UtcNow;
@@ -193,6 +196,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     MachineId = machineId,
                     SchematicBytes = schematicBytes,
                     StateJson = stateJson,
+                    NaturalStateName = naturalStateName,
                     CommitNumber = commitNumber,
                     UpdatedTime = updatedTime,
                     MetadataEntries = metadataEntries
@@ -335,6 +339,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     var stateJson = state.ToStateRepresentation();
 
                     machineRecord.StateJson = stateJson;
+                    machineRecord.NaturalStateName = state is TypeState typeState ? typeState.GetStateName() : null;
                     machineRecord.CommitNumber++;
                     machineRecord.UpdatedTime = DateTimeOffset.UtcNow;
 

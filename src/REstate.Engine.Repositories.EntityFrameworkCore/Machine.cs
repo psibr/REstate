@@ -20,5 +20,10 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         public byte[] SchematicBytes { get; set; }
         
         public List<StateBagEntry> StateBagEntries { get; set; }
+
+        /// <summary>
+        /// If Machine uses NaturalStateMachine flows, this property reflects the value of <see cref="TypeState.GetStateName"/>
+        /// </summary>
+        public string NaturalStateName { get; set; }
     }
 }
