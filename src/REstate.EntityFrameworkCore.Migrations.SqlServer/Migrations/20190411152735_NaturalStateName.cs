@@ -17,6 +17,8 @@ namespace REstate.EntityFrameworkCore.Migrations.SqlServer.Migrations
 
             if (migrationBuilder.ActiveProvider == SqlServer)
             {
+                migrationBuilder.Sql(@"UPDATE [dbo].[Machines] SET [NaturalStateName] = CAST(LEFT(JSON_VALUE([StateJson],'$.AssemblyQualifiedName'), CHARINDEX(',', JSON_VALUE([StateJson],'$.AssemblyQualifiedName')) - 1) AS VARCHAR(450))");
+
                 migrationBuilder.Sql(@"CREATE NONCLUSTERED INDEX IX_Machines_SchematicName_NaturalStateName_UpdatedTime
 ON [dbo].[Machines] ([SchematicName], [UpdatedTime], [NaturalStateName])
 INCLUDE ([MachineId], [CommitNumber], [StateJson], [SchematicBytes])");
