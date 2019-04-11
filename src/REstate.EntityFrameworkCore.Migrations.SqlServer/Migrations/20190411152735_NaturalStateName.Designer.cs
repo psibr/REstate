@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using REstate.Engine.Repositories.EntityFrameworkCore;
 
 namespace REstate.EntityFrameworkCore.Migrations.SqlServer.Migrations
 {
     [DbContext(typeof(REstateDbContext))]
-    partial class REstateDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190411152735_NaturalStateName")]
+    partial class NaturalStateName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

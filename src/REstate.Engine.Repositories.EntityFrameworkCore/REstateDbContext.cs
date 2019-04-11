@@ -31,7 +31,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
 
             modelBuilder.Entity<Machine>()
                 .HasKey(status => status.MachineId);
-            
+
             modelBuilder.Entity<Machine>()
                 .Property(machine => machine.MachineId)
                 .IsUnicode(false)
@@ -42,7 +42,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 .Property(machine => machine.StateJson)
                 .IsUnicode(false)
                 .IsRequired();
-            
+
             modelBuilder.Entity<Machine>()
                 .Property(status => status.CommitNumber)
                 .IsRequired()
@@ -59,12 +59,21 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                 .IsRequired();
 
             modelBuilder.Entity<Machine>()
+                .Property(p => p.NaturalStateName)
+                .IsUnicode(false)
+                .HasMaxLength(450)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Machine>()
                 .HasMany(machine => machine.MetadataEntries)
                 .WithOne();
-            
+
             modelBuilder.Entity<Machine>()
                 .HasMany(machine => machine.StateBagEntries)
                 .WithOne();
+
+            modelBuilder.Entity<Machine>()
+                .HasIndex(machine => new { machine.SchematicName, machine.NaturalStateName, machine.UpdatedTime });
 
             modelBuilder.Entity<MetadataEntry>()
                 .HasKey(entry => new
@@ -72,7 +81,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     entry.MachineId,
                     entry.Key
                 });
-            
+
             modelBuilder.Entity<MetadataEntry>()
                 .Property(entry => entry.MachineId)
                 .IsUnicode(false)
@@ -94,13 +103,13 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
                     entry.MachineId,
                     entry.Key
                 });
-            
+
             modelBuilder.Entity<StateBagEntry>()
                 .Property(entry => entry.MachineId)
                 .IsUnicode(false)
                 .HasMaxLength(450)
                 .IsRequired();
-            
+
             modelBuilder.Entity<StateBagEntry>()
                 .Property(entry => entry.Key)
                 .IsUnicode(false)
@@ -119,7 +128,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
         public DbSet<Machine> Machines { get; set; }
 
         public DbSet<MetadataEntry> MetadataEntries { get; set; }
-        
+
         public DbSet<StateBagEntry> StateBagEntries { get; set; }
 
         public DbSet<Schematic> Schematics { get; set; }
