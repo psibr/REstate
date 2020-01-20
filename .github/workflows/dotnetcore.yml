@@ -19,7 +19,10 @@ jobs:
     
     - name: Nerdbank.GitVersioning
       uses: AArnott/nbgv@v0.3
-      
+    
+    - name: Generate package.lock.json files
+      run: dotnet build -t:clean /p:RestorePackagesWithLockFile=true
+    
     - uses: actions/cache@v1
       with:
         path: ~/.nuget/packages
@@ -28,10 +31,10 @@ jobs:
           ${{ runner.os }}-nuget-
     
     - name: Restore
-      run: dotnet restore --locked-mode /p:RestorePackagesWithLockFile=true
+      run: dotnet restore --locked-mode
     
     - name: Build
-      run: dotnet build --configuration Release
+      run: dotnet build --no-restore --configuration Release
     
     - name: Test
       run: dotnet test --no-build --configuration Release
