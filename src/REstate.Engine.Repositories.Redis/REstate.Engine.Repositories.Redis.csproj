@@ -1,22 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
-    <Version>2.1.0</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>Ovan Crone</Authors>
-    <Company>Psibernetic Solutions</Company>
-    <Product>REstate</Product>
-    <Description>Redis storage provider for REstate's engine.</Description>
-    <Copyright>Ovan Crone 2016</Copyright>
-    <PackageProjectUrl>https://github.com/psibr/REstate</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/psibr/REstate</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>REstate</PackageTags>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
-    <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    
+    <Description>Redis storage provider for REstate's engine.</Description>
   </PropertyGroup>
 
   <ItemGroup>
