@@ -32,3 +32,6 @@ jobs:
     
     - name: Test
       run: dotnet test --no-build --configuration Release
+
+    - name: Pack
+      run: dotnet pack -o ./packages
