@@ -8,7 +8,8 @@ jobs:
     runs-on: windows-latest
 
     steps:      
-    - uses: actions/checkout@v2
+    - name: Checkout repo
+      uses: actions/checkout@v2
       with:
         fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
     
@@ -17,17 +18,10 @@ jobs:
       with:
         dotnet-version: 3.1.101
     
-    - name: Nerdbank.GitVersioning
+    - name: Install Nerdbank.GitVersioning global tool
       uses: AArnott/nbgv@v0.3
     
-    - uses: actions/cache@v1
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }} #hash of project files
-        restore-keys: |
-          ${{ runner.os }}-nuget-
-    
-    - name: Build
+    - name: Restore and Build
       run: dotnet build --configuration Release
     
     - name: Test
@@ -36,7 +30,8 @@ jobs:
     - name: Pack
       run: dotnet pack --no-build -o ./packages
 
-    - uses: actions/upload-artifact@v1
+    - name: Upload packages as artifact
+      uses: actions/upload-artifact@v1
       with:
         name: packages
         path: packages
