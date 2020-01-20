@@ -1,18 +1,32 @@
 <Project>
   <PropertyGroup>
 
+
+    <PackageProjectUrl>https://github.com/psibr/REstate</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/psibr/REstate</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>REstate</PackageTags>
+    <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
+    <PackageIcon>REstate-64.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>Aida Crone</Authors>
+    <Company>Psibernetic Solutions</Company>
+    <Copyright>2020 Psibernetic Solutions &amp; Aida Crone</Copyright>
 
-    <!-- Optional: Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
+    <!--SourceLink-->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-
-    <!-- Optional: Embed source files that are not tracked by the source control manager in the PDB -->
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-
-    <!-- Optional: Include the PDB in the built .nupkg -->
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    
   </PropertyGroup>
+  
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All"/>
+    <None Include="../../assets/icons/REstate-64.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.50" PrivateAssets="All" />
   </ItemGroup>
 </Project>

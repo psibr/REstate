@@ -48,24 +48,22 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore.Tests
             {
                 while (true)
                 {
-                    using (var dbContext = contextFactory.CreateContext())
+                    using var dbContext = contextFactory.CreateContext();
+                    var entity = await dbContext.Data.SingleAsync(datum => datum.Id == id);
+
+                    entity.Counter++;
+                    entity.CommitTag = Guid.NewGuid();
+
+                    try
                     {
-                        var entity = await dbContext.Data.SingleAsync(datum => datum.Id == id);
-
-                        entity.Counter++;
-                        entity.CommitTag = Guid.NewGuid();
-
-                        try
-                        {
-                            await dbContext.SaveChangesAsync();
-                        }
-                        catch (DbUpdateConcurrencyException)
-                        {
-                            continue;
-                        }
-
-                        break;
+                        await dbContext.SaveChangesAsync();
                     }
+                    catch (DbUpdateConcurrencyException)
+                    {
+                        continue;
+                    }
+
+                    break;
                 }
             }
 

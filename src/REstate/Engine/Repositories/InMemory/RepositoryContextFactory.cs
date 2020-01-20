@@ -7,7 +7,7 @@ namespace REstate.Engine.Repositories.InMemory
     public class InMemoryRepositoryContextFactory<TState, TInput>
         : IRepositoryContextFactory<TState, TInput>
     {
-        private Lazy<IEngineRepositoryContext<TState, TInput>> repositoryContextLazy 
+        private readonly Lazy<IEngineRepositoryContext<TState, TInput>> repositoryContextLazy 
             = new Lazy<IEngineRepositoryContext<TState, TInput>>(() 
                 => new EngineRepositoryContext<TState, TInput>(), true);
 

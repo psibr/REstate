@@ -1,31 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
-    <Authors>Ovan Crone</Authors>
-    <Company>Psibernetic Solutions</Company>
-    <Description>Ninject adapter for REstate.</Description>
-    <Copyright>Ovan Crone 2016</Copyright>
-    <Version>3.0.0</Version>
-    <AssemblyVersion>3.0.0.0</AssemblyVersion>
-    <FileVersion>3.0.0.0</FileVersion>
-    <LangVersion>latest</LangVersion>
-    <PackageProjectUrl>https://github.com/psibr/REstate</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/psibr/REstate</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>REstate</PackageTags>
-    <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    
+    <Description>Ninject adapter for REstate.</Description>
   </PropertyGroup>
-
-  <!-- Packages that are specific to .NET Standard 2.0 -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+  
+  <ItemGroup>
     <PackageReference Include="Ninject" Version="[3.3.0,)" />
-  </ItemGroup>
-
-  <!-- Packages that are specific to .NET 4.5 -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
-    <PackageReference Include="Ninject" Version="[3.2.0,)" />
   </ItemGroup>
 
   <ItemGroup>
