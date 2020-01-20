@@ -2,7 +2,6 @@
 
     <PropertyGroup>
         <TargetFramework>netcoreapp3.1</TargetFramework>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
       
         <Description>Entity Framework Core migrations for SQL Server.</Description>
     </PropertyGroup>

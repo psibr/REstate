@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 
     <Description>Create state-machines for complicated flows, in a serializable and pluggable system.</Description>
   </PropertyGroup>
