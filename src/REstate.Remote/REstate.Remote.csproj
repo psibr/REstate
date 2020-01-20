@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 
     <Description>Provides gRPC/HTTP2 interconnect support for REstate's engine in either client or server configuration.</Description>
   </PropertyGroup>
