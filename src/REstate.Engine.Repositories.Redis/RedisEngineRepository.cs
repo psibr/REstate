@@ -37,8 +37,8 @@ namespace REstate.Engine.Repositories.Redis
 
             var value = await _restateDatabase.StringGetAsync($"{SchematicKeyPrefix}/{schematicName}").ConfigureAwait(false);
 
-            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(value,
-                ContractlessStandardResolver.Instance);
+            var schematic = MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(value,
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             return schematic;
         }
@@ -51,7 +51,7 @@ namespace REstate.Engine.Repositories.Redis
             if (schematic == null) throw new ArgumentNullException(nameof(schematic));
             if (schematic.SchematicName == null) throw new ArgumentException("Schematic must have a name to be stored.", nameof(schematic));
 
-            var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
+            var schematicBytes = MessagePackSerializer.Serialize(schematic, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             await _restateDatabase.StringSetAsync($"{SchematicKeyPrefix}/{schematic.SchematicName}", schematicBytes);
 
@@ -83,7 +83,7 @@ namespace REstate.Engine.Repositories.Redis
 
             var id = machineId ?? Guid.NewGuid().ToString();
 
-            var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
+            var schematicBytes = MessagePackSerializer.Serialize(schematic, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             var hash = Convert.ToBase64String(Murmur3.ComputeHashBytes(schematicBytes));
 
@@ -130,7 +130,7 @@ namespace REstate.Engine.Repositories.Redis
             IEnumerable<Metadata> metadata,
             CancellationToken cancellationToken = default)
         {
-            var schematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
+            var schematicBytes = MessagePackSerializer.Serialize(schematic, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             var hash = Convert.ToBase64String(Murmur3.ComputeHashBytes(schematicBytes));
 
@@ -209,9 +209,9 @@ namespace REstate.Engine.Repositories.Redis
             var schematicBytes = await _restateDatabase
                 .StringGetAsync($"{MachineSchematicsKeyPrefix}/{redisRecord.SchematicHash}").ConfigureAwait(false);
 
-            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
+            var schematic = MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
                 schematicBytes,
-                ContractlessStandardResolver.Instance);
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             return new MachineStatus<TState, TInput>
             {
@@ -273,8 +273,8 @@ namespace REstate.Engine.Repositories.Redis
 
             var schematicBytes = await schematicBytesTask.ConfigureAwait(false);
 
-            var schematic = LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(schematicBytes,
-                ContractlessStandardResolver.Instance);
+            var schematic = MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(schematicBytes,
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             return new MachineStatus<TState, TInput>
             {

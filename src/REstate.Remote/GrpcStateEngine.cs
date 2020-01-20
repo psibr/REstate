@@ -63,7 +63,7 @@ namespace REstate.Remote
                 .WithCancellationToken(cancellationToken)
                 .CreateMachineFromSchematicAsync(new CreateMachineFromSchematicRequest
                 {
-                    SchematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance),
+                    SchematicBytes = MessagePackSerializer.Serialize(schematic, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
                     Metadata = metadata,
                     MachineId = machineId
                 });
@@ -110,7 +110,7 @@ namespace REstate.Remote
                 .WithCancellationToken(cancellationToken)
                 .BulkCreateMachineFromSchematicAsync(new BulkCreateMachineFromSchematicRequest
                 {
-                    SchematicBytes = LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance),
+                    SchematicBytes = MessagePackSerializer.Serialize(schematic, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
                     Metadata = metadata
                 });
 
@@ -185,9 +185,9 @@ namespace REstate.Remote
                     SchematicName = schematicName
                 });
 
-            return LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
+            return MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
                 response.SchematicBytes,
-                ContractlessStandardResolver.Instance);
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
         }
 
         public async Task<ISchematic<TState, TInput>> StoreSchematicAsync(
@@ -198,14 +198,14 @@ namespace REstate.Remote
                 .WithCancellationToken(cancellationToken)
                 .StoreSchematicAsync(new StoreSchematicRequest
                 {
-                    SchematicBytes = LZ4MessagePackSerializer.Serialize(
+                    SchematicBytes = MessagePackSerializer.Serialize(
                         schematic,
-                        ContractlessStandardResolver.Instance)
+                        MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block))
                 });
 
-            return LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
+            return MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
                 response.SchematicBytes,
-                ContractlessStandardResolver.Instance);
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
         }
 
         public Task<ISchematic<TState, TInput>> StoreSchematicAsync(

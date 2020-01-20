@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.Azure.ServiceBus;
 using REstate.Schematics;
 
@@ -78,7 +79,7 @@ namespace REstate.Engine.Connectors.AzureServiceBus
                 Payload = inputParameters.Payload
             };
 
-            return LZ4MessagePackSerializer.Serialize(message, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+            return MessagePackSerializer.Serialize(message, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
         }
     }
 }

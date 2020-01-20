@@ -101,10 +101,10 @@ namespace REstate.Remote.Services
         {
             var (stateType, inputType) = GetGenericTupleFromHeaders();
 
-            var input = LZ4MessagePackSerializer.NonGeneric.Deserialize(
+            var input = MessagePackSerializer.Deserialize(
                 inputType,
                 request.InputBytes,
-                ContractlessStandardResolver.Instance);
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             var sendAsync = (SendAsyncDelegate)DelegateCache
                 .GetOrAdd(
@@ -151,12 +151,12 @@ namespace REstate.Remote.Services
         {
             var (stateType, inputType) = GetGenericTupleFromHeaders();
 
-            var input = LZ4MessagePackSerializer.NonGeneric.Deserialize(
+            var input = MessagePackSerializer.Deserialize(
                 inputType,
                 request.InputBytes,
-                ContractlessStandardResolver.Instance);
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
-            var payload = LZ4MessagePackSerializer.Typeless.Deserialize(request.PayloadBytes);
+            var payload = MessagePackSerializer.Typeless.Deserialize(request.PayloadBytes);
 
             var payloadType = payload.GetType();
             var sendWithPayloadAsync = (SendWithPayloadAsyncDelegate)DelegateCache
@@ -212,10 +212,10 @@ namespace REstate.Remote.Services
 
             var schematicType = typeof(Schematic<,>).MakeGenericType(genericTypes);
 
-            var schematic = LZ4MessagePackSerializer.NonGeneric.Deserialize(
+            var schematic = MessagePackSerializer.Deserialize(
                 schematicType,
                 request.SchematicBytes,
-                ContractlessStandardResolver.Instance);
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             var storeSchematicAsync = (StoreSchematicAsyncDelegate)DelegateCache
                 .GetOrAdd(
@@ -371,10 +371,10 @@ namespace REstate.Remote.Services
 
             var schematicType = typeof(Schematic<,>).MakeGenericType(genericTypes);
 
-            var schematic = LZ4MessagePackSerializer.NonGeneric.Deserialize(
+            var schematic = MessagePackSerializer.Deserialize(
                 schematicType,
                 request.SchematicBytes,
-                ContractlessStandardResolver.Instance);
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             var createMachineFromSchematicAsync = (CreateMachineFromSchematicAsyncDelegate)DelegateCache
                 .GetOrAdd(
@@ -461,10 +461,10 @@ namespace REstate.Remote.Services
 
             var schematicType = typeof(Schematic<,>).MakeGenericType(genericTypes);
 
-            var schematic = LZ4MessagePackSerializer.NonGeneric.Deserialize(
+            var schematic = MessagePackSerializer.Deserialize(
                 schematicType,
                 request.SchematicBytes,
-                ContractlessStandardResolver.Instance);
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             var bulkCreateMachineFromSchematicAsync = (BulkCreateMachineFromSchematicAsyncDelegate)DelegateCache
                 .GetOrAdd(
