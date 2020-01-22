@@ -38,3 +38,9 @@ jobs:
       with:
         name: packages
         path: packages
+        
+    - name: Upload REstate bin
+      uses: actions/upload-artifact@v1
+      with:
+        name: REstateBin
+        path: ./src/REstate/bin/Release/netstandard2.0
