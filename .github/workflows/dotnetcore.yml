@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
 
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:      
     - name: Checkout repo
@@ -28,7 +28,7 @@ jobs:
       uses: supercharge/redis-github-action@1.1.0
     
     - name: Test
-      run: dotnet test --no-build --configuration Release
+      run: dotnet test --no-build --configuration Release --filter Category!=Windows
 
     - name: Pack
       run: dotnet pack --no-build --configuration Release -o ./packages
