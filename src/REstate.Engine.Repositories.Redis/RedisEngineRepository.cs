@@ -108,13 +108,13 @@ namespace REstate.Engine.Repositories.Redis
                 StateBag = new Dictionary<string, string>()
             };
 
-            var recordBytes = MessagePackSerializer.Serialize(record);
+            var recordBytes = MessagePackSerializer.Serialize(record, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
-            await _restateDatabase.StringSetAsync($"{MachinesKeyPrefix}/{machineId}", recordBytes, null, When.NotExists).ConfigureAwait(false);
+            await _restateDatabase.StringSetAsync($"{MachinesKeyPrefix}/{id}", recordBytes, null, When.NotExists).ConfigureAwait(false);
 
             return new MachineStatus<TState, TInput>
             {
-                MachineId = machineId,
+                MachineId = id,
                 Schematic = schematic,
                 State = schematic.InitialState,
                 CommitNumber = commitNumber,
@@ -162,8 +162,10 @@ namespace REstate.Engine.Repositories.Redis
                         UpdatedTime = s.UpdatedTime,
                         Metadata = s.Metadata,
                         StateBag = s.StateBag
-                    }))
-            );
+                    }, 
+                    MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)
+            )));
+
 
             await Task.WhenAll(batchOps).ConfigureAwait(false);
 
@@ -178,7 +180,7 @@ namespace REstate.Engine.Repositories.Redis
         {
             var schematic = await RetrieveSchematicAsync(schematicName, cancellationToken).ConfigureAwait(false);
 
-            
+
             return await BulkCreateMachinesAsync(schematic, metadata, cancellationToken).ConfigureAwait(false);
         }
 
@@ -204,7 +206,8 @@ namespace REstate.Engine.Repositories.Redis
             if (!machineBytes.HasValue) throw new MachineDoesNotExistException(machineId);
 
             var redisRecord = MessagePackSerializer.Deserialize<RedisMachineStatus<TState, TInput>>(
-                machineBytes);
+                machineBytes,
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             var schematicBytes = await _restateDatabase
                 .StringGetAsync($"{MachineSchematicsKeyPrefix}/{redisRecord.SchematicHash}").ConfigureAwait(false);
@@ -239,15 +242,17 @@ namespace REstate.Engine.Repositories.Redis
             var machineBytes = await _restateDatabase.StringGetAsync(machineKey).ConfigureAwait(false);
 
             var status = MessagePackSerializer.Deserialize<RedisMachineStatus<TState, TInput>>(
-                machineBytes);
+                machineBytes,
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)); ;
 
             if (lastCommitNumber == null || status.CommitNumber == lastCommitNumber)
             {
                 status.State = state;
-                status.CommitNumber = status.CommitNumber++;
+                //status.CommitNumber = status.CommitNumber++;
+                status.CommitNumber++;
                 status.UpdatedTime = DateTimeOffset.UtcNow;
 
-                if(stateBag != null && lastCommitNumber != null)
+                if (stateBag != null && lastCommitNumber != null)
                     status.StateBag = stateBag;
             }
             else
@@ -255,8 +260,8 @@ namespace REstate.Engine.Repositories.Redis
                 throw new StateConflictException();
             }
 
-            var newMachineBytes = MessagePackSerializer.Serialize(status);
-            
+            var newMachineBytes = MessagePackSerializer.Serialize(status, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
+
             var transaction = _restateDatabase.CreateTransaction();
 
             // Veify the record has not changed since read.
@@ -269,7 +274,7 @@ namespace REstate.Engine.Repositories.Redis
             await setTask.ConfigureAwait(false);
 
             // If the transaction failed, we had a conflict.
-            if(!committed) throw new StateConflictException();
+            if (!committed) throw new StateConflictException();
 
             var schematicBytes = await schematicBytesTask.ConfigureAwait(false);
 
