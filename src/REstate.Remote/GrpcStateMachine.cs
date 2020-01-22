@@ -80,7 +80,7 @@ namespace REstate.Remote
                     {
                         MachineId = MachineId,
                         InputBytes = MessagePackSerializer.Serialize(input, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
-                        PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload)
+                        PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload, MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4Block))
                     });
             }
             catch (RpcException exception)
@@ -119,7 +119,7 @@ namespace REstate.Remote
                     {
                         MachineId = MachineId,
                         InputBytes = MessagePackSerializer.Serialize(input, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
-                        PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload),
+                        PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload, MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4Block)),
                         CommitNumber = lastCommitNumber,
                         StateBag = stateBag
                     });

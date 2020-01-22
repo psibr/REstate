@@ -114,7 +114,7 @@ namespace REstate.Remote.Tests.Units
             var input = "some input";
             var payload = "some payload";
             var inputBytes = MessagePackSerializer.Serialize(input, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
-            var payloadBytes = MessagePackSerializer.Typeless.Serialize(payload);
+            var payloadBytes = MessagePackSerializer.Typeless.Serialize(payload, MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4Block));
             var commitNumber = 0L;
             IDictionary<string, string> stateBag = new Dictionary<string, string>
             {
