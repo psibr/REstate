@@ -18,6 +18,10 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     
+    <!-- Strong-Naming -->
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>../../REstate.snk</AssemblyOriginatorKeyFile>
+    
   </PropertyGroup>
   
   <ItemGroup>

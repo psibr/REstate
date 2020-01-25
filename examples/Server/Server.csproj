@@ -17,9 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\REstate.Engine.Repositories.Redis\REstate.Engine.Repositories.Redis.csproj" />
-    <ProjectReference Include="..\..\..\src\REstate.Remote\REstate.Remote.csproj" />
-    <ProjectReference Include="..\..\..\src\REstate\REstate.csproj" />
+    <ProjectReference Include="..\..\src\REstate.Engine.Repositories.Redis\REstate.Engine.Repositories.Redis.csproj" />
+    <ProjectReference Include="..\..\src\REstate.Remote\REstate.Remote.csproj" />
+    <ProjectReference Include="..\..\src\REstate\REstate.csproj" />
   </ItemGroup>
 
   <ItemGroup>

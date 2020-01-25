@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\REstate.Remote\REstate.Remote.csproj" />
-    <ProjectReference Include="..\..\..\src\REstate\REstate.csproj" />
+    <ProjectReference Include="..\..\src\REstate.Remote\REstate.Remote.csproj" />
+    <ProjectReference Include="..\..\src\REstate\REstate.csproj" />
   </ItemGroup>
 
 </Project>
