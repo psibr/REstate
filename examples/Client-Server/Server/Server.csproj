@@ -2,24 +2,24 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
-    <LangVersion>7.1</LangVersion>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <IsPackable>false</IsPackable>
+    
     <ServerGarbageCollection>true</ServerGarbageCollection>
   </PropertyGroup>
   
   <ItemGroup>
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
-    <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.1.1" />
+    <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\REstate.Engine.Connectors.AzureServiceBus\REstate.Engine.Connectors.AzureServiceBus.csproj" />
-    <ProjectReference Include="..\..\..\REstate.Engine.Repositories.Redis\REstate.Engine.Repositories.Redis.csproj" />
-    <ProjectReference Include="..\..\..\REstate.Remote\REstate.Remote.csproj" />
-    <ProjectReference Include="..\..\..\REstate\REstate.csproj" />
+    <ProjectReference Include="..\..\..\src\REstate.Engine.Repositories.Redis\REstate.Engine.Repositories.Redis.csproj" />
+    <ProjectReference Include="..\..\..\src\REstate.Remote\REstate.Remote.csproj" />
+    <ProjectReference Include="..\..\..\src\REstate\REstate.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,7 +1,6 @@
 <Project>
   <PropertyGroup>
-
-
+    
     <PackageProjectUrl>https://github.com/psibr/REstate</PackageProjectUrl>
     <RepositoryUrl>https://github.com/psibr/REstate</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

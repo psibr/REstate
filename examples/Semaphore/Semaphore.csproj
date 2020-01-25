@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
-    <LangVersion>7.1</LangVersion>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\REstate.Concurrency.Primitives\REstate.Concurrency.Primitives.csproj" />
-    <ProjectReference Include="..\..\REstate\REstate.csproj" />
+    <ProjectReference Include="..\..\src\REstate.Concurrency.Primitives\REstate.Concurrency.Primitives.csproj" />
+    <ProjectReference Include="..\..\src\REstate\REstate.csproj" />
   </ItemGroup>
 
   <ItemGroup>

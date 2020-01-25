@@ -4,6 +4,8 @@
     <TargetFrameworks>netstandard2.1</TargetFrameworks>
 
     <Description>Create state-machines for complicated flows, in a serializable and pluggable system.</Description>
+
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
 
   <!-- Packages that are common across all targetted frameworks -->
