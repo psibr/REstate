@@ -48,6 +48,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{81D1237E-89BA-4681-A80F-1AA57A2758F4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Compatibility.Tests", "test\REstate.Compatibility.Tests\REstate.Compatibility.Tests.csproj", "{23CB227A-48FE-469F-B095-000A3E997E27}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8B02FF53-A9F3-4004-8CDC-32831070957D} = {8B02FF53-A9F3-4004-8CDC-32831070957D}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Engine.Connectors.AzureServiceBus", "src\REstate.Engine.Connectors.AzureServiceBus\REstate.Engine.Connectors.AzureServiceBus.csproj", "{2CDE31D5-9F38-4039-8585-2449566EF4A0}"
 EndProject
