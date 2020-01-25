@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <Reference Include="REstate, PublicKeyToken=40917bf886e6dae7">
-      <HintPath>..\..\src\REstate\bin\Debug\netstandard2.1\REstate.dll</HintPath>
+      <HintPath>..\..\src\REstate\bin\$(Configuration)\netstandard2.1\REstate.dll</HintPath>
       <Aliases>vCurrent</Aliases>
     </Reference>
     
