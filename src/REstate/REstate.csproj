@@ -5,7 +5,7 @@
 
     <Description>Create state-machines for complicated flows, in a serializable and pluggable system.</Description>
 
-    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>../../REstate.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
