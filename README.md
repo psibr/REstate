@@ -1,8 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/8ql1gahqjxcl8nlx/branch/master?svg=true)](https://ci.appveyor.com/project/psibr/restate-wuhpb/branch/master)
-[![AppVeyor tests](https://img.shields.io/appveyor/tests/psibr/restate-wuhpb.svg?logo=appveyor)](https://ci.appveyor.com/project/psibr/restate-wuhpb/build/tests)
-
 [![NuGet REstate Release](https://img.shields.io/nuget/v/REstate.svg?label=REstate)](https://www.nuget.org/packages/REstate)
-[![NuGet REstate Concurrency Primitives Release](https://img.shields.io/nuget/v/REstate.Concurrency.Primitives.svg?label=REstate.Concurrency.Primitives)](https://www.nuget.org/packages/REstate.Concurrency.Primitives)
 [![NuGet REstate Remote Release](https://img.shields.io/nuget/v/REstate.Remote.svg?label=REstate.Remote)](https://www.nuget.org/packages/REstate.Remote)
 
 [![NuGet REstate Redis Repo Release](https://img.shields.io/nuget/v/REstate.Engine.Repositories.Redis.svg?label=REstate.Engine.Repositories.Redis)](https://www.nuget.org/packages/REstate.Engine.Repositories.Redis)
