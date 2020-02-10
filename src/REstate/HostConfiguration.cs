@@ -27,7 +27,8 @@ namespace REstate
 
         public HostConfiguration(IComponentContainer container)
         {
-            Container = container;
+            Container = container ??
+                throw new ArgumentNullException(nameof(container));
         }
 
         public void RegisterComponent(IComponent component) =>

@@ -39,7 +39,6 @@ namespace REstate
             HostConfiguration.Container.Register(agent.AsLocal());
 
             return agent;
-
         }
 
         Lazy<IAgent> IHasAgentLazy.AgentLazy { get; set; }

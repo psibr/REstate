@@ -1,6 +1,7 @@
 ﻿using REstate.Engine;
 using REstate.Engine.Connectors.Resolution;
 using REstate.Schematics;
+using System;
 
 namespace REstate
 {
@@ -21,7 +22,8 @@ namespace REstate
 
         public Agent(HostConfiguration hostConfiguration)
         {
-            Configuration = hostConfiguration;
+            Configuration = hostConfiguration ??
+                throw new ArgumentNullException(nameof(hostConfiguration));
         }
 
         public string GetStateMap<TState, TInput>(Schematic<TState, TInput> schematic) =>
