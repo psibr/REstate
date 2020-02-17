@@ -4,8 +4,6 @@
     <TargetFrameworks>netstandard2.1</TargetFrameworks>
 
     <Description>Create state-machines for complicated flows, in a serializable and pluggable system.</Description>
-
-    <AssemblyOriginatorKeyFile>../../REstate.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
