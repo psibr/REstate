@@ -139,11 +139,13 @@ namespace REstate.Schematics.Builders
 
         }
 
+        [Obsolete("Prefer repository settings and separate engines if needed for different schematics", error: false)]
         public ISchematicBuilder<TState, TInput> WithStateConflictRetries()
         {
             return WithStateConflictRetries(-1);
         }
 
+        [Obsolete("Prefer repository settings and separate engines if needed for different schematics", error: false)]
         public ISchematicBuilder<TState, TInput> WithStateConflictRetries(int retryCount)
         {
             if (retryCount < -1)
