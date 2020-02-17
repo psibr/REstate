@@ -4,11 +4,8 @@
     <TargetFrameworks>netstandard2.1</TargetFrameworks>
 
     <Description>Create state-machines for complicated flows, in a serializable and pluggable system.</Description>
-
-    <AssemblyOriginatorKeyFile>../../REstate.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-  <!-- Packages that are common across all targetted frameworks -->
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
