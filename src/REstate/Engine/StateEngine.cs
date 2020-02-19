@@ -39,6 +39,8 @@ namespace REstate.Engine
             _listeners = listeners.ToList();
         }
 
+        private Logging.ILog Logger { get; } = Logging.LogProvider.For<StateEngine<TState, TInput>>();
+
         internal IConnectorResolver<TState, TInput> ConnectorResolver { get; }
 
         public async Task<ISchematic<TState, TInput>> GetSchematicAsync(
@@ -336,9 +338,10 @@ namespace REstate.Engine
 
                 stageOrExecute = bulkActionBatch.Stage;
             }
-            catch (ConnectorResolutionException)
+            catch (ConnectorResolutionException connectorResolutionException)
             {
-                // Bulk not supported, falling back to individual.
+                Logger.Log(Logging.LogLevel.Warn, () => "BulkAction not supported, falling back to individual Actions.", connectorResolutionException);   
+
                 var action = ConnectorResolver.ResolveAction(initialAction.ConnectorKey);
 
                 stageOrExecute = action.InvokeAsync;
