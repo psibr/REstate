@@ -156,7 +156,7 @@ namespace REstate.Remote.Services
                 request.InputBytes,
                 MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
-            var payload = MessagePackSerializer.Typeless.Deserialize(request.PayloadBytes, MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4Block));
+            var payload = MessagePackSerializer.Typeless.Deserialize(request.PayloadBytes, MessagePackSerializerOptions.Standard.WithResolver(TypelessContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             var payloadType = payload.GetType();
             var sendWithPayloadAsync = (SendWithPayloadAsyncDelegate)DelegateCache
