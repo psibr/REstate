@@ -14,8 +14,10 @@ namespace NaturalSchematicExamples
         }
 
         public class Provisioning
+            // TSignal could be object to catch multiple signals
             : StateDefinition<ReserveSignal>
             , INaturalAction<ReserveSignal>
+            , INaturalPrecondition<ReserveSignal>
         {
             [Description("Provision necessary resource and forwards the Reservation")]
             public async Task InvokeAsync(
@@ -29,6 +31,16 @@ namespace NaturalSchematicExamples
                         Reservation = reserveSignal
                     },
                     cancellationToken);
+            }
+
+            public Task<bool> ValidateAsync(
+                ConnectorContext context,
+                ReserveSignal signal,
+                CancellationToken cancellationToken = default)
+            {
+                // validate the signal somehow. (Type checks are performed by base class)
+
+                return Task.FromResult(true);
             }
         }
 
