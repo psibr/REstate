@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="REstate, PublicKeyToken=40917bf886e6dae7">
+      <HintPath>..\..\src\REstate\bin\$(Configuration)\netstandard2.1\REstate.dll</HintPath>
+      <Aliases>vCurrent</Aliases>
+    </Reference>
+    
+    <Reference Include="REstate, Version=9.3.0.257">
+      <HintPath>PreviousVersions\v930\REstate.dll</HintPath>
+      <SpecificVersion>true</SpecificVersion>
+      <Aliases>v930</Aliases>
+    </Reference>
+  </ItemGroup>
+
+</Project>

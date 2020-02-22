@@ -43,10 +43,10 @@ namespace REstate.Remote
                     MachineId = MachineId
                 });
 
-            _machineSchematic = LZ4MessagePackSerializer
+            _machineSchematic = MessagePackSerializer
                 .Deserialize<Schematic<TState, TInput>>(
                     response.SchematicBytes,
-                    ContractlessStandardResolver.Instance);
+                    MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
 
             return _machineSchematic;
         }
@@ -79,8 +79,8 @@ namespace REstate.Remote
                     .SendWithPayloadAsync(new SendWithPayloadRequest
                     {
                         MachineId = MachineId,
-                        InputBytes = LZ4MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
-                        PayloadBytes = LZ4MessagePackSerializer.Typeless.Serialize(payload)
+                        InputBytes = MessagePackSerializer.Serialize(input, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
+                        PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload, MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4Block))
                     });
             }
             catch (RpcException exception)
@@ -99,9 +99,9 @@ namespace REstate.Remote
 
             return new Status<TState>(
                 MachineId,
-                LZ4MessagePackSerializer.Deserialize<TState>(
+                MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
-                    ContractlessStandardResolver.Instance),
+                    MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
                 response.UpdatedTime,
                 response.CommitNumber,
                 response.StateBag);
@@ -118,8 +118,8 @@ namespace REstate.Remote
                     .SendWithPayloadAsync(new SendWithPayloadRequest
                     {
                         MachineId = MachineId,
-                        InputBytes = LZ4MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
-                        PayloadBytes = LZ4MessagePackSerializer.Typeless.Serialize(payload),
+                        InputBytes = MessagePackSerializer.Serialize(input, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
+                        PayloadBytes = MessagePackSerializer.Typeless.Serialize(payload, MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4Block)),
                         CommitNumber = lastCommitNumber,
                         StateBag = stateBag
                     });
@@ -136,9 +136,9 @@ namespace REstate.Remote
 
             return new Status<TState>(
                 MachineId,
-                LZ4MessagePackSerializer.Deserialize<TState>(
+                MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
-                    ContractlessStandardResolver.Instance),
+                    MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
                 response.UpdatedTime,
                 response.CommitNumber,
                 response.StateBag);
@@ -155,7 +155,7 @@ namespace REstate.Remote
                 .SendAsync(new SendRequest
                 {
                     MachineId = MachineId,
-                    InputBytes = LZ4MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance)
+                    InputBytes = MessagePackSerializer.Serialize(input, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block))
                 });
             }
             catch (RpcException exception)
@@ -174,9 +174,9 @@ namespace REstate.Remote
 
             return new Status<TState>(
                 MachineId,
-                LZ4MessagePackSerializer.Deserialize<TState>(
+                MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
-                    ContractlessStandardResolver.Instance),
+                    MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
                 response.UpdatedTime,
                 response.CommitNumber,
                 response.StateBag);
@@ -193,7 +193,7 @@ namespace REstate.Remote
                     .SendAsync(new SendRequest
                     {
                         MachineId = MachineId,
-                        InputBytes = LZ4MessagePackSerializer.Serialize(input, ContractlessStandardResolver.Instance),
+                        InputBytes = MessagePackSerializer.Serialize(input, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
                         CommitNumber = lastCommitNumber,
                         StateBag = stateBag
                     });
@@ -210,9 +210,9 @@ namespace REstate.Remote
 
             return new Status<TState>(
                 MachineId,
-                LZ4MessagePackSerializer.Deserialize<TState>(
+                MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
-                    ContractlessStandardResolver.Instance),
+                    MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
                 response.UpdatedTime,
                 response.CommitNumber,
                 response.StateBag);
@@ -241,9 +241,9 @@ namespace REstate.Remote
 
             return new Status<TState>(
                 MachineId,
-                LZ4MessagePackSerializer.Deserialize<TState>(
+                MessagePackSerializer.Deserialize<TState>(
                     response.StateBytes,
-                    ContractlessStandardResolver.Instance),
+                    MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block)),
                 response.UpdatedTime,
                 response.CommitNumber,
                 response.StateBag);

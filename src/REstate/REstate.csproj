@@ -1,18 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
 
     <Description>Create state-machines for complicated flows, in a serializable and pluggable system.</Description>
   </PropertyGroup>
 
-  <!-- Packages that are common across all targetted frameworks -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-    <PackageReference Include="System.Runtime" Version="4.3.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
     <PackageReference Include="System.Reflection" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.1" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.7.0" />
   </ItemGroup>
 </Project>

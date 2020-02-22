@@ -1,23 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     
     <Description>Redis storage provider for REstate's engine.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MessagePack" Version="1.9.3" />
-  </ItemGroup>
-  
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="MessagePack" Version="2.0.335" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
-  </ItemGroup>
-  
-  <!-- Packages that are specific to .NET 4.6 -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
-    <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
   </ItemGroup>
 
   <ItemGroup>

@@ -3,4 +3,4 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-[assembly: InternalsVisibleTo("REstate.Tests")]
+[assembly: InternalsVisibleTo("REstate.Tests, PublicKey=0024000004800000940000000602000000240000525341310004000001000100112001444a9902aa2707ea796acbe18cf14aa4f20a56e179a3b10410a4aa3ee28bcbea2ae524161fd9b1c59a3bd21db931614c1c56ff8366451cba0e8a334d2cbe649c92cd9b759d9ee39ee89faa1ae247fe5a72adbe540c90a46d02cf3c62e732575cd7585071b90f35aef230096e9a3e1e1c6b1917b1798882149ce8a720ec")]

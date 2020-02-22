@@ -1,4 +1,5 @@
 ﻿using REstate.Engine;
+using System;
 
 namespace REstate
 {
@@ -21,7 +22,8 @@ namespace REstate
 
         public LocalAgent(IAgent agent)
         {
-            _agent = agent;
+            _agent = agent ?? 
+                throw new ArgumentNullException(nameof(agent));
         }
 
         public ILocalStateEngine<TState, TInput> GetStateEngine<TState, TInput>() =>

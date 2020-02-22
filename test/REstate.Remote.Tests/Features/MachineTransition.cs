@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using LightBDD.Framework;
-using LightBDD.Framework.Scenarios.Contextual;
-using LightBDD.Framework.Scenarios.Extended;
+using LightBDD.Framework.Scenarios;
 using REstate.Remote.Tests.Features.Context;
 using REstate.Tests.Features;
 

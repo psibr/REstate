@@ -8,14 +8,14 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
     {
         public static byte[] ToSchematicRepresentation<TState, TInput>(this Schematic<TState, TInput> schematic)
         {
-            return LZ4MessagePackSerializer.Serialize(schematic, ContractlessStandardResolver.Instance);
+            return MessagePackSerializer.Serialize(schematic, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
         }
 
         public static Schematic<TState, TInput> ToSchematic<TState, TInput>(this byte[] schematicRepresentation)
         {
-            return LZ4MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
+            return MessagePackSerializer.Deserialize<Schematic<TState, TInput>>(
                 schematicRepresentation,
-                ContractlessStandardResolver.Instance);
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance).WithCompression(MessagePackCompression.Lz4Block));
         }
     }
 }

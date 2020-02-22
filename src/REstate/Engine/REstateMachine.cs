@@ -70,12 +70,12 @@ namespace REstate.Engine
         protected readonly Lazy<Task<(ISchematic<TState, TInput> schematic, IReadOnlyDictionary<string, string> metadata)>> CachedValues;
 
         public async Task<ISchematic<TState, TInput>> GetSchematicAsync(
-            CancellationToken cancellationToken) => (await CachedValues.Value).schematic;
+            CancellationToken cancellationToken) => (await CachedValues.Value.ConfigureAwait(false)).schematic;
 
         public string MachineId { get; }
 
         public async Task<IReadOnlyDictionary<string, string>> GetMetadataAsync(
-            CancellationToken cancellationToken = default) => (await CachedValues.Value).metadata;
+            CancellationToken cancellationToken = default) => (await CachedValues.Value.ConfigureAwait(false)).metadata;
 
         public Task<Status<TState>> SendAsync<TPayload>(
             TInput input,
@@ -121,9 +121,13 @@ namespace REstate.Engine
 
                     Status<TState> currentStatus = machineStatus;
 
+                    // Implicit cast to interface to use explicitly defined properties
                     ISchematic<TState, TInput> schematic = machineStatus.Schematic;
 
-                    var schematicState = schematic.States[currentStatus.State];
+                    // Resolve states as index once.
+                    IReadOnlyDictionary<TState, IState<TState, TInput>> states = schematic.States;
+
+                    var schematicState = states[currentStatus.State];
 
                     if (!schematicState.Transitions.TryGetValue(input, out var transition))
                     {
@@ -146,7 +150,8 @@ namespace REstate.Engine
                             throw new TransitionFailedPreconditionException(currentStatus.State.ToString(), input.ToString(), transition.ResultantState.ToString());
                         }
                     }
-                    var resultantState = schematic.States[transition.ResultantState];
+
+                    var resultantState = states[transition.ResultantState];
                     if (resultantState.Precondition != null)
                     {
                         var precondition = _connectorResolver
@@ -196,7 +201,7 @@ namespace REstate.Engine
 
                     currentStatus = machineStatus;
 
-                    schematicState = schematic.States[currentStatus.State];
+                    schematicState = states[currentStatus.State];
 
                     var preActionState = machineStatus;
 

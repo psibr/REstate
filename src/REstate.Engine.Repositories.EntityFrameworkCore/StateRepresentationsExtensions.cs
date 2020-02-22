@@ -7,14 +7,14 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore
     {
         public static string ToStateRepresentation<TState>(this TState state)
         {
-            return MessagePackSerializer.ToJson(state, ContractlessStandardResolver.Instance);
+            return MessagePackSerializer.SerializeToJson(state, MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance));
         }
 
         public static TState ToState<TState>(this string stateRepresentation)
         {
             return MessagePackSerializer.Deserialize<TState>(
-                MessagePackSerializer.FromJson(stateRepresentation),
-                ContractlessStandardResolver.Instance);
+                MessagePackSerializer.ConvertFromJson(stateRepresentation), 
+                MessagePackSerializerOptions.Standard.WithResolver(ContractlessStandardResolver.Instance));
         }
     }
 }

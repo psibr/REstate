@@ -8,6 +8,7 @@ namespace REstate.Engine.Repositories.EntityFrameworkCore.Tests
     /// <summary>
     /// Tests providers to ensure they support required features for REstate.
     /// </summary>
+    [Trait("Category", "Windows")]
     public class ProviderValidationTests
     {
         public static object[][] Providers = 

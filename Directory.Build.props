@@ -1,7 +1,6 @@
 <Project>
   <PropertyGroup>
-
-
+    
     <PackageProjectUrl>https://github.com/psibr/REstate</PackageProjectUrl>
     <RepositoryUrl>https://github.com/psibr/REstate</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -18,6 +17,10 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    
+    <!-- Strong-Naming -->
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>../../REstate.snk</AssemblyOriginatorKeyFile>
     
   </PropertyGroup>
   
