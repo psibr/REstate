@@ -118,15 +118,15 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AnalyzerDescription" xml:space="preserve">
-    <value>locals should be const if possible</value>
+    <value>Transitioning on Interfaces may cause unexpected actions and paths when signals are casted to an interface they implement.</value>
     <comment>An optional longer localizable description of the diagnostic.</comment>
   </data>
-  <data name="AnalyzerMessageFormat" xml:space="preserve">
-    <value>variable '{0}' can be const</value>
+  <data name="RESTATE001_Format" xml:space="preserve">
+    <value>State accepts the interface {0} as a signal</value>
     <comment>The format-able message the diagnostic displays.</comment>
   </data>
-  <data name="AnalyzerTitle" xml:space="preserve">
-    <value>Can be const</value>
+  <data name="RESTATE001_Title" xml:space="preserve">
+    <value>Accepting interfaces as signals may be unsafe</value>
     <comment>The title of the diagnostic.</comment>
   </data>
 </root>

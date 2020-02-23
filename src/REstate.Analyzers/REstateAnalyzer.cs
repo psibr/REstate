@@ -13,52 +13,46 @@ namespace REstate.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class REstateAnalyzer : DiagnosticAnalyzer
     {
-        public const string DiagnosticId = nameof(REstateAnalyzer);
-
         // You can change these strings in the Resources.resx file. If you do not want your analyzer to be localize-able, you can use regular strings for Title and MessageFormat.
         // See https://github.com/dotnet/roslyn/blob/master/docs/analyzers/Localizing%20Analyzers.md for more on localization
-        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.AnalyzerTitle), Resources.ResourceManager, typeof(Resources));
-        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.AnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.RESTATE001_Title), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.RESTATE001_Format), Resources.ResourceManager, typeof(Resources));
         private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.AnalyzerDescription), Resources.ResourceManager, typeof(Resources));
         private const string Category = "Usage";
 
-        private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
+        private static DiagnosticDescriptor RESTATE001 = new DiagnosticDescriptor("RESTATE001", Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
+
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(RESTATE001); } }
 
         public override void Initialize(AnalysisContext context)
         {
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
             context.EnableConcurrentExecution();
 
-            context.RegisterSyntaxNodeAction(AnalyzeNode, SyntaxKind.LocalDeclarationStatement);
+            context.RegisterSyntaxNodeAction(AnalyzeNode, SyntaxKind.SimpleBaseType);
         }
 
         private void AnalyzeNode(SyntaxNodeAnalysisContext context)
         {
+            var baseDeclaration = (SimpleBaseTypeSyntax)context.Node;
 
-            //const check example.
-            //var localDeclaration = (LocalDeclarationStatementSyntax)context.Node;
+            var baseItem = baseDeclaration.ChildNodes().OfType<GenericNameSyntax>().FirstOrDefault();
 
-            //// make sure the declaration isn't already const:
-            //if (localDeclaration.Modifiers.Any(SyntaxKind.ConstKeyword))
-            //{
-            //    return;
-            //}
+            // only consider IAcceptSignal
+            if (baseItem?.Identifier.ValueText != "IAcceptSignal") return;
 
-            //// Perform data flow analysis on the local declaration.
-            //var dataFlowAnalysis = context.SemanticModel.AnalyzeDataFlow(localDeclaration);
+            var symbol = context.SemanticModel.GetSymbolInfo(baseItem);
+            if (symbol.Symbol?.OriginalDefinition?.ToDisplayString() != "REstate.Natural.IAcceptSignal<TSignal>") return;
 
-            //// Retrieve the local symbol for each variable in the local declaration
-            //// and ensure that it is not written outside of the data flow analysis region.
-            //var variable = localDeclaration.Declaration.Variables.Single();
-            //var variableSymbol = context.SemanticModel.GetDeclaredSymbol(variable);
-            //if (dataFlowAnalysis.WrittenOutside.Contains(variableSymbol))
-            //{
-            //    return;
-            //}
+            var signalNode = baseItem.TypeArgumentList.ChildNodes().OfType<IdentifierNameSyntax>().FirstOrDefault();
 
-            //context.ReportDiagnostic(Diagnostic.Create(Rule, context.Node.GetLocation()));
+            if(signalNode is null) return;
+
+            var signalType = context.SemanticModel.GetTypeInfo(signalNode);
+            if(signalType.Type?.TypeKind != TypeKind.Interface) return;
+
+            context.ReportDiagnostic(Diagnostic.Create(RESTATE001, context.Node.GetLocation(), signalType.Type.ToDisplayString()));
         }
     }
 }

@@ -22,7 +22,7 @@ namespace REstate.Analyzers
 
         public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
-            get { return ImmutableArray.Create(REstateAnalyzer.DiagnosticId); }
+            get { return ImmutableArray.Create("RESTATE001"); }
         }
 
         public sealed override FixAllProvider GetFixAllProvider()
@@ -43,12 +43,12 @@ namespace REstate.Analyzers
             var declaration = root.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().First();
 
             // Register a code action that will invoke the fix.
-            context.RegisterCodeFix(
-                CodeAction.Create(
-                    title: title,
-                    createChangedSolution: c => MakeUppercaseAsync(context.Document, declaration, c),
-                    equivalenceKey: title),
-                diagnostic);
+            //context.RegisterCodeFix(
+            //    CodeAction.Create(
+            //        title: title,
+            //        createChangedSolution: c => MakeUppercaseAsync(context.Document, declaration, c),
+            //        equivalenceKey: title),
+            //    diagnostic);
         }
 
         private async Task<Solution> MakeUppercaseAsync(Document document, TypeDeclarationSyntax typeDecl, CancellationToken cancellationToken)
