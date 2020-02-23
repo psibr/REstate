@@ -38,11 +38,11 @@ namespace REstate.Natural.Schematics.Builders
                     var naturalActionInterface = type.GetInterfaces()
                         .FirstOrDefault(i => i.IsGenericType
                                              && i.GetGenericTypeDefinition() ==
-                                             typeof(INaturalAction<>));
+                                             typeof(IAcceptSignal<>));
 
                     if (naturalActionInterface != null)
                     {
-                        var invokeMethodInfo = type.GetMethod(nameof(INaturalAction<object>.InvokeAsync),
+                        var invokeMethodInfo = type.GetMethod(nameof(IAcceptSignal<object>.InvokeAsync),
                             new[]
                             {
                                 typeof(ConnectorContext),
@@ -159,7 +159,7 @@ namespace REstate.Natural.Schematics.Builders
             internal TypeState Input;
 
             public ICreationContext MoveTo<TNewState>()
-                where TNewState : IStateDefinition<TSignal>
+                where TNewState : IStateDefinition, IAcceptSignal<TSignal>
             {
                 TypeState newTypeState = typeof(TNewState);
 
@@ -214,7 +214,7 @@ namespace REstate.Natural.Schematics.Builders
             internal Precondition Precondition;
 
             public ICreationContext MoveTo<TNewState>()
-                where TNewState : IStateDefinition<TSignal>
+                where TNewState : IStateDefinition, IAcceptSignal<TSignal>
             {
                 TypeState newTypeState = typeof(TNewState);
 

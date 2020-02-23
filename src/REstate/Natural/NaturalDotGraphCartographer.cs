@@ -37,7 +37,7 @@ namespace REstate.Natural
                             transition.ResultantState.ToString(),
                             transition.Precondition?.Description)));
 
-                if (state.Action != null && state.Value.ToType().GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(INaturalAction<>)))
+                if (state.Action != null && state.Value.ToType().GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IAcceptSignal<>)))
                 {
                     actionLines.Add($" {state.Value} -> \"{state.Action.Description ?? state.Action.ConnectorKey.Identifier}\"" +
                                     " [label=\"executes\" style=dotted];");

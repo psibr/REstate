@@ -48,7 +48,7 @@
     /// </summary>
     /// <typeparam name="TState">The State to transition from</typeparam>
     /// <typeparam name="TSignal">The Signal to allow</typeparam>
-    public interface IOnContext<TState, out TSignal>
+    public interface IOnContext<TState, TSignal>
          where TState : IStateDefinition
     {
         /// <summary>
@@ -56,14 +56,14 @@
         /// </summary>
         /// <typeparam name="TNewState">The State to transition to</typeparam>
         /// <returns></returns>
-        ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition<TSignal>;
+        ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition, IAcceptSignal<TSignal>;
 
         IWhenContext<TState, TSignal> When<TPrecondition>() where TPrecondition : INaturalPrecondition<TSignal>;
     }
 
-    public interface IWhenContext<TState, out TSignal>
+    public interface IWhenContext<TState, TSignal>
          where TState : IStateDefinition
     {
-        ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition<TSignal>;
+        ICreationContext MoveTo<TNewState>() where TNewState : IStateDefinition, IAcceptSignal<TSignal>;
     }
 }

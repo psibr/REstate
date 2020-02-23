@@ -18,7 +18,7 @@ The following is a set of guidelines for contributing to REstate and its package
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [ovan@psibr.net](mailto:ovan@psibr.net).
+This project and everyone participating in it is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [aida@psibr.net](mailto:aida@psibr.net).
 
 ## How Can I Contribute?
 
