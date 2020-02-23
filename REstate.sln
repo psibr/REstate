@@ -43,14 +43,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.IoC.Ninject", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.EntityFrameworkCore.Migrations.SqlServer", "src\REstate.EntityFrameworkCore.Migrations.SqlServer\REstate.EntityFrameworkCore.Migrations.SqlServer.csproj", "{EFC71033-9DEB-4E9D-94B2-0B510C29DD36}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REState.Engine.Repositories.Redis.Tests", "test\REState.Engine.Repositories.Redis.Tests\REState.Engine.Repositories.Redis.Tests.csproj", "{28147D7F-26BF-4E08-98C7-C1F15693B7F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Engine.Repositories.Redis.Tests", "test\REstate.Engine.Repositories.Redis.Tests\REstate.Engine.Repositories.Redis.Tests.csproj", "{28147D7F-26BF-4E08-98C7-C1F15693B7F9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{81D1237E-89BA-4681-A80F-1AA57A2758F4}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Compatibility.Tests", "test\REstate.Compatibility.Tests\REstate.Compatibility.Tests.csproj", "{23CB227A-48FE-469F-B095-000A3E997E27}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8B02FF53-A9F3-4004-8CDC-32831070957D} = {8B02FF53-A9F3-4004-8CDC-32831070957D}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Engine.Connectors.AzureServiceBus", "src\REstate.Engine.Connectors.AzureServiceBus\REstate.Engine.Connectors.AzureServiceBus.csproj", "{2CDE31D5-9F38-4039-8585-2449566EF4A0}"
 EndProject
@@ -65,6 +60,23 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "examples\Client\Client.csproj", "{EA997352-7CC1-4862-831B-634541A3B4D5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "examples\Server\Server.csproj", "{F5C4BA57-9230-4F96-A981-F6F953FAB191}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Analyzers", "src\REstate.Analyzers\REstate.Analyzers.csproj", "{EF40C41E-BDC1-49FD-B9A8-0B5B1AF70827}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "REstate.Analyzers.Test", "test\REstate.Analyzers.Test\REstate.Analyzers.Test.csproj", "{12F89A61-295A-41C0-AB81-53AE57BC5AAF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "globals", "globals", "{525C0819-6E03-4F3F-AAC6-FD01C2478102}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
+		CONTRIBUTING.md = CONTRIBUTING.md
+		Directory.Build.props = Directory.Build.props
+		ISSUE_TEMPLATE.md = ISSUE_TEMPLATE.md
+		LICENSE = LICENSE
+		PULL_REQUEST_TEMPLATE.md = PULL_REQUEST_TEMPLATE.md
+		README.md = README.md
+		version.json = version.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -120,10 +132,6 @@ Global
 		{28147D7F-26BF-4E08-98C7-C1F15693B7F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28147D7F-26BF-4E08-98C7-C1F15693B7F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{28147D7F-26BF-4E08-98C7-C1F15693B7F9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{23CB227A-48FE-469F-B095-000A3E997E27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{23CB227A-48FE-469F-B095-000A3E997E27}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{23CB227A-48FE-469F-B095-000A3E997E27}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{23CB227A-48FE-469F-B095-000A3E997E27}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2CDE31D5-9F38-4039-8585-2449566EF4A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2CDE31D5-9F38-4039-8585-2449566EF4A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CDE31D5-9F38-4039-8585-2449566EF4A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -144,6 +152,14 @@ Global
 		{F5C4BA57-9230-4F96-A981-F6F953FAB191}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5C4BA57-9230-4F96-A981-F6F953FAB191}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5C4BA57-9230-4F96-A981-F6F953FAB191}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF40C41E-BDC1-49FD-B9A8-0B5B1AF70827}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF40C41E-BDC1-49FD-B9A8-0B5B1AF70827}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF40C41E-BDC1-49FD-B9A8-0B5B1AF70827}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF40C41E-BDC1-49FD-B9A8-0B5B1AF70827}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12F89A61-295A-41C0-AB81-53AE57BC5AAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12F89A61-295A-41C0-AB81-53AE57BC5AAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12F89A61-295A-41C0-AB81-53AE57BC5AAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12F89A61-295A-41C0-AB81-53AE57BC5AAF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -162,13 +178,14 @@ Global
 		{D2075ADE-A17E-4ED1-941F-41C319AE85B2} = {90E8D167-048D-467B-81D5-1007247226A3}
 		{EFC71033-9DEB-4E9D-94B2-0B510C29DD36} = {90E8D167-048D-467B-81D5-1007247226A3}
 		{28147D7F-26BF-4E08-98C7-C1F15693B7F9} = {81D1237E-89BA-4681-A80F-1AA57A2758F4}
-		{23CB227A-48FE-469F-B095-000A3E997E27} = {81D1237E-89BA-4681-A80F-1AA57A2758F4}
 		{2CDE31D5-9F38-4039-8585-2449566EF4A0} = {90E8D167-048D-467B-81D5-1007247226A3}
 		{7716C957-4B22-48BA-8038-C545D2D222D2} = {9747B96D-232F-4CFE-8B0A-BEB9A3FCB8B2}
 		{7F23D592-05AF-4415-B38B-ED840E7CF621} = {9747B96D-232F-4CFE-8B0A-BEB9A3FCB8B2}
 		{912F0B13-7FB0-4B53-A28F-C263B4FE3CF4} = {9747B96D-232F-4CFE-8B0A-BEB9A3FCB8B2}
 		{EA997352-7CC1-4862-831B-634541A3B4D5} = {912F0B13-7FB0-4B53-A28F-C263B4FE3CF4}
 		{F5C4BA57-9230-4F96-A981-F6F953FAB191} = {912F0B13-7FB0-4B53-A28F-C263B4FE3CF4}
+		{EF40C41E-BDC1-49FD-B9A8-0B5B1AF70827} = {90E8D167-048D-467B-81D5-1007247226A3}
+		{12F89A61-295A-41C0-AB81-53AE57BC5AAF} = {81D1237E-89BA-4681-A80F-1AA57A2758F4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0C35B35D-40C1-4521-BF0A-C5A6D7BFF4CD}

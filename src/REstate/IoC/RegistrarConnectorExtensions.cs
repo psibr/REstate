@@ -7,11 +7,22 @@ using REstate.Engine.Connectors.Resolution;
 
 namespace REstate.IoC
 {
+    [Flags]
+    public enum ConnectorRegistrationTarget
+    {
+        Action = 1,
+        Precondition = 2,
+        BulkAction = 4
+    }
+
     /// <summary>
     /// Methods to simplify the complexity of registering <see cref="IConnector"/>s.
     /// </summary>
     public static class RegistrarConnectorExtensions
     {
+        private const ConnectorRegistrationTarget AllTargets =
+            ConnectorRegistrationTarget.Action | ConnectorRegistrationTarget.Precondition | ConnectorRegistrationTarget.BulkAction;
+
         /// <summary>
         /// Registers an <see cref="IAction{TState,TInput}"/> or <see cref="IPrecondition{TState,TInput}"/> 
         /// using the AssemblyQualifiedName of the <see cref="Type"/> as the Identifier and resolvable by the 
@@ -35,10 +46,11 @@ namespace REstate.IoC
         /// </remarks>
         public static IConnectorRegistration RegisterConnector<TConnector>(
             this IRegistrar registrar,
-            string registrationName = null)
+            string registrationName = null,
+            ConnectorRegistrationTarget connectorRegistrationMode = AllTargets)
             where TConnector : IConnector
         {
-            return registrar.RegisterConnector(typeof(TConnector), registrationName);
+            return registrar.RegisterConnector(typeof(TConnector), registrationName, connectorRegistrationMode);
         }
 
         /// <summary>
@@ -67,10 +79,11 @@ namespace REstate.IoC
         public static void RegisterConnector<TConnector>(
             this IRegistrar registrar,
             IConnectorConfiguration configuration,
-            string registrationName = null)
+            string registrationName = null,
+            ConnectorRegistrationTarget connectorRegistrationMode = AllTargets)
             where TConnector : IConnector
         {
-            registrar.RegisterConnector<TConnector>(registrationName).WithConfiguration(configuration);
+            registrar.RegisterConnector<TConnector>(registrationName, connectorRegistrationMode).WithConfiguration(configuration);
         }
 
         /// <summary>
@@ -86,7 +99,7 @@ namespace REstate.IoC
         /// <para />
         /// Registration names should ALWAYS be unique, overriding is NOT supported for safety/clarity reasons.
         /// <para />
-        /// The default is the assembly qualified name of the type.
+        /// The default is the assembly qualified name of the type (no version info).
         /// </param>
         /// <returns>A <see cref="IConnectorRegistration"/> that allows the caller to 
         /// register an <see cref="IConnectorConfiguration"/> that includes an Identifier 
@@ -100,7 +113,8 @@ namespace REstate.IoC
         public static IConnectorRegistration RegisterConnector(
             this IRegistrar registrar,
             Type connectorType,
-            string registrationName = null)
+            string registrationName = null,
+            ConnectorRegistrationTarget connectorRegistrationMode = AllTargets)
         {
             var registrationKey = registrationName ?? TypeState.FromType(connectorType).GetConnectorKey();
 
@@ -112,16 +126,26 @@ namespace REstate.IoC
 
             var registered = false;
 
-            if (interfaces.Any(type => type == typeof(IAction<,>)))
+            if (connectorRegistrationMode.HasFlag(ConnectorRegistrationTarget.Action) 
+                && interfaces.Any(type => type == typeof(IAction<,>)))
             {
                 registrar.Register(typeof(IAction<,>), connectorType, registrationKey);
 
                 registered = true;
             }
 
-            if (interfaces.Any(type => type == typeof(IPrecondition<,>)))
+            if (connectorRegistrationMode.HasFlag(ConnectorRegistrationTarget.Precondition) 
+                && interfaces.Any(type => type == typeof(IPrecondition<,>)))
             {
                 registrar.Register(typeof(IPrecondition<,>), connectorType, registrationKey);
+
+                registered = true;
+            }
+
+            if (connectorRegistrationMode.HasFlag(ConnectorRegistrationTarget.BulkAction)
+                && interfaces.Any(type => type == typeof(IBulkAction<,>)))
+            {
+                registrar.Register(typeof(IBulkAction<,>), connectorType, registrationKey);
 
                 registered = true;
             }
