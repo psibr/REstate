@@ -15,9 +15,8 @@ namespace NaturalSchematicExamples
 
         public class Provisioning
             // TSignal could be object to catch multiple signals
-            : StateDefinition<ReserveSignal>
-            , INaturalAction<ReserveSignal>
-            , INaturalPrecondition<ReserveSignal>
+            : StateDefinition
+            , IAcceptSignal<ReserveSignal>
         {
             [Description("Provision necessary resource and forwards the Reservation")]
             public async Task InvokeAsync(
@@ -45,13 +44,24 @@ namespace NaturalSchematicExamples
         }
 
         public class Provisioned
-            : StateDefinition<IProvisionedSignal>
-            , INaturalAction<IProvisionedSignal>
+            : StateDefinition
+            , IAcceptSignal<ProvisioningCompleteSignal>
+            , IAcceptSignal<ReserveSignal>
+            , IAcceptSignal<ReleaseSignal>
         {
-            [Description("Handle Reservation/Release as a counter")]
+            [Description("Handle Reservation as a counter")]
             public Task InvokeAsync(
                 ConnectorContext context,
-                IProvisionedSignal provisionedSignal,
+                ReserveSignal provisionedSignal,
+                CancellationToken cancellationToken = default)
+            {
+                return Task.CompletedTask;
+            }
+
+            [Description("Handle Release as a counter")]
+            public Task InvokeAsync(
+                ConnectorContext context,
+                ReleaseSignal provisionedSignal,
                 CancellationToken cancellationToken = default)
             {
                 return Task.CompletedTask;
@@ -59,8 +69,8 @@ namespace NaturalSchematicExamples
         }
 
         public class Deprovisioning
-            : StateDefinition<DeprovisionSignal>
-            , INaturalAction<DeprovisionSignal>
+            : StateDefinition
+            , IAcceptSignal<DeprovisionSignal>
         {
             public Deprovisioning(IAgent agent)
             {

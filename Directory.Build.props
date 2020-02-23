@@ -1,6 +1,11 @@
 <Project>
   <PropertyGroup>
-    
+    <Authors>Aida Crone</Authors>
+    <Company>Psibernetic Solutions</Company>
+    <Copyright>2020 Psibernetic Solutions &amp; Aida Crone</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(IsPackable) == 'true'">
     <PackageProjectUrl>https://github.com/psibr/REstate</PackageProjectUrl>
     <RepositoryUrl>https://github.com/psibr/REstate</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -8,27 +13,19 @@
     <PackageIconUrl>https://github.com/psibr/REstate/blob/master/assets/icons/REstate-64.png?raw=true</PackageIconUrl>
     <PackageIcon>REstate-64.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Authors>Aida Crone</Authors>
-    <Company>Psibernetic Solutions</Company>
-    <Copyright>2020 Psibernetic Solutions &amp; Aida Crone</Copyright>
 
     <!--SourceLink-->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    
-    <!-- Strong-Naming -->
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>../../REstate.snk</AssemblyOriginatorKeyFile>
-    
   </PropertyGroup>
   
-  <ItemGroup>
-    <None Include="../../assets/icons/REstate-64.png" Pack="true" PackagePath="\" />
+  <ItemGroup Condition="$(IsPackable) == 'true'">
+    <None Include="../../assets/icons/REstate-64.png" Pack="true" PackagePath="\"  />
   </ItemGroup>
   
-  <ItemGroup>
+  <ItemGroup  Condition="$(IsPackable) == 'true'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.50" PrivateAssets="All" />
   </ItemGroup>

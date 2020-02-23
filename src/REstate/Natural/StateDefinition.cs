@@ -8,24 +8,14 @@ using System.Threading.Tasks;
 
 namespace REstate.Natural
 {
-    public interface IStateDefinition<in TSignal>
-        : IStateDefinition
-        , IAction<TypeState, TypeState>
+    public interface IStateDefinition
+        : IAction<TypeState, TypeState>
         , IPrecondition<TypeState, TypeState>
     {
     }
 
-    public interface IStateDefinition
-    {
-    }
-
-    public class StateDefinition : StateDefinition<object>
-    {
-
-    }
-
-    public abstract class StateDefinition<TSignal>
-        : IStateDefinition<TSignal>
+    public abstract class StateDefinition
+        : IStateDefinition
     {
         public Task InvokeAsync<TRuntimePayload>(
             ISchematic<TypeState, TypeState> schematic,
@@ -35,20 +25,9 @@ namespace REstate.Natural
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default)
         {
-            TSignal signal = default;
+            if(inputParameters == null) return Task.CompletedTask;
 
-            if (inputParameters != null)
-            {
-                if (!(inputParameters.Payload is TSignal castedSignal))
-                    throw new ArgumentException(
-                        $"Type mismatch for converting to signal: " +
-                        $"{typeof(TSignal)} from {typeof(TRuntimePayload)}",
-                        nameof(inputParameters.Payload));
-
-                signal = castedSignal;
-            }
-
-            if (this is INaturalAction<TSignal> action)
+            if (this is IAcceptSignal<TRuntimePayload> action)
                 return action.InvokeAsync(
                     new ConnectorContext
                     {
@@ -57,10 +36,10 @@ namespace REstate.Natural
                         Status = status,
                         Settings = connectorSettings
                     },
-                    signal,
+                    inputParameters.Payload,
                     cancellationToken);
-
-            return Task.CompletedTask;
+            else
+                throw new ArgumentException($"State: {GetType()} does not implement {typeof(IAcceptSignal<TRuntimePayload>)}!");
         }
 
         public Task<bool> ValidateAsync<TRuntimePayload>(
@@ -71,20 +50,9 @@ namespace REstate.Natural
             IReadOnlyDictionary<string, string> connectorSettings,
             CancellationToken cancellationToken = default)
         {
-            TSignal signal = default;
+            if (inputParameters == null) return Task.FromResult(true);
 
-            if (inputParameters != null)
-            {
-                if (!(inputParameters.Payload is TSignal castedSignal))
-                    throw new ArgumentException(
-                        $"Type mismatch for converting to signal: " +
-                        $"{typeof(TSignal)} from {typeof(TRuntimePayload)}",
-                        nameof(inputParameters.Payload));
-
-                signal = castedSignal;
-            }
-
-            if (this is INaturalPrecondition<TSignal> precondition)
+            if (this is IAcceptSignal<TRuntimePayload> precondition)
                 return precondition.ValidateAsync(
                     new ConnectorContext
                     {
@@ -93,10 +61,10 @@ namespace REstate.Natural
                         Status = status,
                         Settings = connectorSettings
                     },
-                    signal,
+                    inputParameters.Payload,
                     cancellationToken);
-
-            return Task.FromResult(true);
+            else
+                throw new ArgumentException($"State: {GetType()} does not implement {typeof(IAcceptSignal<TRuntimePayload>)}!");
         }
     }
 }
