@@ -61,7 +61,7 @@ namespace REstate.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to locals should be const if possible.
+        ///   Looks up a localized string similar to Transitioning on Interfaces may cause unexpected actions and paths when signals are casted to an interface they implement..
         /// </summary>
         internal static string AnalyzerDescription {
             get {
@@ -70,20 +70,20 @@ namespace REstate.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to variable &apos;{0}&apos; can be const.
+        ///   Looks up a localized string similar to State accepts the interface {0} as a signal.
         /// </summary>
-        internal static string AnalyzerMessageFormat {
+        internal static string RESTATE001_Format {
             get {
-                return ResourceManager.GetString("AnalyzerMessageFormat", resourceCulture);
+                return ResourceManager.GetString("RESTATE001_Format", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Can be const.
+        ///   Looks up a localized string similar to Accepting interfaces as signals may be unsafe.
         /// </summary>
-        internal static string AnalyzerTitle {
+        internal static string RESTATE001_Title {
             get {
-                return ResourceManager.GetString("AnalyzerTitle", resourceCulture);
+                return ResourceManager.GetString("RESTATE001_Title", resourceCulture);
             }
         }
     }
