@@ -1,6 +1,6 @@
-name: .NET Core
+name: CI
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -22,13 +22,13 @@ jobs:
       uses: AArnott/nbgv@v0.3
     
     - name: Restore and Build
-      run: dotnet build --configuration Release
+      run: dotnet build --configuration Debug
     
     - name: Test
-      run: dotnet test --no-build --configuration Release
+      run: dotnet test --no-build --configuration Debug
 
     - name: Pack
-      run: dotnet pack --no-build --configuration Release -o ./packages
+      run: dotnet pack --no-build --configuration Debug -o ./packages
 
     - name: Upload packages as artifact
       uses: actions/upload-artifact@v1
