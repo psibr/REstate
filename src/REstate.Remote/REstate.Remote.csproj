@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Grpc" Version="1.20.0" />
     <PackageReference Include="MagicOnion" Version="0.5.3" />
-    <PackageReference Include="MessagePack" Version="1.9.3" />
+    <PackageReference Include="MessagePack" Version="1.9.11" />
   </ItemGroup>
 
   <ItemGroup>
